@@ -1213,6 +1213,7 @@ function showWho() {
   const P = PROVIDERS[ai.provider];
   $("guideWho").textContent = !P ? "" : aiReady()
     ? `Answers come from ${P.name}${P.local ? ", running on this computer" : ""}.`
+      + (P.local && nanoState !== "available" ? " The first question makes Chrome download it (about 4 GB)." : "")
     : P.local ? "Gemini Nano isn't available here. Choose an AI in AI settings." : `Add a ${P.name} key in AI settings to use the guide.`;
 }
 

@@ -87,6 +87,39 @@ table.sim th img { height: 28px; display: block; margin: 0 auto; }
   box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .lens label { display: inline-flex; gap: 6px; align-items: center; }
 .lens a { color: var(--accent); font-size: 14px; }
+
+/* the guide */
+.guide-fab { position: fixed; right: 16px; bottom: 16px; z-index: 20; border-radius: 999px; padding: 10px 16px;
+  background: var(--accent); color: #fff; border: none; box-shadow: 0 3px 12px rgba(0,0,0,.25); font-size: 16px; }
+.guide { position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 100vw; z-index: 30; background: var(--panel);
+  border-left: 1px solid var(--line); box-shadow: -4px 0 16px rgba(0,0,0,.12); display: flex; flex-direction: column; }
+.guide[hidden] { display: none; }
+@media (min-width: 1100px) { body.guide-open main { margin-right: 410px; } }
+@media (max-width: 600px) { .guide { top: auto; left: 0; height: 75vh; width: auto; border-left: none; border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; } }
+.guide header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.guide header b { font-size: 18px; flex: 1; }
+.guide header button { padding: 4px 8px; font-size: 14px; }
+.guide .who { font-size: 13px; color: var(--muted); padding: 6px 12px 0; }
+#guideLog { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.msg { margin: 8px 0; padding: 8px 10px; border-radius: 10px; font-size: 15px; }
+.msg.me { background: var(--bg); border: 1px solid var(--line); margin-left: 40px; }
+.msg.ai { background: color-mix(in srgb, var(--accent) 9%, var(--panel)); }
+.msg.err { color: var(--warn); }
+.msg p { margin: 4px 0; }
+.msg ul, .msg ol { margin: 4px 0; padding-left: 22px; }
+.msg code { font: 13px ui-monospace, Consolas, monospace; background: var(--bg); padding: 0 3px; border-radius: 3px; }
+.act { margin: 2px 2px; padding: 3px 9px; font-size: 14px; border-color: var(--accent); color: var(--accent); background: var(--panel); }
+.guide .bottom { border-top: 1px solid var(--line); padding: 8px 12px 10px; }
+.guide .quick button { font-size: 13px; padding: 4px 8px; }
+.guide textarea { flex: 1; font: inherit; font-size: 15px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 6px 8px; resize: none; }
+#guideSeen { white-space: pre-wrap; font: 11px/1.35 ui-monospace, Consolas, monospace; max-height: 220px; overflow: auto; color: var(--ink); }
+dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink); max-width: min(480px, 92vw); padding: 16px; }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog .provs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+dialog .provs button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+dialog label.field { display: block; margin: 8px 0; }
+dialog label.field input { width: 100%; margin-top: 3px; }
+dialog input[type=password], dialog input[type=text] { font: inherit; font-size: 15px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 6px 10px; }
 </style>
 </head>
 <body>
@@ -228,6 +261,58 @@ table.sim th img { height: 28px; display: block; margin: 0 auto; }
     model: <a href="https://huggingface.co/google/embeddinggemma-2" style="color:var(--accent)">EmbeddingGemma 2</a> (Apache 2.0)
   </p>
 </main>
+
+<button id="guideBtn" class="guide-fab">🧭 Guide</button>
+<aside id="guide" class="guide" hidden aria-label="Guide">
+  <header>
+    <b>🧭 Guide</b>
+    <button id="guideSettings">AI settings</button>
+    <button id="guideClose" title="Close">×</button>
+  </header>
+  <div class="who" id="guideWho"></div>
+  <div id="guideLog">
+    <div class="msg ai"><p>Hi! I'm an AI guide. I can see what you've added and the numbers on this page, but not the pictures or sounds themselves. Ask me anything, or press a button below.</p>
+      <p>Like any AI, I can be wrong, so check what I say against the page.</p></div>
+  </div>
+  <div class="bottom">
+    <div class="row quick">
+      <button data-q="What should I try next?">What should I try next?</button>
+      <button data-q="Explain what I'm looking at right now.">Explain what I'm looking at</button>
+      <button data-q="Give me a challenge.">Give me a challenge</button>
+    </div>
+    <div class="row">
+      <textarea id="guideIn" rows="2" placeholder="Ask the guide…"></textarea>
+      <button id="guideAsk" class="primary">Ask</button>
+    </div>
+    <details>
+      <summary>What the guide was told</summary>
+      <p>Each time you ask, the guide gets its instructions, this summary of the page and the last few messages. The buttons in its answers are ones it asked for.</p>
+      <pre id="guideSeen">Nothing yet.</pre>
+    </details>
+  </div>
+</aside>
+
+<dialog id="aiDialog">
+  <h2>Which AI should guide you?</h2>
+  <div class="provs" id="provs">
+    <button data-p="nano">Gemini Nano (in Chrome)</button>
+    <button data-p="anthropic">Claude</button>
+    <button data-p="gemini">Gemini</button>
+    <button data-p="openai">ChatGPT</button>
+  </div>
+  <p id="provNote" class="meta"></p>
+  <div id="keyRows">
+    <label class="field"><span id="keyLabel">API key</span><input type="password" id="aiKey" autocomplete="off"></label>
+    <p class="meta" style="font-size:13px">Get a key at <a id="keyLink" target="_blank" rel="noopener" style="color:var(--accent)"></a>. The key is sent only to that company, straight from this page.</p>
+    <label class="field">Model <input type="text" id="aiModel" list="modelList"></label>
+    <datalist id="modelList"></datalist>
+    <label><input type="checkbox" id="aiRemember"> Remember my key in this browser</label>
+  </div>
+  <div class="row" style="justify-content:flex-end;margin-top:12px">
+    <button id="aiCancel">Cancel</button>
+    <button id="aiSave" class="primary">Save</button>
+  </div>
+</dialog>
 
 <div id="camModal"><div class="box">
   <video id="camVideo" autoplay playsinline muted></video>
@@ -820,8 +905,465 @@ function drawSpace() {
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", refreshAll);
 })();
 
+// ---------- the guide: an AI that sees a summary of this page ----------
+const AI_STORE = "embex.ai", KEY_STORE = "embex.keys";
+const PROVIDERS = {
+  nano: { name: "Gemini Nano", local: true },
+  anthropic: {
+    name: "Claude", company: "Anthropic", hint: "sk-ant-…", keyUrl: "https://console.anthropic.com/settings/keys", keySite: "console.anthropic.com",
+    model: "claude-sonnet-5-5",
+    choices: [["claude-haiku-5-5", "fastest"], ["claude-sonnet-5-5", ""], ["claude-opus-5-5", ""], ["claude-fable-5-1", "strongest"]],
+  },
+  gemini: {
+    name: "Gemini", company: "Google", hint: "AIza…", keyUrl: "https://aistudio.google.com/app/apikey", keySite: "aistudio.google.com",
+    model: "gemini-3.8-flash",
+    choices: [["gemini-3.5-flash-lite", "fastest"], ["gemini-3.8-flash", ""], ["gemini-3.1-pro-preview", "strongest"]],
+  },
+  openai: {
+    name: "ChatGPT", company: "OpenAI", hint: "sk-…", keyUrl: "https://platform.openai.com/api-keys", keySite: "platform.openai.com",
+    model: "gpt-6.1-sol",
+    choices: [["gpt-6-luna", "fastest"], ["gpt-5.6-terra", ""], ["gpt-6.1-sol", ""], ["gpt-6-astra", "strongest"]],
+  },
+};
+let ai = { provider: "", keys: {}, models: {}, remember: false };
+for (const id in PROVIDERS) if (!PROVIDERS[id].local) ai.models[id] = PROVIDERS[id].model;
+let hadSettings = false;
+try {
+  const a = JSON.parse(localStorage.getItem(AI_STORE));
+  if (a && PROVIDERS[a.provider]) { ai.provider = a.provider; hadSettings = true; }
+  if (a && a.models) Object.assign(ai.models, a.models);
+  const k = JSON.parse(localStorage.getItem(KEY_STORE));
+  if (k) { ai.keys = k; ai.remember = true; }
+} catch {}
+
+// Gemini Nano, built into desktop Chrome
+const nanoApi = () => (typeof window.LanguageModel?.create === "function" ? window.LanguageModel : null);
+const NANO_OPTIONS = { expectedInputs: [{ type: "text", languages: ["en"] }], expectedOutputs: [{ type: "text", languages: ["en"] }] };
+let nanoState = "unavailable"; // Chrome's word: unavailable, downloadable, downloading or available
+async function checkNano() {
+  const LM = nanoApi();
+  if (LM) { try { nanoState = await LM.availability(NANO_OPTIONS); } catch { nanoState = "unavailable"; } }
+  if (!ai.provider) ai.provider = nanoState !== "unavailable" ? "nano" : "anthropic";
+  showWho();
+}
+const aiReady = () => ai.provider === "nano" ? nanoState !== "unavailable" : !!ai.keys[ai.provider];
+
+async function askNano(system, prompt, opts) {
+  const LM = nanoApi();
+  if (!LM || nanoState === "unavailable") throw { code: "no_nano" };
+  const downloading = nanoState !== "available";
+  let session;
+  try {
+    session = await LM.create({
+      ...NANO_OPTIONS, initialPrompts: [{ role: "system", content: system }],
+      monitor(m) { m.addEventListener("downloadprogress", (e) => { if (downloading && e.loaded < 1) opts.onStatus?.(`Chrome is downloading Gemini Nano: ${Math.round(e.loaded * 100)}%`); }); },
+    });
+  } catch (e) { throw { code: "nano_failed", message: e?.message || "" }; }
+  nanoState = "available";
+  try {
+    let text = "";
+    if (typeof session.promptStreaming === "function") {
+      const reader = session.promptStreaming(prompt).getReader();
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const chunk = String(value);
+        text = text && chunk.startsWith(text) ? chunk : text + chunk; // older Chrome sent the whole answer each time
+        opts.onText?.(text);
+      }
+    } else text = String(await session.prompt(prompt));
+    if (!text.trim()) throw { code: "empty" };
+    return text;
+  } catch (e) {
+    if (e?.code) throw e;
+    throw { code: "nano_failed", message: e?.message || "" };
+  } finally { try { session.destroy(); } catch {} }
+}
+
+async function postJson(url, headers, body) {
+  let res, j = null;
+  try {
+    res = await fetch(url, { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
+    j = await res.json().catch(() => null);
+  } catch { throw { code: "network" }; }
+  if (!res.ok) {
+    const err = j && (Array.isArray(j) ? j[0]?.error : j.error);
+    const msg = err?.message || "";
+    const code = res.status === 401 || res.status === 403 || /api.?key/i.test(msg) ? "bad_key" : res.status === 429 ? "rate_limited"
+      : res.status >= 500 ? "upstream" : res.status === 404 || /model/i.test(msg) ? "bad_model" : "api_error";
+    throw { code, message: msg };
+  }
+  return j || {};
+}
+
+async function askAI(system, prompt, opts = {}) {
+  if (ai.provider === "nano") return askNano(system, prompt, opts);
+  const key = ai.keys[ai.provider];
+  if (!key) throw { code: "no_key" };
+  const model = (ai.models[ai.provider] || "").trim() || PROVIDERS[ai.provider].model;
+  let text = "";
+  if (ai.provider === "anthropic") {
+    const j = await postJson("https://api.anthropic.com/v1/messages",
+      { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      { model, max_tokens: 1500, system, messages: [{ role: "user", content: prompt }] });
+    if (j.stop_reason === "refusal") throw { code: "refused" };
+    text = (j.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
+  } else if (ai.provider === "gemini") {
+    const gen = { maxOutputTokens: 1500 };
+    if (+(/^gemini-(\d+)/.exec(model)?.[1]) >= 3) gen.thinkingConfig = { thinkingLevel: "low" };
+    const j = await postJson(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      { "x-goog-api-key": key },
+      { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: gen });
+    text = (j.candidates?.[0]?.content?.parts || []).filter((x) => !x.thought).map((x) => x.text || "").join("");
+  } else {
+    const j = await postJson("https://api.openai.com/v1/chat/completions", { Authorization: "Bearer " + key },
+      { model, messages: [{ role: "system", content: system }, { role: "user", content: prompt }], max_completion_tokens: 1500 });
+    text = String(j.choices?.[0]?.message?.content || "");
+  }
+  if (!text.trim()) throw { code: "empty" };
+  return text;
+}
+
+function aiError(e) {
+  const name = PROVIDERS[ai.provider]?.name || "The AI";
+  const T = {
+    no_nano: "Gemini Nano isn't available in this browser. It needs desktop Chrome with its built-in AI. Choose another AI in AI settings.",
+    nano_failed: "Gemini Nano couldn't answer" + (e.message ? ": " + e.message : ".") + " Try again.",
+    no_key: "Choose an AI and add its key in AI settings first.",
+    bad_key: `${PROVIDERS[ai.provider]?.company || ""} didn't accept that key. Check it in AI settings.`,
+    bad_model: "That model name wasn't accepted. Check it in AI settings.",
+    rate_limited: `${name} is busy, or you've reached a usage limit. Try again in a little while.`,
+    upstream: `${name} had a problem. Try again in a little while.`,
+    refused: `${name} wouldn't answer that one.`,
+    empty: `${name} sent back nothing. Try asking differently.`,
+    network: ai.provider === "openai"
+      ? "Couldn't reach ChatGPT. OpenAI sometimes refuses calls made straight from a web page; Claude or Gemini will work instead."
+      : `Couldn't reach ${name}. Check your internet connection.`,
+    api_error: `${name} sent back an error` + (e.message ? ": " + e.message : "."),
+  };
+  return T[e?.code] || `Something went wrong: ${e?.message || e}`;
+}
+
+const GUIDE_SYSTEM = `You are the guide inside Embedding Explorer, a web page where school students (aged about 10 to 16) explore embeddings. Google's EmbeddingGemma 2 model runs in their browser and turns each word, picture, sound or video they add into a list of 768 numbers.
+
+The page has: 2. Add things. 3. Star view (one thing's 768 numbers drawn as 768 rays from a center; green positive, red negative; can also show A minus B). 4. A similarity grid. 5. Embedding arithmetic (A − B + C, with the nearest things to the result). 6. A 3D space whose three axes the student defines with word pairs. A bar at the top sets how many of the numbers to use (768, 512, 256 or 128) and can "take away what everything shares".
+
+Facts you can rely on:
+- Similarity is cosine similarity: 1 = same direction, 0 = unrelated. Every embedding has length 1.
+- About two thirds of every embedding is a part they all share, and a few positions (such as 111 and 115) are big for everything. So raw similarities are mostly 0.5 to 0.85 and all stars look alike. "Take away what everything shares" subtracts the average of what has been added; then unrelated things score near 0. The average depends on what has been added.
+- Modality gap: words score higher with other words, and pictures with other pictures, even when the meaning matches. Compare rankings across kinds, not raw numbers.
+- The first numbers matter most (Matryoshka training). 256 numbers lose very little; 128 lose more, especially for pictures and sounds.
+- Animal sounds are a weak spot: in testing, a dog barking came out slightly nearer "cat" than "dog". Speech and music match well.
+- Videos are embedded as 16 still frames; sounds use at most 30 seconds.
+- Words are sent with a short instruction in front, shown under "How the words are given to the model".
+- Embedding arithmetic makes a new list of 768 numbers, not a single number. The page shows the things nearest to that list. It often lands nearest one of its own inputs, so look at the nearest thing that isn't an input. It can only find things that have been added: "king − man + woman" can't land on "queen" unless "queen" has been added.
+
+How to help:
+- Answer in under 100 words of plain language for a curious teenager. Use Markdown.
+- If no fact above explains why the model did something, say that nobody can be sure, and suggest an experiment that would tell them more. Don't make up reasons.
+- The model is already trained and can't be changed. Only suggest things the student can do on this page: add words, pictures, sounds or videos, change the settings, and use sections 3 to 6.
+- Talk about the section named in LOOKING AT unless the student asks about something else.
+- Use the real numbers from the page summary. Never invent a number; if one is missing, say how to see it.
+- You can't see the pictures or hear the sounds, only their labels and numbers. Say so if it matters.
+- Prefer suggesting one experiment, and ask what they predict before they try it. Explain surprises honestly, including when the model gets something wrong.
+- When you suggest an experiment, add a button for it on its own line. Button codes:
+  [[add: word]] adds a word or short phrase.
+  [[try: A - B + C]] sets up embedding arithmetic (missing words are added).
+  [[star: A - B]] or [[star: A]] shows a star.
+  A plain label means a word (new words are added). For a picture, sound or video already added, write picture:label, sound:label or video:label, for example [[star: picture:tiger - tiger]].
+- For a challenge, pick one from CHALLENGE IDEAS in the page summary (or one just like them), say exactly what counts as success, and don't give away the answer. When the student says they've done it, check it against the numbers in the summary.
+- Use American spelling.`;
+
+function whereLooking() {
+  let best = null;
+  for (const s of document.querySelectorAll("main section")) {
+    const r = s.getBoundingClientRect();
+    if (r.bottom > 80 && r.top < innerHeight * 0.6) { best = s; break; }
+  }
+  return best ? best.querySelector("h2").textContent : "the top of the page";
+}
+
+function describe(it) {
+  return it.kind === "text" ? `"${it.label}"` : `${KIND_NAME[it.kind]}:${it.label}`;
+}
+
+function snapshot(compact) {
+  const list = ready();
+  const lines = [];
+  lines.push(`SETTINGS: using the first ${dims()} of 768 numbers; shared part taken away: ${$("center").checked ? "yes" : "no"}; words sent as: "${$("prefix").value}<word>".`);
+  lines.push(`LOOKING AT: ${whereLooking()}`);
+  lines.push(`(Words are in quotes; picture:x, sound:x and video:x are things the student added, labeled x.)`);
+  if (!model) { lines.push("The model is not loaded yet."); return lines.join("\n"); }
+  const shown = list.slice(-(compact ? 36 : 60));
+  lines.push(`THINGS ADDED (${list.length}): ` + (shown.map(describe).join(", ") || "none"));
+  if (shown.length > 1) {
+    lines.push("NEAREST TO EACH (similarity):");
+    const V = new Map(shown.map((it) => [it, vecOf(it)]));
+    for (const it of shown) {
+      const near = shown.filter((o) => o !== it).map((o) => [o, dot(V.get(it), V.get(o))]).sort((a, b) => b[1] - a[1]).slice(0, compact ? 2 : 3);
+      lines.push(`- ${describe(it)}: ` + near.map(([o, s]) => `${describe(o)} ${s.toFixed(2)}`).join(", "));
+    }
+  }
+  const a = byId($("starA").value), b = byId($("starB").value);
+  if (a) lines.push(`STAR VIEW: ${describe(a)}` + (b ? ` minus ${describe(b)}: difference size ${norm(sub(vecOf(a), vecOf(b))).toFixed(2)}, similarity ${dot(vecOf(a), vecOf(b)).toFixed(2)}` : ""));
+  const A = byId($("arA").value), B = byId($("arB").value), C = byId($("arC").value);
+  if (A) {
+    let v = vecOf(A);
+    if (B) v = sub(v, vecOf(B));
+    if (C) v = add(v, vecOf(C));
+    v = scale(v, 1 / (norm(v) || 1));
+    const inputs = new Set([A, B, C]);
+    const ranked = list.map((it) => [it, dot(v, vecOf(it))]).sort((x, y) => y[1] - x[1]);
+    const fmt = (r) => r.slice(0, 4).map(([it, s]) => `${describe(it)} ${s.toFixed(2)}`).join(", ");
+    lines.push(`ARITHMETIC: ${describe(A)}${B ? " − " + describe(B) : ""}${C ? " + " + describe(C) : ""} makes a new list of numbers. ` +
+      `Nearest things to it, not counting its own inputs: ${fmt(ranked.filter(([it]) => !inputs.has(it))) || "none"}. ` +
+      `Its own inputs score: ${ranked.filter(([it]) => inputs.has(it)).map(([it, s]) => `${describe(it)} ${s.toFixed(2)}`).join(", ")}.`);
+  }
+  lines.push(...challengeIdeas(list));
+  if (placed) {
+    lines.push(`3D SPACE axes: ` + placed.axes.map(([n, p]) => `"${n}"→"${p}"`).join(", ") + " (positions run from -1 to 1)");
+    if (!compact || /3D/.test(whereLooking())) {
+      for (const { it, p } of placed.points.slice(-30)) lines.push(`- ${describe(it)}: (${p.map((x) => x.toFixed(2)).join(", ")})`);
+    }
+  }
+  return lines.join("\n");
+}
+
+// Challenges worked out from the student's own things, so each has a goal they can check on the page.
+function challengeIdeas(list) {
+  const out = [];
+  const V = new Map(list.map((it) => [it, vecOf(it)]));
+  const sim = (x, y) => dot(V.get(x), V.get(y));
+  const words = list.filter((it) => it.kind === "text"), media = list.filter((it) => it.kind !== "text");
+  if (media.length && words.length) {
+    // the picture, sound or video whose best-matching word matches it least well
+    const [m, w, s] = media.map((m) => { const [w, s] = words.map((w) => [w, sim(m, w)]).sort((a, b) => b[1] - a[1])[0]; return [m, w, s]; })
+      .sort((a, b) => a[2] - b[2])[0];
+    out.push(`- Find a new word that comes closer to ${describe(m)} than ${describe(w)} does (now ${s.toFixed(2)}, the best word so far).`);
+  }
+  if (words.length > 2) {
+    let lo = null;
+    for (let i = 0; i < words.length; i++) for (let j = i + 1; j < words.length; j++) {
+      const s = sim(words[i], words[j]);
+      if (!lo || s < lo[2]) lo = [words[i], words[j], s];
+    }
+    out.push(`- Find two words less similar than ${describe(lo[0])} and ${describe(lo[1])} (${lo[2].toFixed(2)}, the least similar pair so far).`);
+  }
+  out.push(`- Find three words A, B, C where A − B + C lands nearest a fourth word that isn't one of them (check in section 5).`);
+  if (!$("center").checked) out.push(`- Tick "Take away what everything shares", then find two words that still score above 0.5.`);
+  return out.length ? ["CHALLENGE IDEAS (checkable on the page):", ...out] : [];
+}
+
+let history = []; // [{ who: "student" | "guide", text }]
+function guidePrompt(question, compact) {
+  const past = history.slice(compact ? -4 : -8).map((m) => `${m.who === "student" ? "Student" : "Guide"}: ${m.text}`).join("\n\n");
+  return `PAGE SUMMARY\n${snapshot(compact)}\n\n` + (past ? `CONVERSATION SO FAR\n${past}\n\n` : "") + `Student: ${question}`;
+}
+
+// A tiny Markdown renderer, plus the guide's action buttons.
+function md(src) {
+  const inline = (s) => esc(s)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>")
+    .replace(/\[\[\s*(add|try|star)\s*:\s*([^\]]+?)\s*\]\]/gi, (_, kind, arg) => unusable(kind.toLowerCase(), arg) ? ""
+      : `<button class="act" data-act="${kind.toLowerCase()}" data-arg="${arg}">${actLabel(kind.toLowerCase(), arg)}</button>`);
+  const out = [];
+  let list = null;
+  for (const raw of src.replace(/\r/g, "").split("\n")) {
+    const line = raw.trimEnd();
+    const m = /^\s*(?:([-*•])|(\d+)[.)])\s+(.*)$/.exec(line);
+    if (m) {
+      const tag = m[1] ? "ul" : "ol";
+      if (!list || list !== tag) { if (list) out.push(`</${list}>`); out.push(`<${tag}>`); list = tag; }
+      out.push(`<li>${inline(m[3])}</li>`);
+      continue;
+    }
+    if (list) { out.push(`</${list}>`); list = null; }
+    if (!line.trim()) continue;
+    const h = /^#{1,6}\s+(.*)$/.exec(line);
+    out.push(h ? `<p><b>${inline(h[1])}</b></p>` : `<p>${inline(line)}</p>`);
+  }
+  if (list) out.push(`</${list}>`);
+  return out.join("");
+}
+// Small models sometimes write buttons that can't work: a word they haven't chosen, like
+// [[add: new word]] or [[try: A - B + C]], or a picture, sound or video that isn't on the page.
+const PLACEHOLDER = /^(an? |your |new |another |some )*(new )?(word|thing|phrase|example)s?$|^[ABCDX]$/i;
+function unusable(kind, arg) {
+  if (/&lt;/.test(arg)) return true;
+  const ts = terms(arg);
+  if (!ts.length || ts.every((t) => PLACEHOLDER.test(t.label))) return true;
+  return ts.some((t) => /^(picture|sound|video)\s*:/i.test(t.label) && !findThing(t.label));
+}
+function actLabel(kind, arg) {
+  return kind === "add" ? `＋ add ${arg}` : kind === "try" ? `▶ try ${arg}` : `✳ star of ${arg}`;
+}
+
+function logMsg(cls, html) {
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.innerHTML = html;
+  $("guideLog").appendChild(d);
+  $("guideLog").scrollTop = 1e9;
+  return d;
+}
+
+function showWho() {
+  const P = PROVIDERS[ai.provider];
+  $("guideWho").textContent = !P ? "" : aiReady()
+    ? `Answers come from ${P.name}${P.local ? ", running on this computer" : ""}.`
+    : P.local ? "Gemini Nano isn't available here. Choose an AI in AI settings." : `Add a ${P.name} key in AI settings to use the guide.`;
+}
+
+let asking = false;
+async function askGuide(question) {
+  question = question.trim();
+  if (!question || asking) return;
+  logMsg("me", `<p>${esc(question)}</p>`);
+  if (!aiReady()) { logMsg("ai err", `<p>${esc(aiError({ code: ai.provider === "nano" ? "no_nano" : "no_key" }))}</p>`); return; }
+  asking = true; $("guideAsk").disabled = true;
+  const compact = ai.provider === "nano"; // Gemini Nano has a small context window
+  const prompt = guidePrompt(question, compact);
+  $("guideSeen").textContent = `INSTRUCTIONS\n${GUIDE_SYSTEM}\n\n${prompt}`;
+  const box = logMsg("ai", "<p>Thinking…</p>");
+  const t0 = performance.now();
+  try {
+    const text = await askAI(GUIDE_SYSTEM, prompt, {
+      onText: (t) => { box.innerHTML = md(t); $("guideLog").scrollTop = 1e9; },
+      onStatus: (s) => { box.innerHTML = `<p>${esc(s)}</p>`; },
+    });
+    box.innerHTML = md(text);
+    history.push({ who: "student", text: question }, { who: "guide", text });
+    log(`guide (${ai.provider}): ${fmtMs(performance.now() - t0)}`);
+  } catch (e) {
+    console.error(e);
+    box.className = "msg ai err";
+    box.innerHTML = `<p>${esc(aiError(e))}</p>`;
+  }
+  asking = false; $("guideAsk").disabled = false;
+  $("guideLog").scrollTop = 1e9;
+}
+
+// Acting on the guide's buttons
+// "tiger" means the word; "picture:tiger", "sound:…" or "video:…" mean one of those.
+function findThing(ref) {
+  const m = /^\s*(word|picture|sound|video)\s*:\s*(.+)$/i.exec(ref);
+  const kind = m ? Object.keys(KIND_NAME).find((k) => KIND_NAME[k] === m[1].toLowerCase()) : "text";
+  const l = (m ? m[2] : ref).trim().replace(/^"|"$/g, "").toLowerCase();
+  return items.find((it) => it.kind === kind && it.label.toLowerCase() === l)
+    || (!m && items.find((it) => it.label.toLowerCase() === l));
+}
+async function ensureThing(ref) {
+  if (!model) throw new Error("Load the model first.");
+  const label = ref.trim().replace(/^word\s*:\s*/i, "").replace(/^"|"$/g, "");
+  if (/^(picture|sound|video)\s*:/i.test(label) && !findThing(label)) throw new Error(`There's no ${label} on the page.`);
+  const it = findThing(ref) || addItem("text", { text: label, label });
+  while (!it.vec && !it.err) await new Promise((r) => setTimeout(r, 150));
+  if (it.err) throw new Error(it.err);
+  return it;
+}
+function terms(expr) {
+  // "A - B + C" → [{sign:+1,label:A},{sign:-1,label:B},{sign:+1,label:C}]
+  // The signs need spaces around them, so labels like "x-ray" stay whole.
+  const parts = ("+ " + expr.trim()).split(/(?:^|\s+)([+\-−])\s+/).filter((x) => x !== "");
+  const out = [];
+  for (let i = 0; i + 1 < parts.length; i += 2) out.push({ sign: parts[i] === "+" ? 1 : -1, label: parts[i + 1].trim() });
+  return out.filter((t) => t.label);
+}
+async function runAction(kind, arg) {
+  try {
+    if (kind === "add") { await ensureThing(arg); return; }
+    const ts = terms(arg);
+    const its = [];
+    for (const t of ts) its.push(await ensureThing(t.label));
+    refreshAll();
+    if (kind === "star") {
+      $("starA").value = its[0].id;
+      $("starB").value = ts[1]?.sign === -1 ? its[1].id : "";
+      drawBigStar();
+      $("starSec").scrollIntoView({ behavior: "smooth" });
+    } else {
+      $("arA").value = its[0].id;
+      const minus = ts.findIndex((t, i) => i > 0 && t.sign === -1), plus = ts.findIndex((t, i) => i > 0 && t.sign === 1);
+      $("arB").value = minus > 0 ? its[minus].id : "";
+      $("arC").value = plus > 0 ? its[plus].id : "";
+      renderArith();
+      $("arithSec").scrollIntoView({ behavior: "smooth" });
+    }
+  } catch (e) { logMsg("ai err", `<p>${esc(e.message || String(e))}</p>`); }
+}
+$("guideLog").addEventListener("click", (e) => {
+  const b = e.target.closest("button.act");
+  if (!b) return;
+  b.disabled = true;
+  runAction(b.dataset.act, b.dataset.arg).finally(() => { b.disabled = false; });
+});
+
+function openGuide(open) {
+  $("guide").hidden = !open;
+  $("guideBtn").hidden = open;
+  document.body.classList.toggle("guide-open", open);
+  if (open) { showWho(); $("guideIn").focus(); }
+  drawSpace(); drawBigStar();
+}
+$("guideBtn").addEventListener("click", () => openGuide(true));
+$("guideClose").addEventListener("click", () => openGuide(false));
+$("guideAsk").addEventListener("click", () => { const q = $("guideIn").value; $("guideIn").value = ""; askGuide(q); });
+$("guideIn").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("guideAsk").click(); } });
+document.querySelectorAll(".quick button").forEach((b) => b.addEventListener("click", () => askGuide(b.dataset.q)));
+
+// AI settings
+let draft = null;
+function showProvider(id) {
+  if (draft.provider && !PROVIDERS[draft.provider].local) {
+    draft.keys[draft.provider] = $("aiKey").value.trim();
+    draft.models[draft.provider] = $("aiModel").value.trim();
+  }
+  draft.provider = id;
+  const P = PROVIDERS[id];
+  $("provs").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.p === id)));
+  $("keyRows").hidden = !!P.local;
+  if (P.local) {
+    $("provNote").textContent = nanoState === "unavailable"
+      ? "Gemini Nano isn't available in this browser. It needs desktop Chrome with its built-in AI turned on."
+      : "Free and needs no key. It runs on this computer, so your questions stay here. It's a small model, so its answers are simpler."
+        + (nanoState !== "available" ? " Chrome downloads it (about 4 GB) the first time." : "");
+    return;
+  }
+  $("provNote").textContent = `${P.name} is made by ${P.company}. You need your own key, and ${P.company} may charge for its use.`;
+  $("keyLabel").textContent = `${P.company} API key`;
+  $("aiKey").placeholder = P.hint;
+  $("aiKey").value = draft.keys[id] || "";
+  $("aiModel").value = draft.models[id] || P.model;
+  $("modelList").innerHTML = P.choices.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+  $("keyLink").href = P.keyUrl; $("keyLink").textContent = P.keySite;
+}
+$("guideSettings").addEventListener("click", () => {
+  draft = JSON.parse(JSON.stringify(ai));
+  const start = draft.provider; draft.provider = "";
+  $("aiRemember").checked = ai.remember;
+  showProvider(start || "nano");
+  $("aiDialog").showModal();
+});
+$("provs").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => showProvider(b.dataset.p)));
+$("aiCancel").addEventListener("click", () => $("aiDialog").close());
+$("aiSave").addEventListener("click", () => {
+  showProvider(draft.provider); // reads the fields
+  draft.remember = $("aiRemember").checked;
+  ai = draft;
+  try {
+    localStorage.setItem(AI_STORE, JSON.stringify({ provider: ai.provider, models: ai.models }));
+    if (ai.remember && Object.values(ai.keys).some(Boolean)) localStorage.setItem(KEY_STORE, JSON.stringify(ai.keys));
+    else localStorage.removeItem(KEY_STORE);
+  } catch {}
+  $("aiDialog").close();
+  showWho();
+});
+checkNano();
+
 drawSpace();
-window.explorer = { get items() { return items; }, dims }; // for poking around in the console
+window.explorer = { get items() { return items; }, dims, snapshot, guidePrompt, GUIDE_SYSTEM, askAI, md, checkNano }; // for poking around in the console
 </script>
 </body>
 </html>

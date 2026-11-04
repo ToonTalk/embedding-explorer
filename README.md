@@ -14,6 +14,13 @@ Students can:
 4. Do **embedding arithmetic** (A − B + C) and see what is nearest the result.
 5. Build their own **3D space** from three word pairs (for example small → big) and see where everything lands.
 
+A 🧭 **Guide** (an AI) can be opened from anywhere on the page. It is given a text summary of the page: what has been added, the nearest neighbors, and the current star, arithmetic and 3D views, plus challenge ideas the page works out from the student's own things. It can't see the pictures or hear the sounds. It suggests experiments, explains surprises and sets challenges the student can check. Its suggestions come with buttons that add words or set up the star or arithmetic view. "What the guide was told" shows exactly what it received.
+
+The guide can use:
+
+- **Gemini Nano**, built into desktop Chrome. It's free, needs no key, and keeps questions on the computer. It's the default when available. It's a small model, so its explanations are sometimes muddled. In testing it took 6–20 s per answer.
+- **Claude, Gemini or ChatGPT** with the user's own API key. The key is sent only to that company, straight from the page, and is remembered only if the user asks.
+
 A bar at the top changes every section at once. It sets how many of the 768 numbers to use (the model is trained so the first ones matter most). It can also take away the part that all embeddings share, which otherwise makes every star look alike.
 
 This follows Ken Kahn's earlier [active essay on embeddings](https://toontalk.github.io/AI/apps/embeddings/index.html).

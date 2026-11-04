@@ -32,7 +32,9 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 syste
 main { max-width: 1040px; margin: 0 auto; padding: 16px 16px 64px; }
 h1 { margin: 8px 0 4px; font-size: 30px; }
 h2 { margin: 0 0 6px; font-size: 21px; }
-.lede { color: var(--muted); margin: 0 0 16px; }
+.lede { color: var(--muted); margin: 0 0 8px; }
+.pagelinks { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 15px; margin: 0 0 14px; }
+.pagelinks a { color: var(--accent); }
 section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 14px 0; }
 section.locked { opacity: .45; pointer-events: none; }
 p { margin: 4px 0 10px; }
@@ -161,6 +163,12 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
 <main>
   <h1>Embedding Explorer</h1>
   <p class="lede">An AI <span class="term">model</span> turns a word, a picture, a sound or a video into a list of 768 numbers, called an <span class="term">embedding</span>. Things with similar meanings get similar lists — even when one is a word and the other is a photo. Words with a dotted line under them explain themselves when you point at or tap them.</p>
+  <nav class="pagelinks">
+    <a href="https://toontalk.github.io/embedding-explorer/student-guide.html" target="_blank" rel="noopener">Student guide</a>
+    <a href="https://toontalk.github.io/embedding-explorer/teacher-guide.html" target="_blank" rel="noopener">Teacher guide</a>
+    <a href="https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing" target="_blank" rel="noopener">Ken Kahn's post about it</a>
+    <a href="https://toontalk.github.io/embedding-explorer/making-of.html" target="_blank" rel="noopener">How it was made</a>
+  </nav>
 
   <section id="loadSec">
     <h2>1. Load the model</h2>

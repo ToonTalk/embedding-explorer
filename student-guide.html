@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Embedding Explorer: Student Guide</title>
+<link rel="stylesheet" href="pages.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23f7f6f2'/%3E%3Cg stroke-width='4.5' stroke-linecap='round'%3E%3Cpath d='M32 32V4M32 32L52 12M32 32L58 40M32 32L22 56M32 32L8 30' stroke='%231a8f3c'/%3E%3Cpath d='M32 32L46 8M32 32L56 26M32 32L44 54M32 32L12 48M32 32L18 14' stroke='%23d03a2f'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='4' fill='%232f5bd3'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+  <nav class="top">
+    <a href="./">← Open Embedding Explorer</a>
+    <a href="teacher-guide.html">Teacher guide</a>
+    <a href="making-of.html">How it was made</a>
+  </nav>
+
+  <h1>Student guide</h1>
+  <p class="lede">How does an AI know that a puppy is like a dog, or that a photo of a tiger goes with the word “tiger”? It turns everything into lists of numbers. This guide gives you missions to find out how.</p>
+
+  <h2>The one big idea</h2>
+  <p>The AI in this app turns a word, a picture, a sound or a video into a list of 768 numbers. That list is called an <b>embedding</b>. Things with similar meanings get similar lists. That's all the AI knows about them: it never “sees” the picture the way you do, it just compares lists of numbers.</p>
+  <p>Two lists are compared with a number called <b>similarity</b>. 1 means they point the same way, 0 means unrelated. Most of what you'll do is guess a similarity, then check.</p>
+
+  <h2>Getting started</h2>
+  <ol>
+    <li>Open the app in Chrome or Edge on a computer. Press <b>Load</b> in section 1. The first time, this can take a minute; after that it's quick.</li>
+    <li>A few things are added for you: dog, cat, apple, house, a photo of a corgi, a photo of a house and a dog barking.</li>
+    <li>Words with a dotted line under them explain themselves if you point at them or tap them.</li>
+    <li>Stuck? Press <b>🧭 Guide</b> in the corner to ask the AI guide. It can be wrong, so check what it says against the page.</li>
+  </ol>
+
+  <h2>Missions</h2>
+  <p>For each mission, <b>guess first</b>, then check. Being wrong is the interesting part.</p>
+
+  <div class="try">
+    <b class="label">Mission 1 · Who is close to whom?</b>
+    <p>Look at section 4. Which pair do you think scores highest: <i>dog</i> and <i>cat</i>, <i>dog</i> and <i>apple</i>, or <i>dog</i> and the photo of the corgi? Write your order down, then check.</p>
+    <details><summary>A hint</summary><p>Words tend to score higher with other words, even when a picture is a better match. That's called the <i>modality gap</i>. So compare which picture is nearest a word, not just the size of the numbers.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Mission 2 · Why do all the stars look the same?</b>
+    <p>In section 3, each number is drawn as a ray: green for positive, red for negative. Look at the stars for <i>dog</i> and <i>apple</i>. They look almost the same! Now tick <b>Take away what everything shares</b> at the top. What changes?</p>
+    <details><summary>What's going on</summary><p>About two thirds of every list is a part that all of them share. Taking it away leaves what makes each thing different. Then unrelated things score near 0.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Mission 3 · What does a ray mean?</b>
+    <p>Point at one of the longest rays of a star. The page shows everyday words that are unusually high or low for that number. Can you find a ray that seems to be about music, or sports? Can you find one that makes no sense at all?</p>
+    <details><summary>The surprise</summary><p>Most numbers don't mean one thing. The model mixes many ideas into each number. Ideas like “more than one” (dog → dogs) are spread over lots of numbers. Press <b>one → many</b> above the star to see it.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Mission 4 · Word math</b>
+    <p>In section 6, try <code>puppy - dog + cat</code>. What do you think it lands on? Then try <code>(morning + night) / 2</code> and <code>Paris - France + Japan</code>.</p>
+    <details><summary>Important</summary><p>The answer can only be something that's on the page. The example buttons add a few possible answers for you, some right and some wrong. To test your own guess, use <b>Add my guess</b>.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Mission 5 · Invent a formula</b>
+    <p>Make up a formula of your own that you think will work, like <code>king - man + woman</code> or <code>2 * big - small</code>. Write down what you expect, then try it. Can you find one that fails in a funny way?</p>
+  </div>
+
+  <div class="try">
+    <b class="label">Mission 6 · Pictures and sounds</b>
+    <p>Add the 🐾 <b>Animals</b> set. Which word is nearest the sound of a dog barking? Is the AI right? Then add a photo of your own (or drop one onto the page) and see which word it lands nearest.</p>
+    <details><summary>A known weak spot</summary><p>In testing, the dog barking sound came out a little closer to “cat” than to “dog”. Speech and music work much better. Can you find out why? Nobody knows for sure.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Mission 7 · Build your own space</b>
+    <p>In section 7, choose three directions, like <i>small → big</i>, <i>quiet → loud</i> and <i>sad → happy</i>, and press <b>Place everything</b>. Where does the tiger land? Drag to turn the space around.</p>
+  </div>
+
+  <div class="try">
+    <b class="label">Mission 8 · Catch the guide out</b>
+    <p>Ask the 🧭 Guide to explain something, then check it against the numbers on the page. Did it get anything wrong? AI guides can sound sure of themselves even when they're mistaken.</p>
+  </div>
+
+  <h2>Words to know</h2>
+  <dl>
+    <dt>Embedding</dt><dd>The list of numbers the AI makes for something. Here, 768 numbers long.</dd>
+    <dt>Similarity</dt><dd>How much two lists point the same way: 1 is the same, 0 is unrelated.</dd>
+    <dt>Ray</dt><dd>One line of a star. Each ray shows one of the numbers.</dd>
+    <dt>Direction</dt><dd>What you get by subtracting one embedding from another, like big minus small. It points from one meaning toward the other.</dd>
+    <dt>Modality gap</dt><dd>Words stay closer to words, and pictures to pictures, even when they mean the same thing.</dd>
+  </dl>
+
+  <h2>Want to know more?</h2>
+  <p>Inside the app, every short explanation has a <b>More detail</b> link. And <a href="making-of.html">How it was made</a> tells the story of the experiments behind the app.</p>
+
+  <footer>Embedding Explorer by Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer">source</a> (MIT license)</footer>
+</main>
+</body>
+</html>

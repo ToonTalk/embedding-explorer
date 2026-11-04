@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Embedding Explorer: Teacher Guide</title>
+<link rel="stylesheet" href="pages.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23f7f6f2'/%3E%3Cg stroke-width='4.5' stroke-linecap='round'%3E%3Cpath d='M32 32V4M32 32L52 12M32 32L58 40M32 32L22 56M32 32L8 30' stroke='%231a8f3c'/%3E%3Cpath d='M32 32L46 8M32 32L56 26M32 32L44 54M32 32L12 48M32 32L18 14' stroke='%23d03a2f'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='4' fill='%232f5bd3'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+  <nav class="top">
+    <a href="./">← Open Embedding Explorer</a>
+    <a href="student-guide.html">Student guide</a>
+    <a href="making-of.html">How it was made</a>
+  </nav>
+
+  <h1>Teacher guide</h1>
+  <p class="lede">Embedding Explorer lets students aged about 10 to 16 look inside one of the ideas at the heart of modern AI: turning meaning into lists of numbers. Students add words, pictures, sounds and videos, then compare, draw, add and subtract the lists the AI makes for them.</p>
+
+  <h2>Before the lesson</h2>
+  <h3>Computers and browsers</h3>
+  <ul>
+    <li><b>Desktop or laptop computers</b> with Chrome or Edge. The app needs a graphics chip the browser can use (WebGPU), which most computers from the last few years have. Phones and tablets haven't been tested.</li>
+    <li><b>A large first download.</b> The model is about 473 MB with pictures, videos and sounds (175 MB for words only: untick those boxes before pressing Load). The browser keeps it, so later visits load in a few seconds. On a school network, load it once on each computer before the lesson.</li>
+    <li><b>Without a graphics chip</b> the web version still works for words (about 0.2 s each), but pictures and sounds are too slow to use.</li>
+  </ul>
+
+  <h3>Two versions</h3>
+  <div class="table-wrap"><table>
+    <tr><th></th><th><a href="./">Web version</a></th><th><a href="https://claude.ai/artifact/41qaoHhWfC87k5AShT1un5">Claude version</a></th></tr>
+    <tr><td>Needs</td><td>Just a browser</td><td>A claude.ai account</td></tr>
+    <tr><td>Camera and microphone</td><td>Yes</td><td>No (files only)</td></tr>
+    <tr><td>AI guide</td><td>Gemini Nano built into Chrome (free, stays on the computer), or Claude, Gemini or ChatGPT with an API key</td><td>Claude, through the student's own claude.ai account, with no key</td></tr>
+  </table></div>
+
+  <h3>Privacy</h3>
+  <p>The embedding model runs entirely in the browser: words, photos, recordings and videos students add stay on their computer. The only thing that can leave is what the <b>AI guide</b> sends when a student asks it a question. It sends a text summary of the page: the labels of what's been added and the numbers. It never sends the pictures or sounds themselves. With Gemini Nano, even that stays on the computer. With Claude, Gemini or ChatGPT, it goes to that company. Each time, the guide shows exactly what it was told, under “What the guide was told”.</p>
+
+  <h2>What students should come away with</h2>
+  <ol>
+    <li>An AI model can represent the meaning of words, pictures and sounds as lists of numbers, called <b>embeddings</b>, in one shared space.</li>
+    <li>Similar meanings give similar lists, and similarity can be measured with a single number.</li>
+    <li>You can do arithmetic on meanings, and it sometimes works (puppy − dog + cat lands on kitten) and sometimes doesn't.</li>
+    <li>The individual numbers mostly don't mean anything on their own: ideas are spread across many of them.</li>
+    <li>The model can be wrong in surprising ways, and the way to find out is to make predictions and test them.</li>
+  </ol>
+
+  <h2>Three lessons</h2>
+  <p>Each lesson is about 45 minutes. The <a href="student-guide.html">student guide</a> has the missions mentioned below.</p>
+
+  <h3>Lesson 1 · Meaning as numbers</h3>
+  <ul>
+    <li>Start with no computers: give pairs of words (dog/cat, dog/apple, hot/cold) and ask students to rank how “close” they are. Is hot closer to cold or to warm?</li>
+    <li>Load the app. Mission 1 (who is close to whom). Compare the class's rankings with the model's.</li>
+    <li>Discuss: what could it mean for two lists of numbers to be “close”? Introduce similarity as “pointing the same way”.</li>
+  </ul>
+
+  <h3>Lesson 2 · Looking inside</h3>
+  <ul>
+    <li>Mission 2 (why the stars look alike) and Mission 3 (what a ray means).</li>
+    <li>Discuss: if no single number means “animal”, where is the idea of an animal stored? Use the study directions above the star (one → many, now → past) to show an idea spread over many numbers.</li>
+    <li>Mission 6 (pictures and sounds): students find where the model gets it wrong.</li>
+  </ul>
+
+  <h3>Lesson 3 · Arithmetic with meaning</h3>
+  <ul>
+    <li>Missions 4 and 5 (word math and inventing formulas). Ask each group to find one formula that works and one that fails, and to explain both.</li>
+    <li>Mission 7 (building a 3D space).</li>
+    <li>Optional: Mission 8, checking the AI guide. A good discussion of trusting AI.</li>
+  </ul>
+
+  <h2>Common misunderstandings</h2>
+  <dl>
+    <dt>“A similarity of 0.7 means they're 70% the same.”</dt>
+    <dd>Not quite. Without “Take away what everything shares”, almost every pair scores between 0.5 and 0.85, because two thirds of every list is a shared part. Compare rankings, not raw numbers.</dd>
+    <dt>“Similar means the same meaning.”</dt>
+    <dd>Opposites are often close. In a study of 2,800 words, “cold” was the fourth-nearest word to “hot”, because both are about temperature.</dd>
+    <dt>“The arithmetic found the answer.”</dt>
+    <dd>It can only land on things already on the page. With nothing better to land on, the top answer may score as low as 0.2: a weak match, not an answer.</dd>
+    <dt>“Each number stands for a feature, like size or color.”</dt>
+    <dd>Only about a third of the numbers even lean toward one kind of word, and none carries much of an idea like “plural”. The ray explanations in the app say this plainly.</dd>
+    <dt>“The guide is always right.”</dt>
+    <dd>It isn't, especially with the small Gemini Nano model. The guide is told not to invent reasons, but it sometimes does. Treat it as a classmate with ideas, not an authority.</dd>
+  </dl>
+
+  <h2>Answer key: what we measured</h2>
+  <p>These numbers come from the app's own model with its default settings (the first 256 numbers, nothing taken away), unless noted. Your class may see slightly different numbers.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Try</th><th>Lands nearest</th><th class="num">Similarity</th></tr>
+    <tr><td><code>(morning + night) / 2</code></td><td>evening</td><td class="num">0.93</td></tr>
+    <tr><td><code>puppy - dog + cat</code></td><td>kitten</td><td class="num">0.91</td></tr>
+    <tr><td><code>Paris - France + Japan</code></td><td>Tokyo</td><td class="num">0.88</td></tr>
+    <tr><td><code>bread + cheese + tomato</code></td><td>pizza</td><td class="num">0.86</td></tr>
+    <tr><td><code>(hot + cold) / 2</code></td><td>warm</td><td class="num">0.90</td></tr>
+    <tr><td><code>2 * big - small</code></td><td>large, then huge</td><td class="num">0.80</td></tr>
+    <tr><td><code>king - man + woman</code></td><td>queen (if added)</td><td class="num">0.82</td></tr>
+    <tr><td><code>tiger - cat + dog</code></td><td>wolf, among 2,800 words</td><td class="num">0.33*</td></tr>
+  </table></div>
+  <p class="meta">* From a study of 2,800 words using all 768 numbers, with the shared part taken away, which lowers every score. With the first 128 numbers and only the starter examples, tiger − cat + dog lands on “house”: taking away “cat” also takes away what every animal shares. The app explains this under “Why does it land on something odd?”.</p>
+  <ul>
+    <li><b>Why the stars look alike:</b> about 66% of each list is shared, and six of the 768 numbers hold 44% of that shared part.</li>
+    <li><b>Pictures and video:</b> 7 of 7 example pictures and videos landed nearest the right word. The dog barking sound landed slightly nearer “cat” than “dog”, with 4-bit and 8-bit models alike.</li>
+    <li><b>Fewer numbers:</b> of each everyday word's five nearest neighbors, 62% were in its own group with all 768 numbers, 59% with 256, 53% with 128 and 41% with 64.</li>
+  </ul>
+
+  <h2>Further reading</h2>
+  <ul>
+    <li><a href="https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing">Ken Kahn's post about this app</a></li>
+    <li><a href="https://toontalk.github.io/AI/apps/embeddings/index.html">Ken Kahn's 2023 active essay on embeddings</a>, which this app follows</li>
+    <li><a href="making-of.html">How the app was made</a>, including the experiments behind the numbers above</li>
+  </ul>
+
+  <footer>Embedding Explorer by Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer">source</a> (MIT license) · model: <a href="https://huggingface.co/google/embeddinggemma-2">EmbeddingGemma 2</a> (Apache 2.0)</footer>
+</main>
+</body>
+</html>

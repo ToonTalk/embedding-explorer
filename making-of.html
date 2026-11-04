@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Making of Embedding Explorer</title>
+<link rel="stylesheet" href="pages.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23f7f6f2'/%3E%3Cg stroke-width='4.5' stroke-linecap='round'%3E%3Cpath d='M32 32V4M32 32L52 12M32 32L58 40M32 32L22 56M32 32L8 30' stroke='%231a8f3c'/%3E%3Cpath d='M32 32L46 8M32 32L56 26M32 32L44 54M32 32L12 48M32 32L18 14' stroke='%23d03a2f'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='4' fill='%232f5bd3'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+  <nav class="top">
+    <a href="./">← Open Embedding Explorer</a>
+    <a href="student-guide.html">Student guide</a>
+    <a href="teacher-guide.html">Teacher guide</a>
+  </nav>
+
+  <h1>The making of Embedding Explorer</h1>
+  <p class="lede">Embedding Explorer was built in two days, November 3 and 4, 2026, in a conversation between Ken Kahn and me, Claude (Anthropic's Opus 5.5 model, working in Claude Code). Ken asked the questions and steered; I wrote the code, ran the experiments and tested the results. This is the story of how it came together, including what went wrong.</p>
+  <p class="meta">Written by Claude. Ken's own account is in <a href="https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing">his post about the app</a>.</p>
+
+  <h2>The question</h2>
+  <p>In 2023 Ken wrote an <a href="https://toontalk.github.io/AI/apps/embeddings/index.html">active essay on embeddings</a> for students. It used hand-made 3D embeddings, drew embeddings as stars, and used Google's Universal Sentence Encoder for words. Google's newer EmbeddingGemma 2 puts words, pictures, sounds and videos into one shared space. Ken asked whether it could power a new version for school students, and whether the model was too big to run in a browser.</p>
+  <p>It isn't too big. Compressed to 4 bits per setting, the whole model is a 473 MB download, and with the browser's access to the graphics chip (WebGPU) it is fast. So we built it.</p>
+
+  <h2>Day one: a prototype</h2>
+  <p>The app is a single HTML file. It loads <a href="https://huggingface.co/docs/transformers.js">Transformers.js</a> 4.3.2, which runs the model with the onnxruntime engine. The first version had the sections that are still there: add things, see each embedding as a star, compare everything with everything, do A − B + C, and build a 3D space from three word pairs.</p>
+  <p>I measured it on Ken's desktop computer, which has an NVIDIA graphics card:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Step</th><th class="num">Time</th></tr>
+    <tr><td>First load (473 MB download)</td><td class="num">53 s</td></tr>
+    <tr><td>Later loads (from the browser's cache)</td><td class="num">5 s</td></tr>
+    <tr><td>One word</td><td class="num">0.1 s</td></tr>
+    <tr><td>One picture</td><td class="num">0.45 s</td></tr>
+    <tr><td>One sound</td><td class="num">0.2 s</td></tr>
+    <tr><td>One short video (16 frames)</td><td class="num">3.5 s + 5 s to decode</td></tr>
+  </table></div>
+  <p>All 7 example pictures and videos landed nearest the right word. The animal sounds didn't: a dog barking came out slightly nearer “cat” than “dog”. It did the same with the larger 8-bit model, so the compression isn't to blame.</p>
+
+  <h3>The first surprises</h3>
+  <ul>
+    <li><b>Without a graphics chip, the compressed model wouldn't run at all.</b> Its word and picture parts use an operation (“GatherBlockQuantized”) that the browser's ordinary processor engine lacks. Without WebGPU, the app now falls back to a bigger 16-bit model for words, which works at about 0.2 s per word. A single picture didn't finish in five minutes, so pictures are switched off there.</li>
+    <li><b>Every star looked the same.</b> Ken spotted this right away: even “idea” and “horse” had nearly identical stars, and a similarity of 0.70.</li>
+  </ul>
+
+  <h2>Why do all the stars look alike?</h2>
+  <p>I measured it on 27 example items. Their average embedding has length 0.81, so about two thirds of every embedding is a part they all share. Six of the 768 numbers carry 44% of that shared part, which is why every star has the same few long rays. No two items scored below 0.51.</p>
+  <p>The fix is a switch at the top of the page, <b>Take away what everything shares</b>, which subtracts the average of everything on the page. With it, “idea” and “horse” drop from 0.70 to −0.04, while related pairs stay apart from the crowd: “unicorn” and “horse” go from 0.82 to 0.37.</p>
+  <p>Ken also asked why the option to use only the first N numbers applied to just one section. Now one bar at the top changes every section. This model was trained so that its first numbers matter most, so using fewer numbers is a fair thing to try.</p>
+
+  <h2>An AI guide</h2>
+  <p>Ken wanted an AI guide that students could ask for help. It opens from a button in the corner. Each time a student asks, it's given a text summary of the page: what's been added, what's nearest to what, and what each section is showing. It never gets the pictures or sounds themselves, and “What the guide was told” shows exactly what it received.</p>
+  <p>By default the guide uses Gemini Nano, a small model built into Chrome that runs on the student's own computer. Students can also use Claude, Gemini or ChatGPT with their own key. To test it with the real Nano, I copied Chrome's on-device model into a temporary browser profile, ran the page in a headless browser, and asked it questions. Its first answers had problems:</p>
+  <ul>
+    <li>It said embedding arithmetic gives “a single number”, misdescribed the stars, and suggested retraining the model. I added facts and rules to its instructions.</li>
+    <li>It wrote buttons that couldn't work, like “add new word”. The page now drops those.</li>
+    <li>Its challenges were vague. The page now works out challenge ideas from the student's own things, with numbers to check against.</li>
+    <li>Later Ken saw it give an empty answer. Now the page asks again, and if that's empty too, offers an idea of its own.</li>
+  </ul>
+  <p>Nano takes 6 to 20 seconds per answer. Its answers are fair at best, and it still sometimes makes up reasons. Larger models do better.</p>
+
+  <h2>Day two: Ken's list</h2>
+  <p>After trying the app, Ken sent a list of changes. Some were quick: a favicon, tooltips for technical words, a “More detail” version of every explanation, a much smaller starting set with buttons that add whole sets (animals, questions like “How old are you?” and “What is your age?”), and a way to remove many things at once. Others turned into experiments.</p>
+
+  <h3>The sea turtle that never finished</h3>
+  <p>The sea turtle video sat at “working…” forever. Transformers.js's video loader waits for the video to load, but if loading fails it never gives up. I replaced it with a loader that stops with a message after a while and offers “Try again”.</p>
+
+  <h3>How many numbers?</h3>
+  <p>Ken asked whether the app should start with 128 or 256 numbers instead of 768. I tested 560 everyday words in 20 groups (animals, food, feelings…) and counted how many of each word's five nearest words came from its own group:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Numbers used</th><th class="num">768</th><th class="num">512</th><th class="num">256</th><th class="num">128</th><th class="num">64</th></tr>
+    <tr><td>Neighbors in the same group</td><td class="num">62%</td><td class="num">62%</td><td class="num">59%</td><td class="num">53%</td><td class="num">41%</td></tr>
+  </table></div>
+  <p>256 loses little and gives a star with few enough rays to look at, so the app starts there.</p>
+
+  <h3>What do the rays mean?</h3>
+  <p>Ken asked whether I could find out what some of the star's rays “mean”. I embedded 2,834 words and, for each of the 768 numbers, listed the words where it was unusually high or low. Pointing at a ray now shows those words. The honest finding:</p>
+  <ul>
+    <li>About a third of the numbers lean toward one group of words. For example, two numbers are high for music words, and when you look at the star for “music” with the shared part taken away, three of its five longest rays are music-leaning ones.</li>
+    <li>Most numbers mix unrelated words together.</li>
+    <li>The six longest rays are big for everything. They differ a little between words, pictures and sounds, so they partly say what kind of thing it is.</li>
+  </ul>
+
+  <h3>Plural, tense and abstract</h3>
+  <p>Looking at “dogs minus dog”, Ken expected a long ray for plural. Could other rays be about tense or how abstract a word is? I embedded 40 singular and plural pairs (dog → dogs), 40 present and past pairs (walk → walked), 20 pairs like big → bigger, and 30 concrete and 30 abstract nouns.</p>
+  <p>Each change turned out to be a consistent <em>direction</em>: the average plural change told singular from plural in all 40 pairs. But it's spread over many numbers. The biggest single number holds only 1 to 5% of the change. Some numbers move the same way almost every time, such as number 116, which goes up from singular to plural in 39 of 40 pairs, but only by a little. So there's no one long ray for plural. The app now has buttons that draw these study directions, with the reliable numbers bright and the rest pale.</p>
+
+  <h3>Why tiger − cat + dog landed on “house”</h3>
+  <p>Ken's screenshots showed tiger − cat + dog landing nearest “house”, ahead of “horse” and “dog”. I reproduced it: it happens with the first 128 numbers and the shared part taken away. Taking away “cat” also takes away what cats share with all animals, so horse loses points for being an animal and house doesn't. With all 768 numbers and 2,800 words to choose from, tiger − cat + dog lands on “wolf”.</p>
+
+  <h2>Your own formula</h2>
+  <p>Ken suggested letting students write their own arithmetic, like (morning + night) / 2. Section 6 now understands words, phrases, emoji, numbers, + − × ÷, brackets and <code>average(…)</code>, and gives plain messages for things that make no sense, like multiplying two words. I tried candidate formulas against about 150 words before choosing the examples:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Formula</th><th>Nearest</th><th class="num">Similarity</th></tr>
+    <tr><td><code>(morning + night) / 2</code></td><td>evening</td><td class="num">0.93</td></tr>
+    <tr><td><code>puppy - dog + cat</code></td><td>kitten</td><td class="num">0.91</td></tr>
+    <tr><td><code>Paris - France + Japan</code></td><td>Tokyo</td><td class="num">0.88</td></tr>
+    <tr><td><code>bread + cheese + tomato</code></td><td>pizza</td><td class="num">0.86</td></tr>
+    <tr><td><code>(blue + yellow) / 2</code></td><td>green, just ahead of red</td><td class="num">0.88</td></tr>
+  </table></div>
+  <p>One subtlety: similarity ignores length, so dividing a whole formula by 2 changes nothing. (morning + night) / 2 lands on the same things as morning + night. The app says so and shows each result's length.</p>
+
+  <h2>A Claude artifact edition</h2>
+  <p>Ken asked whether the app could also run as a Claude artifact, a page shared from claude.ai. Artifacts can't download from other websites, so the 473 MB model had nowhere to come from. I built a small probe to find out what would work:</p>
+  <ul>
+    <li>The graphics chip (WebGPU) works inside an artifact.</li>
+    <li>An artifact can store up to about 1 GB of files of its own, in pieces of up to 15 MB.</li>
+    <li>Claude can be asked questions from the page, through the viewer's own claude.ai account, with no key. Gemini Nano isn't available there.</li>
+  </ul>
+  <p>So the model, the engine and the example media are split into 68 pieces, 549 MB in all, stored in the artifact. The same HTML file runs in both places: a build script adds the list of pieces, and the page reassembles each file as Transformers.js asks for it. One bug showed up only there: before each download, Transformers.js asks for a single byte to learn the file's size, and my first version answered by fetching the whole file, so the biggest files came down twice. In the artifact the model loads in 55 seconds the first time and about 4 seconds after that.</p>
+
+  <h2>How I tested</h2>
+  <ul>
+    <li>Most checks ran in a browser pane inside the Claude app, by driving the real page and reading the numbers it produced.</li>
+    <li>The word studies and the real Gemini Nano tests ran in headless Chrome, controlled from Node over the Chrome DevTools Protocol.</li>
+    <li>The artifact was tested in Ken's own Chrome, which was signed in to claude.ai.</li>
+  </ul>
+  <p>The study scripts are in the <a href="https://github.com/ToonTalk/embedding-explorer/tree/main/study">study folder</a> of the source, so anyone can rerun them.</p>
+
+  <h2>What's still uncertain</h2>
+  <ul>
+    <li>The Gemini Nano guide is the weakest part. It is free and private, but it still sometimes invents explanations.</li>
+    <li>Why the model hears a dog barking as closer to “cat” is unknown.</li>
+    <li>The meanings shown for rays come from words, so they fit pictures and sounds less well.</li>
+    <li>Phones and tablets haven't been tested.</li>
+  </ul>
+
+  <h2>Credits</h2>
+  <ul>
+    <li>Idea, direction and testing: Ken Kahn. Code, experiments and this page: Claude.</li>
+    <li>Model: <a href="https://huggingface.co/google/embeddinggemma-2">EmbeddingGemma 2</a> by Google (Apache 2.0), converted for the browser by onnx-community.</li>
+    <li>Runtime: <a href="https://huggingface.co/docs/transformers.js">Transformers.js</a> and onnxruntime-web.</li>
+    <li>Example pictures, sounds and videos: the Transformers.js documentation dataset on Hugging Face.</li>
+    <li>Common words for the ray study: the <a href="https://github.com/first20hours/google-10000-english">google-10000-english</a> list.</li>
+  </ul>
+
+  <footer>Embedding Explorer · <a href="https://github.com/ToonTalk/embedding-explorer">source</a> (MIT license)</footer>
+</main>
+</body>
+</html>

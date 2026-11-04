@@ -2,7 +2,7 @@
 
 A web page for school students to explore **embeddings**: the lists of numbers an AI model uses to represent the meaning of words, pictures, sounds and videos.
 
-**Try it:** https://toontalk.github.io/embedding-explorer/
+**Try it:** https://toontalk.github.io/embedding-explorer/ · [Student guide](https://toontalk.github.io/embedding-explorer/student-guide.html) · [Teacher guide](https://toontalk.github.io/embedding-explorer/teacher-guide.html) · [How it was made](https://toontalk.github.io/embedding-explorer/making-of.html) · [Ken Kahn's post](https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing)
 
 It runs Google's [EmbeddingGemma 2](https://huggingface.co/google/embeddinggemma-2) entirely in the browser with [Transformers.js](https://huggingface.co/docs/transformers.js), so whatever students add stays on their computer. Words, pictures, sounds and videos all land in one shared space of 768 numbers.
 

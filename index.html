@@ -246,7 +246,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <canvas id="bigStar"></canvas>
       <div class="facts"><div id="starFacts"></div><div id="rayInfo" class="rayinfo"></div></div>
     </div>
-    <details>
+    <details id="raysWhy">
       <summary>What do the rays mean?</summary>
       <p>Point at a ray (or tap it) to see which everyday words have unusually high or low values for that number. These come from a study: the model made embeddings for about 2,800 words, and for each of the 768 numbers we listed the words where it was highest and lowest.</p>
       <p>A few numbers lean toward one kind of word, such as music or sports. But most mix unrelated words together: the model doesn't keep one number per idea. The longest rays are different again: they're big for everything, so they say almost nothing about what a thing is.</p>
@@ -308,7 +308,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
     </div>
     <div class="starwrap">
       <canvas id="arStar" style="width:200px;height:200px"></canvas>
-      <ol class="nearest" id="arList"></ol>
+      <div style="flex:1;min-width:220px"><ol class="nearest" id="arList"></ol><div id="arRayInfo" class="rayinfo"></div></div>
     </div>
     <details>
       <summary>Why does it land on something odd?</summary>
@@ -336,6 +336,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <div style="flex:1;min-width:220px">
         <ol class="nearest" id="fxList"></ol>
         <div class="row"><input type="text" id="fxGuess" placeholder="a word you think is close" style="flex:1;min-width:150px"><button id="fxGuessGo">Add my guess</button></div>
+        <div id="fxRayInfo" class="rayinfo"></div>
       </div>
     </div>
     <details>
@@ -999,43 +1000,74 @@ function fillSelect(sel, withNone, noneLabel) {
 const byId = (id) => items.find((it) => String(it.id) === String(id));
 
 // ---------- what the rays seem to be about (from a study of 2,800 words; see RAYS) ----------
-let bigStar = null;   // { v, size, S, a, b } as last drawn
-let rayPinned = null; // a ray chosen by click or tap
-function rayAt(e) {
-  if (!bigStar) return null;
-  const r = $("bigStar").getBoundingClientRect();
-  const x = e.clientX - r.left - bigStar.size / 2, y = e.clientY - r.top - bigStar.size / 2;
+// A ray view links a star canvas to a box that explains the ray under the pointer (or tapped).
+// Its star is { v, size, S, label (HTML), faint?, dir? }.
+function makeRayView(canvasId, infoId) {
+  const view = { canvas: $(canvasId), info: $(infoId), star: null, pinned: null };
+  view.set = (star) => {
+    view.star = star;
+    if (!star) { view.pinned = null; view.info.innerHTML = ""; return; }
+    if (view.pinned != null && view.pinned >= star.v.length) view.pinned = null;
+    highlightRay(view, view.pinned); showRay(view, view.pinned);
+  };
+  view.canvas.style.cursor = "crosshair";
+  view.canvas.style.touchAction = "manipulation";
+  view.canvas.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch" || view.pinned != null || !view.star) return;
+    const i = rayAt(view, e); highlightRay(view, i); showRay(view, i);
+  });
+  // Leaving the star keeps the last ray's words showing, so its link can be reached.
+  view.canvas.addEventListener("click", (e) => {
+    if (!view.star) return;
+    const i = rayAt(view, e);
+    view.pinned = view.pinned != null || i == null ? null : i;
+    highlightRay(view, view.pinned ?? i); showRay(view, view.pinned ?? (e.pointerType === "mouse" ? i : null));
+  });
+  view.info.addEventListener("click", (e) => {
+    const b = e.target.closest("button.rayref");
+    if (b) { view.pinned = +b.dataset.ray; highlightRay(view, view.pinned); showRay(view, view.pinned); return; }
+    if (e.target.closest("a.raywhy")) {
+      e.preventDefault();
+      const d = $("raysWhy");
+      d.open = true; d.querySelector("details.more").open = true; d.scrollIntoView({ behavior: "smooth" });
+    }
+  });
+  return view;
+}
+function rayAt(view, e) {
+  const { star } = view;
+  const r = view.canvas.getBoundingClientRect();
+  const x = e.clientX - r.left - star.size / 2, y = e.clientY - r.top - star.size / 2;
   if (Math.hypot(x, y) < 8) return null;
-  const n = bigStar.v.length;
+  const n = star.v.length;
   let a = Math.atan2(y, x) + Math.PI / 2;
   if (a < 0) a += 2 * Math.PI;
   return Math.round(a / (2 * Math.PI) * n) % n;
 }
-function highlightRay(i) {
-  const { v, size, S, faint } = bigStar;
-  drawStar($("bigStar"), v, size, S, faint);
+function highlightRay(view, i) {
+  const { v, size, S, faint } = view.star;
+  drawStar(view.canvas, v, size, S, faint);
   if (i == null) return;
-  const g = $("bigStar").getContext("2d"), n = v.length, c = size / 2, R = size / 2 - 2;
+  const g = view.canvas.getContext("2d"), n = v.length, c = size / 2, R = size / 2 - 2;
   const ang = (2 * Math.PI * i) / n - Math.PI / 2, r = Math.max(14, R * Math.min(1, Math.abs(v[i]) / S));
   g.strokeStyle = css("--accent"); g.lineWidth = 4; g.lineCap = "round";
   g.beginPath(); g.moveTo(c, c); g.lineTo(c + r * Math.cos(ang), c + r * Math.sin(ang)); g.stroke();
   g.lineCap = "butt";
 }
 const rayWords = (ks) => ks.map((k) => esc(RAYS.vocab[k])).join(", ");
-function rayHint(i) {
-  if (bigStar?.dir) { const d = DIRS[bigStar.dir]; return `same way in ${d.agree[i]} of ${d.n}`; }
+function rayHint(view, i) {
+  if (view.star?.dir) { const d = DIRS[view.star.dir]; return `same way in ${d.agree[i]} of ${d.n}`; }
   if (RAYS.shared[i]) return "big for everything";
   const [, , hi, lo] = RAYS.rays[i];
   return hi ? `${hi}?` : lo ? `not ${lo}?` : "no clear theme";
 }
-function showRay(i) {
-  if (!bigStar || i == null) { $("rayInfo").innerHTML = bigStar ? longestRays() : ""; return; }
-  const { v, a, b, dir } = bigStar, x = v[i];
+function showRay(view, i) {
+  if (!view.star || i == null) { view.info.innerHTML = view.star ? longestRays(view) : ""; return; }
+  const { v, label } = view.star, x = v[i];
   const [hiW, loW, hi, lo] = RAYS.rays[i];
   const sh = RAYS.shared[i];
   const sign = x >= 0 ? "green" : "red";
-  const what = dir ? DIR_LABEL[dir][0] : b ? `${labelHtml(a)} minus ${labelHtml(b)}` : labelHtml(a);
-  let h = `<p><b>Number ${i + 1}</b> · ${what}: <b>${x >= 0 ? "+" : ""}${x.toFixed(3)}</b> (${sign})</p>`;
+  let h = `<p><b>Number ${i + 1}</b> · ${label}: <b>${x >= 0 ? "+" : ""}${x.toFixed(3)}</b> (${sign})</p>`;
   const moves = Object.entries(DIRS).filter(([, d]) => d.agree[i] >= 0.9 * d.n)
     .map(([k, d]) => `went ${d.mean[i] > 0 ? "up" : "down"} from ${DIR_LABEL[k][2]} in ${d.agree[i]} of ${d.n} pairs`);
   if (moves.length) h += `<p>In the pairs study, this number ${moves.join("; and ")}.</p>`;
@@ -1047,33 +1079,17 @@ function showRay(i) {
     h += `<p>${hi && lo ? `Words about ${hi} tend to be high here, and words about ${lo} low.` : hi ? `Words about ${hi} tend to be high here.` : lo ? `Words about ${lo} tend to be low here.`
       : "No clear theme: like most of the numbers, this one is used for many unrelated things."}</p>`;
   }
-  $("rayInfo").innerHTML = h + `<p class="meta">${rayPinned != null ? "Tap the star again to let go." : "Click to keep this ray."} <a href="#" class="raywhy">Why are most numbers unclear?</a></p>`;
+  view.info.innerHTML = h + `<p class="meta">${view.pinned != null ? "Tap the star again to let go." : "Click to keep this ray."} <a href="#" class="raywhy">Why are most numbers unclear?</a></p>`;
 }
-function longestRays() {
-  const { v } = bigStar;
+function longestRays(view) {
+  const { v } = view.star;
   const top = [...v.keys()].sort((p, q) => Math.abs(v[q]) - Math.abs(v[p])).slice(0, 5);
-  return `<p><span class="w">Longest rays:</span> ${top.map((i) => `<button class="rayref" data-ray="${i}">${i + 1}: ${esc(rayHint(i))}</button>`).join("")}</p>` +
+  return `<p><span class="w">Longest rays:</span> ${top.map((i) => `<button class="rayref" data-ray="${i}">${i + 1}: ${esc(rayHint(view, i))}</button>`).join("")}</p>` +
     `<p class="meta">Point at a ray to see what it seems to be about.</p>`;
 }
-$("bigStar").addEventListener("pointermove", (e) => {
-  if (e.pointerType === "touch" || rayPinned != null || !bigStar) return;
-  const i = rayAt(e); highlightRay(i); showRay(i);
-});
-// Leaving the star keeps the last ray's words showing, so its link can be reached.
-$("bigStar").addEventListener("click", (e) => {
-  const i = rayAt(e);
-  rayPinned = rayPinned != null || i == null ? null : i;
-  if (bigStar) { highlightRay(rayPinned ?? i); showRay(rayPinned ?? (e.pointerType === "mouse" ? i : null)); }
-});
-$("rayInfo").addEventListener("click", (e) => {
-  const b = e.target.closest("button.rayref");
-  if (b) { rayPinned = +b.dataset.ray; highlightRay(rayPinned); showRay(rayPinned); return; }
-  if (e.target.closest("a.raywhy")) {
-    e.preventDefault();
-    const d = $("rayInfo").closest("section").querySelectorAll("details")[0];
-    d.open = true; d.querySelector("details.more").open = true; d.scrollIntoView({ behavior: "smooth" });
-  }
-});
+const starView = makeRayView("bigStar", "rayInfo");
+const arView = makeRayView("arStar", "arRayInfo");
+const fxView = makeRayView("fxStar", "fxRayInfo");
 
 // The directions from the pairs study (DIRS): name, example, and "from X to Y" for the ray notes.
 const DIR_LABEL = {
@@ -1086,7 +1102,7 @@ let dirShown = null;
 for (const k of Object.keys(DIRS)) {
   const btn = document.createElement("button");
   btn.dataset.dir = k; btn.textContent = DIR_LABEL[k][0]; btn.title = DIRS[k].ex.join(", ") + "…";
-  btn.onclick = () => { dirShown = dirShown === k ? null : k; rayPinned = null; drawBigStar(); };
+  btn.onclick = () => { dirShown = dirShown === k ? null : k; starView.pinned = null; drawBigStar(); };
   $("dirs").appendChild(btn);
 }
 function drawDirection(canvas, size) {
@@ -1095,9 +1111,7 @@ function drawDirection(canvas, size) {
   const sorted = Array.from(v, Math.abs).sort((p, q) => p - q);
   const S = sorted[Math.floor(sorted.length * 0.99)] || 1;
   const steady = (i) => d.agree[i] >= 0.9 * d.n;
-  bigStar = { v, size, S, dir: dirShown, faint: (i) => !steady(i) };
-  if (rayPinned != null && rayPinned >= n) rayPinned = null;
-  highlightRay(rayPinned); showRay(rayPinned);
+  starView.set({ v, size, S, dir: dirShown, label: DIR_LABEL[dirShown][0], faint: (i) => !steady(i) });
   const energy = Array.from(v, (x) => x * x).sort((p, q) => q - p);
   const share = (k) => Math.round(100 * energy.slice(0, k).reduce((s, x) => s + x, 0));
   const k = [...v.keys()].filter(steady).length;
@@ -1113,18 +1127,16 @@ function drawBigStar() {
   canvas.style.width = canvas.style.height = size + "px";
   $("dirs").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.dir === dirShown)));
   if (dirShown) return drawDirection(canvas, size);
-  if (!a) { bigStar = null; drawStar(canvas, null, size, 1); $("starFacts").innerHTML = "Add something first."; showRay(null); return; }
+  if (!a) { starView.set(null); drawStar(canvas, null, size, 1); $("starFacts").innerHTML = "Add something first."; return; }
   const S = starScale(), va = vecOf(a);
-  bigStar = { v: b ? sub(va, vecOf(b)) : va, size, S, a, b };
-  if (rayPinned != null && rayPinned >= bigStar.v.length) rayPinned = null;
-  highlightRay(rayPinned); showRay(rayPinned);
+  starView.set({ v: b ? sub(va, vecOf(b)) : va, size, S, label: b ? `${labelHtml(a)} minus ${labelHtml(b)}` : labelHtml(a) });
   if (!b) {
     const p = va.filter((x) => x > 0).length;
     $("starFacts").innerHTML = `<p>${KIND_ICON[a.kind]} <b>${labelHtml(a)}</b></p>
       <p><b>${va.length}</b> rays: <b>${p}</b> green, <b>${va.length - p}</b> red.</p>
       <p>Biggest number: <b>${Math.max(...va).toFixed(3)}</b><br>Smallest: <b>${Math.min(...va).toFixed(3)}</b></p>`;
   } else {
-    const vb = vecOf(b), d = bigStar.v;
+    const vb = vecOf(b), d = starView.star.v;
     $("starFacts").innerHTML = `<p>${KIND_ICON[a.kind]} <b>${labelHtml(a)}</b> minus ${KIND_ICON[b.kind]} <b>${labelHtml(b)}</b></p>
       <p>Size of the ${term("difference")}: <b>${norm(d).toFixed(3)}</b><br><span class="meta">(0 = identical, 2 = opposite)</span></p>
       <p>${term("Similarity", "similarity")}: <b>${dot(va, vb).toFixed(3)}</b></p>
@@ -1159,12 +1171,12 @@ function renderSim() {
 
 function renderArith() {
   const a = byId($("arA").value), b = byId($("arB").value), c = byId($("arC").value);
-  if (!a) { $("arList").innerHTML = ""; drawStar($("arStar"), null, 200, 1); return; }
+  if (!a) { $("arList").innerHTML = ""; arView.set(null); drawStar($("arStar"), null, 200, 1); return; }
   let v = vecOf(a);
   if (b) v = sub(v, vecOf(b));
   if (c) v = add(v, vecOf(c));
   v = scale(v, 1 / (norm(v) || 1));
-  drawStar($("arStar"), v, 200, starScale());
+  arView.set({ v, size: 200, S: starScale(), label: labelHtml(a) + (b ? " − " + labelHtml(b) : "") + (c ? " + " + labelHtml(c) : "") });
   const used = new Set([a, b, c].filter(Boolean));
   const ranked = ready().map((it) => ({ it, s: dot(v, vecOf(it)) })).sort((x, y) => y.s - x.s).slice(0, 8);
   const top = Math.max(...ranked.map((r) => r.s), .01);
@@ -1315,11 +1327,11 @@ function formulaResult() {
 function renderFormula() {
   let r = null;
   try { r = formulaResult(); } catch (e) { $("fxMsg").textContent = e.message; $("fxMsg").className = "err"; }
-  if (!r) { drawStar($("fxStar"), null, 200, 1); $("fxList").innerHTML = ""; if (!fx && !$("fxMsg").textContent) $("fxMsg").textContent = ""; return; }
-  if (r.len < 1e-6) { $("fxMsg").textContent = "The result is all zeros, so it has no direction and nothing is nearest."; $("fxMsg").className = "err"; drawStar($("fxStar"), null, 200, 1); $("fxList").innerHTML = ""; return; }
+  if (!r) { fxView.set(null); drawStar($("fxStar"), null, 200, 1); $("fxList").innerHTML = ""; if (!fx && !$("fxMsg").textContent) $("fxMsg").textContent = ""; return; }
+  if (r.len < 1e-6) { $("fxMsg").textContent = "The result is all zeros, so it has no direction and nothing is nearest."; $("fxMsg").className = "err"; fxView.set(null); drawStar($("fxStar"), null, 200, 1); $("fxList").innerHTML = ""; return; }
   $("fxMsg").className = "meta";
   $("fxMsg").innerHTML = `<b>${esc(fx.src)}</b> · length before scaling to 1: <b>${r.len.toFixed(2)}</b>`;
-  drawStar($("fxStar"), r.v, 200, starScale());
+  fxView.set({ v: r.v, size: 200, S: starScale(), label: esc(fx.src) });
   const ranked = ready().map((it) => ({ it, s: dot(r.v, vecOf(it)) })).sort((x, y) => y.s - x.s).slice(0, 10);
   const top = Math.max(...ranked.map((x) => x.s), .01);
   $("fxList").innerHTML = ranked.map(({ it, s }) =>

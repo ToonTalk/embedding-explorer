@@ -39,6 +39,25 @@ This follows Ken Kahn's earlier [active essay on embeddings](https://toontalk.gi
 
 Measured on a desktop with an NVIDIA GPU: about 0.1 s per word, 0.5 s per picture, 0.2 s per sound and 3–4 s per short video.
 
+## The Claude artifact edition
+
+The same `index.html` also runs as a Claude artifact: https://claude.ai/artifact/41qaoHhWfC87k5AShT1un5. An artifact can't download from other sites, so everything it needs is kept in the artifact's own storage:
+
+- The 4-bit model, its tokenizer and the onnxruntime engine are split into pieces of 15 MB or less, 532 MB in all. They're stored as `video/mp4`, the store's catch-all for binary data.
+- The example pictures, sounds and videos are stored there too.
+
+`tools/build-artifact.mjs` reads `tools/artifact-assets.txt`, the list of stored pieces, and writes the artifact page with that list injected. The page then serves Transformers.js's downloads from the pieces.
+
+How the artifact differs from the web edition:
+
+- **Guide:** it uses Claude through the viewer's claude.ai account, with no key needed. Gemini Nano isn't available inside an artifact.
+- **No camera or microphone:** the artifact frame refuses them.
+- **Graphics chip needed:** only the 4-bit files are stored, and they need WebGPU.
+
+```bash
+node tools/build-artifact.mjs
+```
+
 ## Running it locally
 
 It is a single file, `index.html`. Serve the folder with any static web server, for example:

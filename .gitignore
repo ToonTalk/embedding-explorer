@@ -7,3 +7,4 @@ study/chrome-profile/
 study/*.txt
 study/pairs-vecs.bin
 study/pairs-words.json
+dist/

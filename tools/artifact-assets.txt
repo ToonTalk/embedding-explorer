@@ -1,0 +1,74 @@
+# What is stored in the artifact https://claude.ai/artifact/41qaoHhWfC87k5AShT1un5
+# name  asset-id  bytes        (see tools/build-artifact.mjs)
+# words model, tokenizer and configs (q4)
+chat_template.jinja.part00.mp4 8a159211aa123bf63d10a69a69b4d86f 1016
+config.json.part00.mp4 e74987b165cbcb1cf63cf21656455c1d 5031
+onnx_model_q4.onnx.part00.mp4 a516d0c9410be10204a89daa75b8296b 490742
+onnx_model_q4.onnx_data.part00.mp4 b7110355babb4addfada49f786aed57b 14680064
+onnx_model_q4.onnx_data.part01.mp4 0252f88a7d654f7079ec9250aa313683 14680064
+onnx_model_q4.onnx_data.part02.mp4 7da29820769c9a4e3379b10a3eeb6fd5 14680064
+onnx_model_q4.onnx_data.part03.mp4 2411d0d22d4691e1740857f6ed10eae0 14680064
+onnx_model_q4.onnx_data.part04.mp4 4ad684a1373194d350f79d44375c3c25 14680064
+onnx_model_q4.onnx_data.part05.mp4 076f542dc10b4bb025bc5eb84f3f958d 14680064
+onnx_model_q4.onnx_data.part06.mp4 4728767f09b969bdedd01e8b3ee992a7 14680064
+onnx_model_q4.onnx_data.part07.mp4 fb051611c8a4f8915044246de1740ee4 14680064
+onnx_model_q4.onnx_data.part08.mp4 335cbd94b87f7b36e055887eaefb1448 14680064
+onnx_model_q4.onnx_data.part09.mp4 06babee47073cf2a2c26d8358b3f0f3a 14680064
+onnx_model_q4.onnx_data.part10.mp4 04cf1d37bbed64f56fc3a6f54ec605fd 14680064
+onnx_model_q4.onnx_data.part11.mp4 ba30c05373c400ef28100c429c594b86 12548096
+ort-wasm-simd-threaded.asyncify.wasm.part00.mp4 bb6d70c60de997e0fcaadd79ed961f10 14680064
+ort-wasm-simd-threaded.asyncify.wasm.part01.mp4 d82f953cb8763f078f27020c0ccd155d 12181713
+preprocessor_config.json.part00.mp4 81da98935195c0882a70c0c451ca52e9 560
+processor_config.json.part00.mp4 7f3337fcd6b0f3c8ba96bc3326d53661 1788
+tokenizer.json.part00.mp4 f293e35db2c6a9c86cfd850914cebfc6 14680064
+tokenizer.json.part01.mp4 7fa5ecb3552a44c0d4b21017d00af106 14680064
+tokenizer.json.part02.mp4 e99c08b1e8a003ad4cab215fa5df776a 2810382
+tokenizer_config.json.part00.mp4 1526b41ad7453911256fbc695d657aea 1599
+# sound encoder (q4)
+onnx_audio_encoder_q4.onnx.part00.mp4 5ef6bbc9ada238be63784a4c893ab574 245543
+onnx_audio_encoder_q4.onnx_data.part00.mp4 8516df0f119d8357b7f415bad094b3fc 14680064
+onnx_audio_encoder_q4.onnx_data.part01.mp4 76997c74df2d62d6188cc8520bc3e458 14680064
+onnx_audio_encoder_q4.onnx_data.part02.mp4 f0a3107b822c0b718f384db631212a41 14680064
+onnx_audio_encoder_q4.onnx_data.part03.mp4 4beefd0b62020f82d98eda9e9291c66f 14680064
+onnx_audio_encoder_q4.onnx_data.part04.mp4 2a6d2770ed0929641811a30e102f6ea6 14680064
+onnx_audio_encoder_q4.onnx_data.part05.mp4 9bbf126df85da9ab6b86283bbeb8496f 14680064
+onnx_audio_encoder_q4.onnx_data.part06.mp4 92eba7078d70aad39c740a8192b2d26f 14680064
+onnx_audio_encoder_q4.onnx_data.part07.mp4 9a6dc32805d36e85bc9a17a0f74eb539 14680064
+onnx_audio_encoder_q4.onnx_data.part08.mp4 42e3a9c099424fa3660446592403a72c 14680064
+onnx_audio_encoder_q4.onnx_data.part09.mp4 058d202b00169338553f4bf9a2b236d3 14680064
+onnx_audio_encoder_q4.onnx_data.part10.mp4 640c9873882be4b64bb97e232a669881 14680064
+onnx_audio_encoder_q4.onnx_data.part11.mp4 0100f45fa104829a77bd04864b5a3d99 14680064
+onnx_audio_encoder_q4.onnx_data.part12.mp4 f358fb47af4ac149637dade74add9244 12915200
+# picture and video encoder (q4)
+onnx_vision_encoder_q4.onnx.part00.mp4 285b8642cc8485037a42a8c28d04992c 159400
+onnx_vision_encoder_q4.onnx_data.part00.mp4 eee0993395625162c4645e78b1001fd8 14680064
+onnx_vision_encoder_q4.onnx_data.part01.mp4 7c6f449b1fad1db3bbe5511542f80e5d 14680064
+onnx_vision_encoder_q4.onnx_data.part02.mp4 071af79ef546756262f25699761877d8 14680064
+onnx_vision_encoder_q4.onnx_data.part03.mp4 d3834f0a57e06eefabca1f469677bead 14680064
+onnx_vision_encoder_q4.onnx_data.part04.mp4 fcd7deda7b0445bae0b6915518306b77 14680064
+onnx_vision_encoder_q4.onnx_data.part05.mp4 2e8d14a878446ee9f138ac6cd2ac1317 14680064
+onnx_vision_encoder_q4.onnx_data.part06.mp4 1f5ca3fc2fbbd65a421d93609269591d 14680064
+onnx_vision_encoder_q4.onnx_data.part07.mp4 f36923dc468838d5d1828cd75f9711d7 6197248
+# example media (sounds stored as .wav.mp4)
+airport.jpg c66017f68bc1e13d28823806b4d5a02b 57906
+beach.png aa33bd166395964b222fbe504fd9389e 186172
+beetle.png d6ff7e4b56b1220620cfecc6326cc021 356589
+bread_small.png ca3a52b0192fa6f0d2bf8169634d8fc8 522298
+butterfly.jpg 9da3c3308eb4942f498b39dd11f930de 127529
+cats.jpg e62f7d2e51a11aedaee1614f5529ec7e 422547
+cat_meow.wav.mp4 17937bf64d84f368e92e3a21ebb6bf3c 57678
+city-streets.jpg edfe57a4c353c2746e889833163f6f98 139197
+corgi.jpg a095d13dbf29b9c998841cc3ad2c6745 309486
+courtroom.mp4 f766758f329dac519b28cc37e1b8f904 2682062
+dog_barking.wav.mp4 0589be5efb5a9ac5a8d630f22af34c9f 441044
+french-audio.wav.mp4 08ea56a2fb635776f439c8d712cae7ad 550734
+house.jpg 889e91360c95d6aa5a19b5ebba26d4cf 52650
+japanese-audio.wav.mp4 b2b899bcb256b4db9298c0cf83ed9eb6 670542
+jfk.wav.mp4 9c44987a4583eefa2c8c8b1e6fd20e37 1940478
+mlk.wav.mp4 e95e1ab361a7b65482f0005548e63207 416078
+moraine-lake.png 16c8d4ca95fae072b35ba0e384a4f2a6 233640
+new-york.jpg 7709abfcb6032bee2c1a716aaecf7e55 556612
+piano.wav.mp4 e08d4f0c6b0cc3861bd1590f1ec16594 3175278
+savanna.jpg 115d54222effeed6789a8b9f08874fb5 38947
+sea-turtle.mp4 66a3535e81b0a151e6d8ece065c887f9 5380073
+tiger.jpg faeb14e8143bfd2ec2b667874d3ff840 62971

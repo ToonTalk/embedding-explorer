@@ -15,9 +15,18 @@
   :root:not([data-theme="light"]) {
     --bg: #17181b; --panel: #222327; --ink: #ececec; --muted: #a0a4ab; --line: #3a3c42;
     --accent: #7ea2ff; --pos: #4cc76f; --neg: #ff6b5e; --warn: #ff8a80;
-    --ax1: #fb923c; --ax2: #2dd4bf; --ax3: #a78bfa;
+    --ax1: #fb923c; --ax2: #2dd4bf; --ax3: #a78bfa; color-scheme: dark;
   }
 }
+:root[data-theme="dark"] {
+  --bg: #17181b; --panel: #222327; --ink: #ececec; --muted: #a0a4ab; --line: #3a3c42;
+  --accent: #7ea2ff; --pos: #4cc76f; --neg: #ff6b5e; --warn: #ff8a80;
+  --ax1: #fb923c; --ax2: #2dd4bf; --ax3: #a78bfa; color-scheme: dark;
+}
+/* the Claude artifact edition: no camera, microphone or AI settings there */
+.artifact-only { display: none; }
+.in-artifact .artifact-only { display: inline; }
+.in-artifact #snap, .in-artifact #record, .in-artifact #guideSettings { display: none; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
 main { max-width: 1040px; margin: 0 auto; padding: 16px 16px 64px; }
@@ -208,7 +217,6 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <button id="snap" data-need="vision">📷 Take a photo</button>
       <button id="record" data-need="audio">🎤 Record 4 seconds</button>
       <button id="removeBtn">🗑 Remove some…</button>
-      <input type="file" id="fileIn" accept="image/*,audio/*,video/*" multiple hidden>
     </div>
     <div class="row sets" id="sets"><span class="meta">Add a set:</span></div>
     <div class="removebar" id="removeBar" hidden>
@@ -381,6 +389,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
   <p class="meta" style="text-align:center;color:var(--muted);font-size:13px">
     By Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer" style="color:var(--accent)">source</a> (MIT license) ·
     model: <a href="https://huggingface.co/google/embeddinggemma-2" style="color:var(--accent)">EmbeddingGemma 2</a> (Apache 2.0)
+    <span class="artifact-only">· also on the web, with a camera, microphone and Gemini Nano: <a href="https://toontalk.github.io/embedding-explorer/" style="color:var(--accent)">toontalk.github.io/embedding-explorer</a></span>
   </p>
 </main>
 
@@ -460,6 +469,45 @@ env.allowLocalModels = false;
 
 const MODEL_ID = "onnx-community/embeddinggemma-2-ONNX";
 const SAMPLES = "https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/";
+// In the Claude artifact edition, tools/build-artifact.mjs sets window.__EMBEX_PACK__ =
+// { files: { name: { size, parts: [url…] } }, media: { file: url } }: the model and the example
+// media come from the artifact's own storage, because an artifact can't download from elsewhere.
+const PACK = window.__EMBEX_PACK__ || null;
+const packLoad = { got: 0, want: 0, onChange: null }; // bytes read from the artifact's storage, for the progress bar
+const sampleUrl = (file) => PACK ? PACK.media[file] : SAMPLES + file;
+if (PACK) {
+  document.documentElement.classList.add("in-artifact");
+  const realFetch = env.fetch;
+  env.fetch = async (url, opts) => {
+    const u = String(url);
+    const hf = /\/embeddinggemma-2-ONNX\/resolve\/[^/]+\/(.+?)(\?.*)?$/.exec(u);
+    const name = hf ? hf[1].replace(/\//g, "_") : /ort-wasm-simd-threaded\.asyncify\.wasm$/.test(u) ? "ort-wasm-simd-threaded.asyncify.wasm" : null;
+    if (!name) return realFetch(url, opts);
+    const f = PACK.files[name];
+    if (!f) return new Response(null, { status: 404, statusText: "Not Found" });
+    // Transformers.js first asks for one byte to learn a file's size: answer from the list, not by downloading it.
+    if (new Headers(opts?.headers).get("Range") === "bytes=0-0") {
+      return new Response(new Uint8Array(1), { status: 206, headers: { "content-range": `bytes 0-0/${f.size}`, "content-length": "1", "content-type": "application/octet-stream" } });
+    }
+    // Fetch every piece at once, but hand them over in order.
+    packLoad.want += f.size; packLoad.onChange?.();
+    const pieces = f.parts.map((part) => fetch(part).then(async (r) => {
+      if (!r.ok) throw new Error(`Couldn't read part of ${name} (${r.status}).`);
+      const buf = await r.arrayBuffer();
+      packLoad.got += buf.byteLength; packLoad.onChange?.();
+      return buf;
+    }));
+    pieces.forEach((x) => x.catch(() => {}));
+    let k = 0;
+    const body = new ReadableStream({
+      async pull(ctl) {
+        if (k >= pieces.length) { ctl.close(); return; }
+        try { ctl.enqueue(new Uint8Array(await pieces[k++])); } catch (e) { ctl.error(e); }
+      },
+    });
+    return new Response(body, { status: 200, headers: { "content-length": String(f.size), "content-type": "application/octet-stream" } });
+  };
+}
 const SIZES = {
   q4: { text: 175, vision: 109, audio: 189 },
   q8: { text: 314, vision: 195, audio: 340 },
@@ -504,7 +552,14 @@ function showSizeNote() {
 ["quality", "device", "wantVision", "wantAudio"].forEach((id) => $(id).addEventListener("change", showSizeNote));
 (async () => {
   try { hasGpu = !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch {}
-  if (!hasGpu) {
+  if (PACK) {
+    // The artifact stores only the 4-bit files, which need the graphics chip.
+    $("quality").hidden = $("device").hidden = true;
+    if (!hasGpu) {
+      $("loadBtn").disabled = true;
+      status("This edition needs a graphics chip that the browser can use (WebGPU), and this browser doesn't offer one. The web edition at toontalk.github.io/embedding-explorer can run words without one.", true);
+    }
+  } else if (!hasGpu) {
     $("device").options[0].textContent = "No graphics chip found: using the main processor";
     $("wantVision").checked = $("wantAudio").checked = false;
   }
@@ -557,8 +612,15 @@ $("loadBtn").addEventListener("click", async () => {
     status(`Downloading… (running on ${device === "webgpu" ? "the graphics chip" : "the main processor"})`);
     const t0 = performance.now();
     const files = new Map();
+    // In the artifact, the pieces read from its storage drive the bar instead.
+    packLoad.got = packLoad.want = 0;
+    packLoad.onChange = PACK && (() => {
+      if (failed || !packLoad.want) return;
+      $("barFill").style.width = (100 * packLoad.got / packLoad.want).toFixed(1) + "%";
+      status(`Reading the model from this page's storage… ${(packLoad.got / 1e6).toFixed(0)} of ${(packLoad.want / 1e6).toFixed(0)} MB`);
+    });
     const progress_callback = (p) => {
-      if (p.status === "progress" && p.total && !failed) {
+      if (p.status === "progress" && p.total && !failed && !PACK) {
         files.set(p.file, { loaded: p.loaded, total: p.total });
         let a = 0, b = 0;
         for (const f of files.values()) { a += f.loaded; b += f.total; }
@@ -619,14 +681,25 @@ async function embedInput(kind, input) {
   });
 }
 
+// Mono, 16,000 samples a second, as the model wants.
+async function decodeAudio(buf) {
+  const ctx = new OfflineAudioContext(1, 1, 16000);
+  const ab = await ctx.decodeAudioData(buf);
+  const out = new Float32Array(ab.length);
+  for (let c = 0; c < ab.numberOfChannels; c++) {
+    const d = ab.getChannelData(c);
+    for (let i = 0; i < d.length; i++) out[i] += d[i] / ab.numberOfChannels;
+  }
+  return out;
+}
 async function decodeMedia(it) {
-  if (it.kind === "image") return load_image(it.src);
+  if (it.kind === "image") return it.file ? RawImage.fromBlob(it.file) : load_image(it.src);
   if (it.kind === "audio") {
-    let a = await load_audio(it.src, 16000);
+    let a = it.file ? await decodeAudio(await it.file.arrayBuffer()) : await load_audio(it.src, 16000);
     if (a.length > MAX_AUDIO_SECONDS * 16000) { a = a.slice(0, MAX_AUDIO_SECONDS * 16000); it.note = `first ${MAX_AUDIO_SECONDS} s`; }
     return a;
   }
-  if (it.kind === "video") return loadVideo(it.src, VIDEO_FRAMES);
+  if (it.kind === "video") return loadVideo(it.file || it.src, VIDEO_FRAMES);
 }
 
 // Like Transformers.js's load_video, but it gives up with a message instead of waiting
@@ -641,8 +714,8 @@ function waitFor(el, event, ms, what) {
   });
 }
 async function loadVideo(src, numFrames) {
-  let blob;
-  try {
+  let blob = src instanceof Blob ? src : null;
+  if (!blob) try {
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 60000);
     const res = await fetch(src, { signal: ctl.signal });
     if (!res.ok) throw new Error(`the server said ${res.status}`);
@@ -652,9 +725,17 @@ async function loadVideo(src, numFrames) {
   const video = document.createElement("video");
   video.muted = true; video.preload = "auto";
   try {
-    const meta = waitFor(video, "loadedmetadata", 20000, "reading it");
-    video.src = url;
-    await meta;
+    try {
+      const meta = waitFor(video, "loadedmetadata", 20000, "reading it");
+      video.src = url;
+      await meta;
+    } catch (e) {
+      // Some frames refuse to play blob: URLs; a stored video can be played from its own address.
+      if (typeof src !== "string") throw e;
+      const meta = waitFor(video, "loadedmetadata", 20000, "reading it");
+      video.src = src;
+      await meta;
+    }
     const duration = video.duration;
     if (!isFinite(duration) || !video.videoWidth) throw new Error("Couldn't read the video's length or size.");
     const canvas = document.createElement("canvas");
@@ -750,11 +831,15 @@ function addFiles(files) {
   for (const f of files) {
     const kind = kindOfFile(f);
     if (!kind) { status(`Can't use “${f.name}” — not a picture, sound or video.`, true); continue; }
-    addItem(kind, { src: URL.createObjectURL(f), label: f.name.replace(/\.[^.]+$/, "") });
+    addItem(kind, { src: URL.createObjectURL(f), file: f, label: f.name.replace(/\.[^.]+$/, "") });
   }
 }
-$("addFile").addEventListener("click", () => $("fileIn").click());
-$("fileIn").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+$("addFile").addEventListener("click", () => {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "image/*,audio/*,video/*"; inp.multiple = true;
+  inp.onchange = () => addFiles(inp.files);
+  inp.click();
+});
 document.addEventListener("dragover", (e) => { e.preventDefault(); document.body.classList.add("drop"); });
 document.addEventListener("dragleave", (e) => { if (!e.relatedTarget) document.body.classList.remove("drop"); });
 document.addEventListener("drop", (e) => {
@@ -792,7 +877,8 @@ function addThings(things, set) {
   for (const t of things) {
     const [kind, file, label] = typeof t === "string" ? ["text", null, t] : t;
     if ((kind === "audio" && !loaded.audio) || ((kind === "image" || kind === "video") && !loaded.vision)) { skipped++; continue; }
-    const src = file && SAMPLES + file;
+    const src = file && sampleUrl(file);
+    if (file && !src) continue;
     if (items.some((it) => it.kind === kind && (kind === "text" ? it.text === label : it.src === src))) continue;
     addItem(kind, kind === "text" ? { text: label, label, set } : { src, label, set });
   }
@@ -856,7 +942,7 @@ $("camSnap").addEventListener("click", () => {
   c.width = v.videoWidth; c.height = v.videoHeight;
   c.getContext("2d").drawImage(v, 0, 0);
   closeCam();
-  c.toBlob((b) => addItem("image", { src: URL.createObjectURL(b), label: "my photo" }), "image/jpeg", .9);
+  c.toBlob((b) => addItem("image", { src: URL.createObjectURL(b), file: b, label: "my photo" }), "image/jpeg", .9);
 });
 
 // microphone
@@ -869,7 +955,8 @@ $("record").addEventListener("click", async () => {
   rec.onstop = () => {
     stream.getTracks().forEach((t) => t.stop());
     $("record").textContent = "🎤 Record 4 seconds"; $("record").disabled = false;
-    addItem("audio", { src: URL.createObjectURL(new Blob(chunks, { type: rec.mimeType })), label: "my recording" });
+    const b = new Blob(chunks, { type: rec.mimeType });
+    addItem("audio", { src: URL.createObjectURL(b), file: b, label: "my recording" });
   };
   rec.start();
   $("record").disabled = true;
@@ -1530,6 +1617,7 @@ const term = (word, key) => `<span class="term" tabindex="0"${key ? ` data-t="${
 const AI_STORE = "embex.ai", KEY_STORE = "embex.keys";
 const PROVIDERS = {
   nano: { name: "Gemini Nano", local: true },
+  claude: { name: "Claude", keyless: true }, // the artifact edition, through the viewer's claude.ai account
   anthropic: {
     name: "Claude", company: "Anthropic", hint: "sk-ant-…", keyUrl: "https://console.anthropic.com/settings/keys", keySite: "console.anthropic.com",
     model: "claude-sonnet-5-5",
@@ -1547,6 +1635,7 @@ const PROVIDERS = {
   },
 };
 let ai = { provider: "", keys: {}, models: {}, remember: false };
+let sampleFn = null; // keyless Claude, in the artifact edition
 for (const id in PROVIDERS) if (!PROVIDERS[id].local) ai.models[id] = PROVIDERS[id].model;
 let hadSettings = false;
 try {
@@ -1564,10 +1653,14 @@ let nanoState = "unavailable"; // Chrome's word: unavailable, downloadable, down
 async function checkNano() {
   const LM = nanoApi();
   if (LM) { try { nanoState = await LM.availability(NANO_OPTIONS); } catch { nanoState = "unavailable"; } }
-  if (!ai.provider) ai.provider = nanoState !== "unavailable" ? "nano" : "anthropic";
+  if (PACK) {
+    ai.provider = "claude";
+    try { sampleFn = window.claude?.use ? await window.claude.use("sample") : null; } catch { sampleFn = null; }
+  }
+  if (!ai.provider || PROVIDERS[ai.provider].keyless && !PACK) ai.provider = nanoState !== "unavailable" ? "nano" : "anthropic";
   showWho();
 }
-const aiReady = () => ai.provider === "nano" ? nanoState !== "unavailable" : !!ai.keys[ai.provider];
+const aiReady = () => ai.provider === "nano" ? nanoState !== "unavailable" : ai.provider === "claude" ? !!sampleFn : !!ai.keys[ai.provider];
 
 async function askNano(system, prompt, opts) {
   const LM = nanoApi();
@@ -1619,6 +1712,19 @@ async function postJson(url, headers, body) {
 
 async function askAI(system, prompt, opts = {}) {
   if (ai.provider === "nano") return askNano(system, prompt, opts);
+  if (ai.provider === "claude") {
+    if (!sampleFn) throw { code: "no_sample" };
+    try {
+      // sample has no separate instructions field, so they go first in the message.
+      const r = await sampleFn([{ role: "user", content: `${system}\n\n---\n\n${prompt}` }],
+        { modelTier: "quick", cache: false, onText: ({ text }) => opts.onText?.(text) });
+      if (!r.text?.trim()) throw { code: "empty" };
+      return r.text;
+    } catch (e) {
+      if (e?.code === "empty") throw e;
+      throw { code: { not_granted: "declined", rate_limited: "rate_limited" }[e?.code] || "upstream", message: e?.message };
+    }
+  }
   const key = ai.keys[ai.provider];
   if (!key) throw { code: "no_key" };
   const model = (ai.models[ai.provider] || "").trim() || PROVIDERS[ai.provider].model;
@@ -1651,6 +1757,8 @@ function aiError(e) {
     no_nano: "Gemini Nano isn't available in this browser. It needs desktop Chrome with its built-in AI. Choose another AI in AI settings.",
     nano_failed: "Gemini Nano couldn't answer" + (e.message ? ": " + e.message : ".") + " Try again.",
     no_key: "Choose an AI and add its key in AI settings first.",
+    no_sample: "The guide uses Claude through your claude.ai account, and that isn't available here (for example when you're signed out).",
+    declined: "The guide needs your permission to ask Claude. You can allow it from this page's Permissions menu.",
     bad_key: `${PROVIDERS[ai.provider]?.company || ""} didn't accept that key. Check it in AI settings.`,
     bad_model: "That model name wasn't accepted. Check it in AI settings.",
     rate_limited: `${name} is busy, or you've reached a usage limit. Try again in a little while.`,
@@ -1852,7 +1960,10 @@ function logMsg(cls, html) {
 
 function showWho() {
   const P = PROVIDERS[ai.provider];
-  $("guideWho").textContent = !P ? "" : aiReady()
+  $("guideWho").textContent = !P ? "" : P.keyless
+    ? (aiReady() ? "Answers come from Claude, through your claude.ai account. It asks your permission the first time."
+      : "The guide uses Claude through your claude.ai account, which isn't available here (for example when you're signed out).")
+    : aiReady()
     ? `Answers come from ${P.name}${P.local ? ", running on this computer" : ""}.`
       + (P.local && nanoState !== "available" ? " The first question makes Chrome download it (about 4 GB)." : "")
     : P.local ? "Gemini Nano isn't available here. Choose an AI in AI settings." : `Add a ${P.name} key in AI settings to use the guide.`;

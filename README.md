@@ -1,0 +1,38 @@
+# Embedding Explorer
+
+A web page for school students to explore **embeddings**: the lists of numbers an AI model uses to represent the meaning of words, pictures, sounds and videos.
+
+**Try it:** https://toontalk.github.io/embedding-explorer/
+
+It runs Google's [EmbeddingGemma 2](https://huggingface.co/google/embeddinggemma-2) entirely in the browser with [Transformers.js](https://huggingface.co/docs/transformers.js), so whatever students add stays on their computer. Words, pictures, sounds and videos all land in one shared space of 768 numbers.
+
+Students can:
+
+1. Add words, sentences, photos (including from the webcam), sound recordings and videos.
+2. See any embedding as a **star**: one ray per number, green for positive and red for negative. They can also see the difference between two embeddings as a star.
+3. Compare everything with everything in a similarity grid.
+4. Do **embedding arithmetic** (A − B + C) and see what is nearest the result.
+5. Build their own **3D space** from three word pairs (for example small → big) and see where everything lands.
+
+A bar at the top changes every section at once. It sets how many of the 768 numbers to use (the model is trained so the first ones matter most). It can also take away the part that all embeddings share, which otherwise makes every star look alike.
+
+This follows Ken Kahn's earlier [active essay on embeddings](https://toontalk.github.io/AI/apps/embeddings/index.html).
+
+## Requirements
+
+- **A browser with WebGPU** (recent Chrome or Edge) is strongly recommended. With WebGPU the first visit downloads about 473 MB, which the browser keeps for later visits.
+- **Without WebGPU**, the page falls back to the main processor. This needs a larger 16-bit download, and in testing it was only practical for words: about 0.2 s each. A single picture didn't finish in five minutes.
+
+Measured on a desktop with an NVIDIA GPU: about 0.1 s per word, 0.5 s per picture, 0.2 s per sound and 3–4 s per short video.
+
+## Running it locally
+
+It is a single file, `index.html`. Serve the folder with any static web server, for example:
+
+```bash
+python -m http.server 8455
+```
+
+## License
+
+MIT. See [LICENSE](LICENSE). The EmbeddingGemma 2 model is licensed separately under Apache 2.0.

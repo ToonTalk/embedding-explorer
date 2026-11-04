@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embedding Explorer</title>
+<style>
+:root {
+  --bg: #f7f6f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #5f6368; --line: #dcdad3;
+  --accent: #2f5bd3; --pos: #1a8f3c; --neg: #d03a2f; --warn: #b3261e;
+  --ax1: #c2410c; --ax2: #0f766e; --ax3: #7c3aed;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181b; --panel: #222327; --ink: #ececec; --muted: #a0a4ab; --line: #3a3c42;
+    --accent: #7ea2ff; --pos: #4cc76f; --neg: #ff6b5e; --warn: #ff8a80;
+    --ax1: #fb923c; --ax2: #2dd4bf; --ax3: #a78bfa;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 16px 16px 64px; }
+h1 { margin: 8px 0 4px; font-size: 30px; }
+h2 { margin: 0 0 6px; font-size: 21px; }
+.lede { color: var(--muted); margin: 0 0 16px; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 14px 0; }
+section.locked { opacity: .45; pointer-events: none; }
+p { margin: 4px 0 10px; }
+details { margin-top: 8px; color: var(--muted); font-size: 14px; }
+details summary { cursor: pointer; }
+button, select, input[type=text] { font: inherit; font-size: 15px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 6px 10px; }
+button { cursor: pointer; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+.choices label { display: inline-flex; gap: 6px; align-items: center; margin-right: 14px; }
+#status { margin-top: 8px; font-size: 15px; }
+#status.err { color: var(--warn); }
+.bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 6px; max-width: 420px; }
+.bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+table.times { border-collapse: collapse; margin-top: 6px; }
+table.times td, table.times th { padding: 2px 10px 2px 0; text-align: left; }
+#log { white-space: pre-wrap; font: 12px/1.4 ui-monospace, Consolas, monospace; max-height: 160px; overflow: auto; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 8px; position: relative; background: var(--bg); }
+.card .thumb { height: 74px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 6px; }
+.card .thumb img, .card .thumb video { max-width: 100%; max-height: 74px; }
+.card .thumb .word { font-size: 18px; text-align: center; padding: 4px; word-break: break-word; }
+.card .thumb .icon { font-size: 34px; }
+.card .name { font-size: 13px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .meta { font-size: 12px; color: var(--muted); }
+.card canvas { display: block; margin: 4px auto 0; }
+.card .x { position: absolute; top: 2px; right: 4px; border: none; background: none; padding: 2px 6px; color: var(--muted); }
+.card.busy { opacity: .55; }
+.card audio { width: 100%; height: 28px; }
+
+.starwrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+#bigStar { width: 380px; height: 380px; max-width: 100%; }
+.facts { font-size: 15px; min-width: 220px; flex: 1; }
+.facts b { font-variant-numeric: tabular-nums; }
+
+.simwrap { overflow-x: auto; }
+table.sim { border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+table.sim th { font-weight: 500; padding: 2px; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+table.sim th.rowh { text-align: right; padding-right: 6px; max-width: 140px; }
+table.sim td { width: 46px; height: 30px; text-align: center; color: #111; border: 1px solid var(--panel); }
+table.sim th img { height: 28px; display: block; margin: 0 auto; }
+
+.nearest { list-style: none; padding: 0; margin: 6px 0; }
+.nearest li { display: flex; gap: 8px; align-items: center; padding: 2px 0; }
+.nearest .sbar { height: 10px; background: var(--accent); border-radius: 3px; }
+.nearest .used { color: var(--muted); }
+
+.axes { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 6px 8px; align-items: center; max-width: 620px; }
+.axes .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.axes input { width: 100%; }
+#space { width: 100%; height: 480px; border: 1px solid var(--line); border-radius: 10px; touch-action: none; cursor: grab; background: var(--bg); }
+
+#camModal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 10; }
+#camModal.open { display: flex; }
+#camModal .box { background: var(--panel); padding: 14px; border-radius: 12px; max-width: 92vw; }
+#camModal video { max-width: 80vw; max-height: 60vh; border-radius: 8px; display: block; }
+.drop { outline: 3px dashed var(--accent); outline-offset: -6px; }
+.lens { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; margin: 14px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.lens label { display: inline-flex; gap: 6px; align-items: center; }
+.lens a { color: var(--accent); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Embedding Explorer</h1>
+  <p class="lede">An AI model turns a word, a picture, a sound or a video into a list of 768 numbers, called an <em>embedding</em>. Things with similar meanings get similar lists — even when one is a word and the other is a photo.</p>
+
+  <section id="loadSec">
+    <h2>1. Load the model</h2>
+    <p>The model (Google's EmbeddingGemma 2) runs inside this browser, so what you add stays on this computer. It downloads once and is then remembered.</p>
+    <div class="row choices">
+      <label><input type="checkbox" checked disabled> Words</label>
+      <label><input type="checkbox" id="wantVision" checked> Pictures &amp; videos</label>
+      <label><input type="checkbox" id="wantAudio" checked> Sounds</label>
+    </div>
+    <div class="row">
+      <select id="quality">
+        <option value="q4">Smaller download (4-bit)</option>
+        <option value="q8">Better quality (8-bit)</option>
+      </select>
+      <select id="device">
+        <option value="auto">Use the graphics chip if possible</option>
+        <option value="wasm">Use only the main processor</option>
+      </select>
+      <button id="loadBtn" class="primary">Load</button>
+      <span id="sizeNote" class="meta"></span>
+    </div>
+    <div class="bar"><div id="barFill"></div></div>
+    <div id="status">Not loaded yet.</div>
+    <details>
+      <summary>Timings and details</summary>
+      <table class="times" id="timesTable"></table>
+      <div id="log"></div>
+    </details>
+  </section>
+
+  <div id="lens" class="lens" hidden>
+    <label>Use the first <select id="dims">
+      <option>768</option><option>512</option><option>256</option><option>128</option>
+    </select> of the 768 numbers</label>
+    <label><input type="checkbox" id="center"> Take away what everything shares</label>
+    <a href="#why">Why?</a>
+  </div>
+
+  <section id="addSec" class="locked">
+    <h2>2. Add things</h2>
+    <p>Type a word or sentence, or add a picture, sound or video. You can also drop files onto this page.</p>
+    <div class="row">
+      <input type="text" id="textIn" placeholder="a word or a sentence" style="flex:1;min-width:180px">
+      <button id="addText">Add</button>
+    </div>
+    <div class="row">
+      <button id="addFile">📁 Picture, sound or video file</button>
+      <button id="snap" data-need="vision">📷 Take a photo</button>
+      <button id="record" data-need="audio">🎤 Record 4 seconds</button>
+      <button id="examples">✨ Add examples</button>
+      <button id="clearAll">Remove all</button>
+      <input type="file" id="fileIn" accept="image/*,audio/*,video/*" multiple hidden>
+    </div>
+    <div class="grid" id="items"></div>
+    <details>
+      <summary>How the words are given to the model</summary>
+      <p>The model works best when text starts with a short instruction. Each word or sentence you add is actually sent as:</p>
+      <div class="row"><select id="prefix">
+        <option value="task: search result | query: ">task: search result | query: <i>your text</i></option>
+        <option value="task: sentence similarity | query: ">task: sentence similarity | query: <i>your text</i></option>
+        <option value="">your text (no instruction)</option>
+      </select></div>
+      <p>The first works well for matching words to pictures and sounds; the second for comparing sentences with each other. Try switching and watch the numbers change.</p>
+    </details>
+  </section>
+
+  <section id="starSec" class="locked">
+    <h2>3. Star view</h2>
+    <p>Each of the numbers is drawn as a ray from the center: <span style="color:var(--pos)">green</span> for positive, <span style="color:var(--neg)">red</span> for negative, longer for bigger. Pick a second thing to see the <em>difference</em> between the two.</p>
+    <div class="row">
+      <select id="starA"></select>
+      <span>minus</span>
+      <select id="starB"></select>
+    </div>
+    <div class="starwrap">
+      <canvas id="bigStar"></canvas>
+      <div class="facts" id="starFacts"></div>
+    </div>
+    <details id="why">
+      <summary>Why do all the stars look alike?</summary>
+      <p>Every embedding this model makes contains a big shared part that is almost the same for a word, a photo or a sound. In the example set, that shared part is about two thirds of each list, and just six positions (such as numbers 111 and 115) carry almost half of it. That is why every star has the same few long rays, and why even “idea” and “horse” come out 0.70 alike.</p>
+      <p>Tick <b>Take away what everything shares</b> at the top. It subtracts the average of everything you have added, leaving what makes each thing different. The stars stop looking alike, unrelated things score near 0, and related things such as “unicorn” and “horse” stay well above 0. The average depends on what you have added, so adding more things changes it.</p>
+      <p>Even then, 768 rays are too many to tell apart by eye. Use the first 128 numbers as well and the differences are easy to see.</p>
+      <p>A few rays may still reach the edge: the rays are scaled to fit 99% of the numbers, and the few bigger ones are cut off.</p>
+    </details>
+    <details>
+      <summary>Why can I use fewer numbers?</summary>
+      <p>This model was trained so that the first numbers carry the most important information. Keeping only the first 256 of the 768 loses very little; keeping 128 loses more, especially for pictures and sounds. The setting at the top changes every section.</p>
+    </details>
+  </section>
+
+  <section id="simSec" class="locked">
+    <h2>4. Who is close to whom?</h2>
+    <p>Each square compares two things: 1 means the same direction, 0 means unrelated. Darker means closer.</p>
+    <div class="simwrap" id="simTable"></div>
+    <details>
+      <summary>Something to notice</summary>
+      <p>Compare a word with a picture of the same thing, and two words with each other. Words tend to be closer to other words, and pictures to other pictures, even when the meanings match. Researchers call this the <em>modality gap</em>. So look at which picture is closest to a word, not just at the size of the number.</p>
+      <p>Most squares are between 0.5 and 0.8 because of the part every embedding shares (see “Why do all the stars look alike?” above). Tick <b>Take away what everything shares</b> at the top and the numbers spread out around 0.</p>
+      <p>The number is the <em>cosine similarity</em>: multiply the two lists number by number and add everything up (each list has been scaled to length 1 first).</p>
+    </details>
+  </section>
+
+  <section id="arithSec" class="locked">
+    <h2>5. Embedding arithmetic</h2>
+    <p>Lists of numbers can be added and subtracted. What is closest to the result?</p>
+    <div class="row">
+      <select id="arA"></select><span>minus</span><select id="arB"></select><span>plus</span><select id="arC"></select>
+    </div>
+    <div class="starwrap">
+      <canvas id="arStar" style="width:200px;height:200px"></canvas>
+      <ol class="nearest" id="arList"></ol>
+    </div>
+  </section>
+
+  <section id="axesSec" class="locked">
+    <h2>6. Your own 3D space</h2>
+    <p>Choose three directions, each from one word to another. Everything you added is placed along them. Drag to turn the space.</p>
+    <div class="axes">
+      <span class="dot" style="background:var(--ax1)"></span><input type="text" id="ax1a" value="small"><span>→</span><input type="text" id="ax1b" value="big">
+      <span class="dot" style="background:var(--ax2)"></span><input type="text" id="ax2a" value="quiet"><span>→</span><input type="text" id="ax2b" value="loud">
+      <span class="dot" style="background:var(--ax3)"></span><input type="text" id="ax3a" value="made by people"><span>→</span><input type="text" id="ax3b" value="found in nature">
+    </div>
+    <div class="row"><button id="placeBtn" class="primary">Place everything</button><span id="axesNote" class="meta"></span></div>
+    <canvas id="space"></canvas>
+    <details>
+      <summary>How the places are worked out</summary>
+      <p>The direction from “small” to “big” is the embedding of “big” minus the embedding of “small”. A thing's place along that direction is how much its own embedding points the same way. The places are then centered and stretched to fill the box, so only where things are compared with each other matters.</p>
+    </details>
+  </section>
+  <p class="meta" style="text-align:center;color:var(--muted);font-size:13px">
+    By Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer" style="color:var(--accent)">source</a> (MIT license) ·
+    model: <a href="https://huggingface.co/google/embeddinggemma-2" style="color:var(--accent)">EmbeddingGemma 2</a> (Apache 2.0)
+  </p>
+</main>
+
+<div id="camModal"><div class="box">
+  <video id="camVideo" autoplay playsinline muted></video>
+  <div class="row"><button id="camSnap" class="primary">Snap</button><button id="camCancel">Cancel</button></div>
+</div></div>
+
+<script type="module">
+import { AutoConfig, AutoModel, AutoProcessor, load_image, load_audio, load_video, env }
+  from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/+esm";
+
+env.allowLocalModels = false;
+
+const MODEL_ID = "onnx-community/embeddinggemma-2-ONNX";
+const SAMPLES = "https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/";
+const SIZES = {
+  q4: { text: 175, vision: 109, audio: 189 },
+  q8: { text: 314, vision: 195, audio: 340 },
+  fp16: { text: 543, vision: 336, audio: 587 },
+};
+const MAX_AUDIO_SECONDS = 30;
+const VIDEO_FRAMES = 16; // 16 frames × 140 tokens stays under the WebGPU limit of about 2,700
+const KIND_ICON = { text: "🔤", image: "🖼️", audio: "🔊", video: "🎬" };
+const KIND_NAME = { text: "word", image: "picture", audio: "sound", video: "video" };
+
+const $ = (id) => document.getElementById(id);
+let model = null, processor = null;
+let loaded = { vision: false, audio: false, device: "", quality: "" };
+let items = [];
+let nextId = 1;
+let queue = Promise.resolve();
+const timings = { text: [], image: [], audio: [], video: [] };
+const poleCache = new Map();
+
+// ---------- logging and status ----------
+function log(msg) { $("log").textContent += msg + "\n"; $("log").scrollTop = 1e9; }
+function status(msg, isErr = false) { $("status").textContent = msg; $("status").className = isErr ? "err" : ""; }
+
+// Without WebGPU, the 4- and 8-bit word and picture parts can't run (their packed word
+// table needs an operation the WASM runtime lacks), so those two fall back to 16-bit.
+function dtypesFor(device, quality) {
+  if (device === "webgpu") return { model: quality, vision_encoder: quality, audio_encoder: quality };
+  return { model: "fp16", vision_encoder: "fp16", audio_encoder: quality };
+}
+
+let hasGpu = false;
+function showSizeNote() {
+  const device = $("device").value === "wasm" || !hasGpu ? "wasm" : "webgpu";
+  const d = dtypesFor(device, $("quality").value);
+  const mb = SIZES[d.model].text + ($("wantVision").checked ? SIZES[d.vision_encoder].vision : 0)
+    + ($("wantAudio").checked ? SIZES[d.audio_encoder].audio : 0);
+  $("sizeNote").textContent = `about ${mb} MB the first time`
+    + (device === "wasm" && ($("wantVision").checked || $("wantAudio").checked)
+      ? " · pictures, videos and sounds may take minutes each without a graphics chip" : "");
+}
+["quality", "device", "wantVision", "wantAudio"].forEach((id) => $(id).addEventListener("change", showSizeNote));
+(async () => {
+  try { hasGpu = !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch {}
+  if (!hasGpu) {
+    $("device").options[0].textContent = "No graphics chip found: using the main processor";
+    $("wantVision").checked = $("wantAudio").checked = false;
+  }
+  showSizeNote();
+})();
+
+function renderTimes() {
+  const rows = Object.entries(timings).filter(([, t]) => t.length).map(([k, t]) => {
+    const avg = t.reduce((a, b) => a + b, 0) / t.length;
+    return `<tr><td>${KIND_ICON[k]} ${KIND_NAME[k]}</td><td>${fmtMs(avg)} on average</td><td>${t.length} done</td></tr>`;
+  });
+  $("timesTable").innerHTML = rows.join("");
+}
+const fmtMs = (ms) => ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`;
+
+// ---------- loading ----------
+$("loadBtn").addEventListener("click", async () => {
+  $("loadBtn").disabled = true;
+  let failed = false;
+  try {
+    const wantVision = $("wantVision").checked, wantAudio = $("wantAudio").checked;
+    const quality = $("quality").value;
+    const device = $("device").value === "wasm" || !hasGpu ? "wasm" : "webgpu";
+    const dtype = dtypesFor(device, quality);
+    if (model) { try { await model.dispose(); } catch {} model = null; }
+    status(`Downloading… (running on ${device === "webgpu" ? "the graphics chip" : "the main processor"})`);
+    const t0 = performance.now();
+    const files = new Map();
+    const progress_callback = (p) => {
+      if (p.status === "progress" && p.total && !failed) {
+        files.set(p.file, { loaded: p.loaded, total: p.total });
+        let a = 0, b = 0;
+        for (const f of files.values()) { a += f.loaded; b += f.total; }
+        $("barFill").style.width = (100 * a / b).toFixed(1) + "%";
+        status(`Downloading… ${(a / 1e6).toFixed(0)} of ${(b / 1e6).toFixed(0)} MB`);
+      }
+    };
+    const config = await AutoConfig.from_pretrained(MODEL_ID);
+    if (!wantVision) config.vision_config = null;
+    if (!wantAudio) config.audio_config = null;
+    processor = await AutoProcessor.from_pretrained(MODEL_ID);
+    model = await AutoModel.from_pretrained(MODEL_ID, { config, device, dtype, progress_callback });
+    $("barFill").style.width = "100%";
+    loaded = { vision: wantVision, audio: wantAudio, device, quality };
+    const secs = ((performance.now() - t0) / 1000).toFixed(1);
+    const parts = ["words", wantVision && "pictures & videos", wantAudio && "sounds"].filter(Boolean).join(", ");
+    const where = device === "webgpu" ? "the graphics chip (WebGPU)" : "the main processor (WASM) — expect it to be slow";
+    status(`Ready for ${parts}. Loaded in ${secs} s on ${where}.`);
+    log(`load: ${secs} s, device=${device}, dtype=${JSON.stringify(dtype)}, vision=${wantVision}, audio=${wantAudio}`);
+    document.querySelectorAll("section.locked").forEach((s) => s.classList.remove("locked"));
+    $("lens").hidden = false;
+    document.querySelectorAll("[data-need]").forEach((b) => b.disabled = !loaded[b.dataset.need]);
+    poleCache.clear();
+    for (const it of items) { it.vec = null; embedItem(it); }
+    if (!items.length) addExamples();
+  } catch (e) {
+    failed = true;
+    console.error(e);
+    status("Loading failed: " + (e.message || e), true);
+    log("load error: " + (e.stack || e));
+  } finally {
+    $("loadBtn").disabled = false;
+    $("loadBtn").textContent = "Load again with these settings";
+  }
+});
+
+// ---------- embedding ----------
+function runSerial(fn) {
+  const p = queue.then(fn, fn);
+  queue = p.catch(() => {});
+  return p;
+}
+
+const textForModel = (t) => $("prefix").value + t;
+
+async function embedInput(kind, input) {
+  return runSerial(async () => {
+    const t0 = performance.now();
+    let inputs;
+    if (kind === "text") inputs = await processor([input]);
+    else if (kind === "image") inputs = await processor(null, input);
+    else if (kind === "audio") inputs = await processor(null, null, input);
+    else inputs = await processor(null, null, null, input);
+    const out = await model(inputs);
+    const vec = Float32Array.from(out.sentence_embedding.data);
+    return { vec, ms: performance.now() - t0 };
+  });
+}
+
+async function decodeMedia(it) {
+  if (it.kind === "image") return load_image(it.src);
+  if (it.kind === "audio") {
+    let a = await load_audio(it.src, 16000);
+    if (a.length > MAX_AUDIO_SECONDS * 16000) { a = a.slice(0, MAX_AUDIO_SECONDS * 16000); it.note = `first ${MAX_AUDIO_SECONDS} s`; }
+    return a;
+  }
+  if (it.kind === "video") return load_video(it.src, { num_frames: VIDEO_FRAMES });
+}
+
+async function embedItem(it) {
+  if (it.kind === "image" || it.kind === "video") { if (!loaded.vision) return markUnsupported(it); }
+  if (it.kind === "audio" && !loaded.audio) return markUnsupported(it);
+  it.busy = true; it.err = null; renderItems();
+  try {
+    if (it.kind === "text") {
+      const r = await embedInput("text", textForModel(it.text));
+      it.vec = r.vec; it.ms = r.ms;
+    } else {
+      const t0 = performance.now();
+      const media = await decodeMedia(it);
+      it.decodeMs = performance.now() - t0;
+      const r = await embedInput(it.kind, media);
+      it.vec = r.vec; it.ms = r.ms;
+    }
+    timings[it.kind].push(it.ms);
+    log(`${it.kind} "${it.label}": ${fmtMs(it.ms)}${it.decodeMs ? ` (+ ${fmtMs(it.decodeMs)} to decode)` : ""}`);
+    renderTimes();
+  } catch (e) {
+    console.error(e);
+    it.err = e.message || String(e);
+    log(`error on ${it.kind} "${it.label}": ${it.err}`);
+  }
+  it.busy = false;
+  refreshAll();
+  // Re-place the 3D space once everything that was added has an embedding.
+  if (!items.some((x) => x.busy)) placeEverything();
+}
+
+function markUnsupported(it) {
+  it.err = `Load the model with ${it.kind === "audio" ? "sounds" : "pictures & videos"} to use this.`;
+  refreshAll();
+}
+
+// ---------- adding things ----------
+function addItem(kind, fields) {
+  const it = { id: nextId++, kind, vec: null, ms: 0, busy: false, err: null, ...fields };
+  items.push(it);
+  if (kind === "image") { it.img = new Image(); it.img.crossOrigin = "anonymous"; it.img.src = it.src; it.img.onload = () => drawSpace(); }
+  if (kind === "video") makeVideoThumb(it);
+  renderItems();
+  if (model) embedItem(it);
+  return it;
+}
+
+function makeVideoThumb(it) {
+  const v = document.createElement("video");
+  v.crossOrigin = "anonymous"; v.muted = true; v.preload = "auto"; v.src = it.src;
+  v.addEventListener("loadeddata", () => { v.currentTime = Math.min(1, (v.duration || 2) / 2); });
+  v.addEventListener("seeked", () => {
+    const c = document.createElement("canvas");
+    c.width = 160; c.height = Math.round(160 * v.videoHeight / v.videoWidth) || 90;
+    c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+    it.img = new Image(); it.img.src = c.toDataURL("image/jpeg", .8);
+    it.img.onload = () => { renderItems(); drawSpace(); };
+  }, { once: true });
+}
+
+$("addText").addEventListener("click", () => {
+  const t = $("textIn").value.trim();
+  if (!t) return;
+  addItem("text", { text: t, label: t });
+  $("textIn").value = "";
+});
+$("textIn").addEventListener("keydown", (e) => { if (e.key === "Enter") $("addText").click(); });
+
+function kindOfFile(f) {
+  if (f.type.startsWith("image/")) return "image";
+  if (f.type.startsWith("audio/")) return "audio";
+  if (f.type.startsWith("video/")) return "video";
+  return null;
+}
+function addFiles(files) {
+  for (const f of files) {
+    const kind = kindOfFile(f);
+    if (!kind) { status(`Can't use “${f.name}” — not a picture, sound or video.`, true); continue; }
+    addItem(kind, { src: URL.createObjectURL(f), label: f.name.replace(/\.[^.]+$/, "") });
+  }
+}
+$("addFile").addEventListener("click", () => $("fileIn").click());
+$("fileIn").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+document.addEventListener("dragover", (e) => { e.preventDefault(); document.body.classList.add("drop"); });
+document.addEventListener("dragleave", (e) => { if (!e.relatedTarget) document.body.classList.remove("drop"); });
+document.addEventListener("drop", (e) => {
+  e.preventDefault(); document.body.classList.remove("drop");
+  if (!model) { status("Load the model first, then drop files.", true); return; }
+  addFiles(e.dataTransfer.files);
+});
+
+$("clearAll").addEventListener("click", () => { items = []; refreshAll(); });
+
+function addExamples() {
+  const words = ["dog", "cat", "tiger", "butterfly", "house", "beach", "turtle", "a speech", "piano music", "apple", "fruit"];
+  for (const w of words) addItem("text", { text: w, label: w });
+  const media = [
+    ["image", "corgi.jpg", "corgi"], ["image", "cats.jpg", "cats"], ["image", "tiger.jpg", "tiger"],
+    ["image", "butterfly.jpg", "butterfly"], ["image", "house.jpg", "house"], ["image", "beach.png", "beach"],
+    ["audio", "dog_barking.wav", "dog barking"], ["audio", "cat_meow.wav", "cat meowing"],
+    ["audio", "jfk.wav", "JFK speech"], ["audio", "piano.wav", "piano"],
+    ["video", "sea-turtle.mp4", "sea turtle"],
+  ];
+  for (const [kind, file, label] of media) {
+    if ((kind === "audio" && !loaded.audio) || (kind !== "audio" && !loaded.vision)) continue;
+    addItem(kind, { src: SAMPLES + file, label });
+  }
+}
+$("examples").addEventListener("click", addExamples);
+
+// camera
+let camStream = null;
+$("snap").addEventListener("click", async () => {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    $("camVideo").srcObject = camStream;
+    $("camModal").classList.add("open");
+  } catch (e) { status("Couldn't open the camera: " + e.message, true); }
+});
+function closeCam() { camStream?.getTracks().forEach((t) => t.stop()); camStream = null; $("camModal").classList.remove("open"); }
+$("camCancel").addEventListener("click", closeCam);
+$("camSnap").addEventListener("click", () => {
+  const v = $("camVideo"), c = document.createElement("canvas");
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext("2d").drawImage(v, 0, 0);
+  closeCam();
+  c.toBlob((b) => addItem("image", { src: URL.createObjectURL(b), label: "my photo" }), "image/jpeg", .9);
+});
+
+// microphone
+$("record").addEventListener("click", async () => {
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { status("Couldn't open the microphone: " + e.message, true); return; }
+  const rec = new MediaRecorder(stream), chunks = [];
+  rec.ondataavailable = (e) => chunks.push(e.data);
+  rec.onstop = () => {
+    stream.getTracks().forEach((t) => t.stop());
+    $("record").textContent = "🎤 Record 4 seconds"; $("record").disabled = false;
+    addItem("audio", { src: URL.createObjectURL(new Blob(chunks, { type: rec.mimeType })), label: "my recording" });
+  };
+  rec.start();
+  $("record").disabled = true;
+  for (let s = 4; s > 0; s--) { $("record").textContent = `🔴 ${s}…`; await new Promise((r) => setTimeout(r, 1000)); }
+  rec.stop();
+});
+
+// ---------- vector helpers ----------
+function truncNorm(v, d) {
+  const out = v.slice(0, d);
+  let n = 0; for (let i = 0; i < d; i++) n += out[i] * out[i];
+  n = Math.sqrt(n) || 1;
+  for (let i = 0; i < d; i++) out[i] /= n;
+  return out;
+}
+const dot = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
+const norm = (a) => Math.sqrt(dot(a, a));
+const sub = (a, b) => a.map((x, i) => x - b[i]);
+const add = (a, b) => a.map((x, i) => x + b[i]);
+const scale = (a, k) => a.map((x) => x * k);
+const dims = () => +$("dims").value;
+const ready = () => items.filter((it) => it.vec);
+
+// What every embedding shares: the average of everything added, at the current length.
+let meanVec = null;
+function updateMean() {
+  const list = ready(), d = dims();
+  meanVec = null;
+  if (!$("center").checked || list.length < 2) return;
+  meanVec = new Float32Array(d);
+  for (const it of list) {
+    const v = truncNorm(it.vec, d);
+    for (let i = 0; i < d; i++) meanVec[i] += v[i] / list.length;
+  }
+}
+// The list every section uses: the first N numbers, minus the shared part if that's ticked.
+function view(raw) {
+  const v = truncNorm(raw, dims());
+  if (meanVec?.length !== v.length) updateMean();
+  return meanVec ? truncNorm(sub(v, meanVec), v.length) : v;
+}
+const vecOf = (it) => view(it.vec);
+
+// A handful of the numbers are ten times bigger than the rest, so the scale is set by the
+// 99th percentile of all the numbers shown; the few bigger rays are cut off at the edge.
+function starScale() {
+  const all = [];
+  for (const it of ready()) for (const x of vecOf(it)) all.push(Math.abs(x));
+  if (!all.length) return 1;
+  all.sort((a, b) => a - b);
+  return all[Math.floor(all.length * 0.99)] || 1;
+}
+
+// ---------- drawing stars ----------
+function sizeCanvas(c, w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+  const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return g;
+}
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+function drawStar(canvas, v, size, maxAbs) {
+  const g = sizeCanvas(canvas, size, size);
+  g.clearRect(0, 0, size, size);
+  if (!v) return;
+  const cx = size / 2, cy = size / 2, R = size / 2 - 2, n = v.length;
+  g.lineWidth = n > 300 ? Math.max(.6, size / 400) : 1.2;
+  const pos = css("--pos"), neg = css("--neg");
+  for (let i = 0; i < n; i++) {
+    const a = (2 * Math.PI * i) / n - Math.PI / 2;
+    const r = R * Math.min(1, Math.abs(v[i]) / maxAbs);
+    g.strokeStyle = v[i] >= 0 ? pos : neg;
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)); g.stroke();
+  }
+}
+
+// ---------- rendering ----------
+function itemThumb(it) {
+  if (it.kind === "text") return `<div class="word">${esc(it.text)}</div>`;
+  if (it.kind === "image") return `<img src="${it.src}" alt="">`;
+  if (it.kind === "video") return it.img ? `<img src="${it.img.src}" alt="">` : `<div class="icon">🎬</div>`;
+  return `<audio controls preload="none" src="${it.src}"></audio>`;
+}
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function renderItems() {
+  const box = $("items");
+  box.innerHTML = "";
+  const S = starScale();
+  for (const it of items) {
+    const card = document.createElement("div");
+    card.className = "card" + (it.busy ? " busy" : "");
+    const meta = it.err ? `<span style="color:var(--warn)">${esc(it.err)}</span>`
+      : it.busy ? "working…" : it.vec ? `${fmtMs(it.ms)}${it.note ? " · " + it.note : ""}` : "waiting";
+    card.innerHTML = `<button class="x" title="Remove">×</button>
+      <div class="thumb">${itemThumb(it)}</div>
+      <div class="name">${KIND_ICON[it.kind]} ${esc(it.label)}</div>
+      <div class="meta">${meta}</div>`;
+    const c = document.createElement("canvas");
+    c.style.width = c.style.height = "90px";
+    card.appendChild(c);
+    if (it.vec) drawStar(c, vecOf(it), 90, S);
+    card.querySelector(".x").onclick = () => { items = items.filter((x) => x !== it); refreshAll(); };
+    box.appendChild(card);
+  }
+}
+
+function fillSelect(sel, withNone, noneLabel) {
+  const prev = sel.value;
+  const opts = (withNone ? [`<option value="">${noneLabel}</option>`] : [])
+    .concat(ready().map((it) => `<option value="${it.id}">${KIND_ICON[it.kind]} ${esc(it.label)}</option>`));
+  sel.innerHTML = opts.join("");
+  if ([...sel.options].some((o) => o.value === prev)) sel.value = prev;
+}
+const byId = (id) => items.find((it) => String(it.id) === String(id));
+
+function drawBigStar() {
+  const a = byId($("starA").value), b = byId($("starB").value);
+  const canvas = $("bigStar"), size = Math.min(380, canvas.parentElement.clientWidth);
+  canvas.style.width = canvas.style.height = size + "px";
+  if (!a) { drawStar(canvas, null, size, 1); $("starFacts").innerHTML = "Add something first."; return; }
+  const S = starScale(), va = vecOf(a);
+  if (!b) {
+    drawStar(canvas, va, size, S);
+    const p = va.filter((x) => x > 0).length;
+    $("starFacts").innerHTML = `<p>${KIND_ICON[a.kind]} <b>${esc(a.label)}</b></p>
+      <p><b>${va.length}</b> rays: <b>${p}</b> green, <b>${va.length - p}</b> red.</p>
+      <p>Biggest number: <b>${Math.max(...va).toFixed(3)}</b><br>Smallest: <b>${Math.min(...va).toFixed(3)}</b></p>`;
+  } else {
+    const vb = vecOf(b), d = sub(va, vb);
+    drawStar(canvas, d, size, S);
+    $("starFacts").innerHTML = `<p>${KIND_ICON[a.kind]} <b>${esc(a.label)}</b> minus ${KIND_ICON[b.kind]} <b>${esc(b.label)}</b></p>
+      <p>Size of the difference: <b>${norm(d).toFixed(3)}</b><br><span class="meta">(0 = identical, 2 = opposite)</span></p>
+      <p>Similarity: <b>${dot(va, vb).toFixed(3)}</b></p>
+      <p class="meta">Drawn at the same scale as the single stars, so a small star means a small difference.</p>`;
+  }
+}
+
+function heat(t) {
+  // t in 0..1 → pale to deep blue
+  const l = 96 - t * 58;
+  return `hsl(220 70% ${l}%)`;
+}
+function renderSim() {
+  const list = ready();
+  if (list.length < 2) { $("simTable").innerHTML = "<p>Add at least two things.</p>"; return; }
+  const V = list.map(vecOf);
+  const M = V.map((a) => V.map((b) => dot(a, b)));
+  let lo = 1, hi = -1;
+  M.forEach((r, i) => r.forEach((x, j) => { if (i !== j) { lo = Math.min(lo, x); hi = Math.max(hi, x); } }));
+  const head = (it) => it.img ? `<img src="${it.img.src}" alt="" title="${esc(it.label)}">` : `<span title="${esc(it.label)}">${KIND_ICON[it.kind]} ${esc(it.label.slice(0, 8))}</span>`;
+  let h = `<table class="sim"><tr><th></th>${list.map((it) => `<th>${head(it)}</th>`).join("")}</tr>`;
+  list.forEach((it, i) => {
+    h += `<tr><th class="rowh">${KIND_ICON[it.kind]} ${esc(it.label)}</th>`;
+    M[i].forEach((x, j) => {
+      const t = i === j ? 1 : (x - lo) / ((hi - lo) || 1);
+      h += `<td style="background:${heat(t)};${t > .6 ? "color:#fff" : ""}" title="${esc(it.label)} · ${esc(list[j].label)}">${i === j ? "" : x.toFixed(2)}</td>`;
+    });
+    h += "</tr>";
+  });
+  $("simTable").innerHTML = h + "</table>";
+}
+
+function renderArith() {
+  const a = byId($("arA").value), b = byId($("arB").value), c = byId($("arC").value);
+  if (!a) { $("arList").innerHTML = ""; drawStar($("arStar"), null, 200, 1); return; }
+  let v = vecOf(a);
+  if (b) v = sub(v, vecOf(b));
+  if (c) v = add(v, vecOf(c));
+  v = scale(v, 1 / (norm(v) || 1));
+  drawStar($("arStar"), v, 200, starScale());
+  const used = new Set([a, b, c].filter(Boolean));
+  const ranked = ready().map((it) => ({ it, s: dot(v, vecOf(it)) })).sort((x, y) => y.s - x.s).slice(0, 8);
+  const top = Math.max(...ranked.map((r) => r.s), .01);
+  $("arList").innerHTML = ranked.map(({ it, s }) =>
+    `<li class="${used.has(it) ? "used" : ""}"><span style="width:44px;text-align:right">${s.toFixed(2)}</span>
+     <span class="sbar" style="width:${Math.max(2, 120 * s / top)}px"></span>
+     ${KIND_ICON[it.kind]} ${esc(it.label)}${used.has(it) ? " (used above)" : ""}</li>`).join("");
+}
+
+function refreshAll() {
+  updateMean();
+  renderItems();
+  for (const id of ["starA", "arA"]) fillSelect($(id), false);
+  fillSelect($("starB"), true, "nothing");
+  fillSelect($("arB"), true, "nothing");
+  fillSelect($("arC"), true, "nothing");
+  drawBigStar(); renderSim(); renderArith(); drawSpace();
+}
+for (const id of ["starA", "starB"]) $(id).addEventListener("change", drawBigStar);
+for (const id of ["arA", "arB", "arC"]) $(id).addEventListener("change", renderArith);
+for (const id of ["dims", "center"]) $(id).addEventListener("change", () => { refreshAll(); placeEverything(); });
+document.querySelector('.lens a[href="#why"]').addEventListener("click", () => { $("why").open = true; });
+$("prefix").addEventListener("change", () => {
+  poleCache.clear();
+  for (const it of items) if (it.kind === "text") embedItem(it);
+});
+
+// ---------- 3D space ----------
+let placed = null; // { axes: [[neg,pos],...], points: [{it, p:[x,y,z]}] }
+let yaw = -0.6, pitch = 0.35;
+
+async function poleVec(word) {
+  const key = $("prefix").value + "\u0000" + word;
+  if (!poleCache.has(key)) poleCache.set(key, (await embedInput("text", textForModel(word))).vec);
+  return poleCache.get(key);
+}
+
+async function placeEverything() {
+  if (!model) return;
+  const axes = [1, 2, 3].map((k) => [$(`ax${k}a`).value.trim(), $(`ax${k}b`).value.trim()]);
+  if (axes.some(([a, b]) => !a || !b)) { $("axesNote").textContent = "Fill in all six words."; return; }
+  $("axesNote").textContent = "working…";
+  const dirs = [];
+  for (const [neg, pos] of axes) {
+    const u = sub(view(await poleVec(pos)), view(await poleVec(neg)));
+    dirs.push(scale(u, 1 / (norm(u) || 1)));
+  }
+  const list = ready();
+  if (!list.length) { $("axesNote").textContent = "Add some things first."; return; }
+  const raw = list.map((it) => { const v = vecOf(it); return dirs.map((u) => dot(v, u)); });
+  const p = [0, 1, 2].map((k) => {
+    const col = raw.map((r) => r[k]);
+    const mean = col.reduce((a, b) => a + b, 0) / col.length;
+    const span = Math.max(...col.map((x) => Math.abs(x - mean))) || 1;
+    return col.map((x) => (x - mean) / span);
+  });
+  placed = { axes, points: list.map((it, i) => ({ it, p: [p[0][i], p[1][i], p[2][i]] })) };
+  $("axesNote").textContent = "";
+  drawSpace();
+}
+$("placeBtn").addEventListener("click", placeEverything);
+
+function drawSpace() {
+  const c = $("space"), W = c.clientWidth, H = c.clientHeight;
+  if (!W) return;
+  const g = sizeCanvas(c, W, H);
+  g.clearRect(0, 0, W, H);
+  if (!placed) {
+    g.fillStyle = css("--muted"); g.font = "15px system-ui"; g.textAlign = "center";
+    g.fillText("Press “Place everything”.", W / 2, H / 2);
+    return;
+  }
+  const R = Math.min(W, H) * 0.36;
+  const cy_ = Math.cos(yaw), sy_ = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const proj = ([x, y, z]) => {
+    const x1 = x * cy_ + z * sy_, z1 = -x * sy_ + z * cy_;
+    const y2 = y * cp - z1 * sp, z2 = y * sp + z1 * cp;
+    const f = 3.2 / (3.2 + z2);
+    return { x: W / 2 + x1 * f * R, y: H / 2 - y2 * f * R, z: z2, f };
+  };
+  const colors = [css("--ax1"), css("--ax2"), css("--ax3")];
+  g.font = "13px system-ui"; g.textAlign = "center"; g.textBaseline = "middle";
+  placed.axes.forEach(([neg, pos], k) => {
+    const e = [0, 0, 0]; e[k] = 1.15;
+    const a = proj(e.map((x) => -x)), b = proj(e);
+    g.strokeStyle = colors[k]; g.lineWidth = 2; g.globalAlpha = .7;
+    g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
+    g.globalAlpha = 1; g.fillStyle = colors[k];
+    g.fillText(neg, a.x, a.y); g.fillText(pos, b.x, b.y);
+  });
+  const pts = placed.points.map((q) => ({ ...q, s: proj(q.p) })).sort((a, b) => b.s.z - a.s.z);
+  for (const { it, s } of pts) {
+    const sz = 34 * s.f;
+    if (it.img && it.img.complete && it.img.naturalWidth) {
+      const ar = it.img.naturalWidth / it.img.naturalHeight;
+      const w = ar >= 1 ? sz * 1.3 : sz * 1.3 * ar, h = ar >= 1 ? sz * 1.3 / ar : sz * 1.3;
+      g.drawImage(it.img, s.x - w / 2, s.y - h / 2, w, h);
+    } else {
+      g.fillStyle = css("--panel"); g.strokeStyle = css("--line");
+      const label = (it.kind === "text" ? "" : KIND_ICON[it.kind] + " ") + it.label;
+      g.font = `${Math.round(13 * s.f + 2)}px system-ui`;
+      const tw = g.measureText(label).width + 10, th = 18 * s.f + 4;
+      g.beginPath(); g.roundRect(s.x - tw / 2, s.y - th / 2, tw, th, 5); g.fill(); g.stroke();
+      g.fillStyle = css("--ink"); g.fillText(label, s.x, s.y + 1);
+    }
+  }
+}
+
+(() => {
+  const c = $("space");
+  let drag = null;
+  c.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY }; c.setPointerCapture(e.pointerId); c.style.cursor = "grabbing"; });
+  c.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    yaw += (e.clientX - drag.x) * 0.01;
+    pitch = Math.max(-1.4, Math.min(1.4, pitch + (e.clientY - drag.y) * 0.01));
+    drag = { x: e.clientX, y: e.clientY };
+    drawSpace();
+  });
+  const end = () => { drag = null; c.style.cursor = "grab"; };
+  c.addEventListener("pointerup", end); c.addEventListener("pointercancel", end);
+  window.addEventListener("resize", () => { drawSpace(); drawBigStar(); });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", refreshAll);
+})();
+
+drawSpace();
+window.explorer = { get items() { return items; }, dims }; // for poking around in the console
+</script>
+</body>
+</html>

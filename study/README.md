@@ -9,3 +9,9 @@ How the page's ray meanings (`const RAYS` in `index.html`) were made.
 `node analyze.mjs dims` compares how well 768, 512, 256, 128 and 64 numbers keep words near their own group. `node analyze.mjs house` reproduces the "tiger − cat + dog lands on house" puzzle. `node arith.mjs` runs arithmetic against the whole vocabulary.
 
 Words use the page's default instruction, `task: search result | query: `, with the 4-bit model on WebGPU.
+
+## Directions: one → many, now → past, plain → -er, thing → idea
+
+`pairs.json` lists 40 singular/plural pairs, 40 present/past pairs, 20 plain/-er pairs, and 30 concrete and 30 abstract nouns. `node collect-pairs.mjs` embeds them (to `pairs-vecs.bin`), and `node directions.mjs` measures each direction and writes `dirs.js` (`const DIRS` in `index.html`).
+
+Result with 768 numbers: each direction separates every one of its pairs, but the biggest single number holds only 1–2% of it, the top 20 numbers about 17–19%, and the top 50 about 35%. With 256 numbers the biggest holds 3–5%. Still, some single numbers move the same way in nearly every pair (for one → many, number 116 in 39 of 40 pairs).

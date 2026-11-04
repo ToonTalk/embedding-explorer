@@ -418,6 +418,7 @@ const SIZES = {
   fp16: { text: 543, vision: 336, audio: 587 },
 };
 const MAX_AUDIO_SECONDS = 30;
+const LOAD_STORE = "embex.load"; // the settings of the last load that worked
 const VIDEO_FRAMES = 16; // 16 frames × 140 tokens stays under the WebGPU limit of about 2,700
 const KIND_ICON = { text: "🔤", image: "🖼️", audio: "🔊", video: "🎬" };
 const KIND_NAME = { text: "word", image: "picture", audio: "sound", video: "video" };
@@ -459,8 +460,32 @@ function showSizeNote() {
     $("device").options[0].textContent = "No graphics chip found: using the main processor";
     $("wantVision").checked = $("wantAudio").checked = false;
   }
+  try { // the settings of the last load that worked
+    const s = JSON.parse(localStorage.getItem(LOAD_STORE));
+    if (s) { $("wantVision").checked = s.vision; $("wantAudio").checked = s.audio; $("quality").value = s.quality; $("device").value = s.device; }
+  } catch {}
   showSizeNote();
+  await new Promise((r) => setTimeout(r)); // let the rest of the page finish setting up first
+  if (await modelIsSaved()) {
+    status("The model is already saved in this browser, so it's loading by itself…");
+    $("loadBtn").click();
+  }
 })();
+
+// Transformers.js keeps downloaded files in the browser's Cache Storage. If every file these
+// settings need is there, loading takes seconds and downloads nothing, so it can start by itself.
+async function modelIsSaved() {
+  try {
+    const cache = await caches.open("transformers-cache");
+    const have = new Set((await cache.keys()).map((r) => r.url.split("/").pop()));
+    const device = $("device").value === "wasm" || !hasGpu ? "wasm" : "webgpu";
+    const d = dtypesFor(device, $("quality").value);
+    const need = [`model_${d.model}.onnx`, "tokenizer.json", "config.json"];
+    if ($("wantVision").checked) need.push(`vision_encoder_${d.vision_encoder}.onnx`);
+    if ($("wantAudio").checked) need.push(`audio_encoder_${d.audio_encoder}.onnx`);
+    return need.every((f) => have.has(f));
+  } catch { return false; }
+}
 
 function renderTimes() {
   const rows = Object.entries(timings).filter(([, t]) => t.length).map(([k, t]) => {
@@ -500,6 +525,7 @@ $("loadBtn").addEventListener("click", async () => {
     model = await AutoModel.from_pretrained(MODEL_ID, { config, device, dtype, progress_callback });
     $("barFill").style.width = "100%";
     loaded = { vision: wantVision, audio: wantAudio, device, quality };
+    try { localStorage.setItem(LOAD_STORE, JSON.stringify({ vision: wantVision, audio: wantAudio, quality, device: $("device").value })); } catch {}
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
     const parts = ["words", wantVision && "pictures & videos", wantAudio && "sounds"].filter(Boolean).join(", ");
     const where = device === "webgpu" ? "the graphics chip (WebGPU)" : "the main processor (WASM) — expect it to be slow";
@@ -1504,6 +1530,7 @@ function unusable(kind, arg) {
   if (/&lt;/.test(arg)) return true;
   const ts = terms(arg);
   if (!ts.length || ts.every((t) => PLACEHOLDER.test(t.label))) return true;
+  if (kind === "add" && findThing(arg)) return true; // it's already on the page
   return ts.some((t) => /^(picture|sound|video)\s*:/i.test(t.label) && !findThing(t.label));
 }
 function actLabel(kind, arg) {

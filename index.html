@@ -51,7 +51,9 @@ table.times td, table.times th { padding: 2px 10px 2px 0; text-align: left; }
 .card .thumb .icon { font-size: 34px; }
 .card .thumb .word.emoji { font-size: 48px; line-height: 1.1; }
 .emo { font-size: 1.6em; line-height: 1; vertical-align: middle; }
-.dirs button { font-size: 13px; padding: 3px 8px; }
+.dirs button, .fxex button { font-size: 13px; padding: 3px 8px; }
+.fxex button { font-family: ui-monospace, Consolas, monospace; }
+#fxMsg.err { color: var(--warn); font-size: 15px; }
 .dirs button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
 .card .name { font-size: 13px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .meta { font-size: 12px; color: var(--muted); }
@@ -252,7 +254,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <details class="more">
         <summary>More detail</summary>
         <p>For each number, the study found the average value over all 2,800 words, and how much it usually varies. A word is “high” for a number when its value is far above that average. If the words in a group (animals, food, feelings, music and so on) are high on average, the page says that group leans that way. About a third of the numbers have such a leaning group; the others don't.</p>
-        <p>Why don't the numbers mean one thing each? The model has to fit far more ideas than it has numbers. It seems to store each idea as a <em>direction</em>, a mix of many numbers, and many ideas share each number. Researchers call this <em>superposition</em>, and finding the real directions is an active area of research. The arrows in section 6 are directions like that, which you choose yourself.</p>
+        <p>Why don't the numbers mean one thing each? The model has to fit far more ideas than it has numbers. It seems to store each idea as a <em>direction</em>, a mix of many numbers, and many ideas share each number. Researchers call this <em>superposition</em>, and finding the real directions is an active area of research. The arrows in section 7 are directions like that, which you choose yourself.</p>
         <p>The study used words, so the meanings fit pictures and sounds less well. And the six longest rays (numbers 116, 392, 112, 555, 733 and 30) are about the same for every word and picture, but a bit different for sounds, so they partly say what <em>kind</em> of thing it is.</p>
       </details>
     </details>
@@ -320,8 +322,42 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
     </details>
   </section>
 
+  <section id="formulaSec" class="locked">
+    <h2>6. Your own formula</h2>
+    <p>Write your own <span class="term">arithmetic</span> with words, numbers, + − × ÷ and brackets, like <code>(morning + night) / 2</code>. Words that aren't on the page yet are added. The result can only land on things on the page, so add your guesses too.</p>
+    <div class="row">
+      <input type="text" id="fxIn" placeholder="(morning + night) / 2" style="flex:1;min-width:200px" spellcheck="false" autocomplete="off">
+      <button id="fxGo" class="primary">Work it out</button>
+    </div>
+    <div class="row fxex" id="fxExamples"><span class="meta">Try:</span></div>
+    <div id="fxMsg" class="meta"></div>
+    <div class="starwrap">
+      <canvas id="fxStar" style="width:200px;height:200px"></canvas>
+      <div style="flex:1;min-width:220px">
+        <ol class="nearest" id="fxList"></ol>
+        <div class="row"><input type="text" id="fxGuess" placeholder="a word you think is close" style="flex:1;min-width:150px"><button id="fxGuessGo">Add my guess</button></div>
+      </div>
+    </div>
+    <details>
+      <summary>What can I write?</summary>
+      <ul>
+        <li>Words: <code>dog</code>, emoji: <code>🐶</code>, phrases: <code>piano music</code>. Use quotes if a phrase has a sign in it: <code>"x-ray"</code>.</li>
+        <li>Pictures, sounds and videos already on the page: <code>picture:tiger</code>, <code>sound:piano</code>, <code>video:sea turtle</code> (no quotes needed after the colon, but use quotes if the label has + or − in it).</li>
+        <li>Numbers: <code>2 * big</code>, <code>big / 2</code>, <code>0.5 * dog</code>. You can leave out the ×: <code>2 big</code>.</li>
+        <li><code>average(red, blue, yellow)</code> adds them up and divides by how many there are.</li>
+      </ul>
+      <p>Only the <em>direction</em> of the result matters for what's nearest, because similarity ignores length. So <code>(morning + night) / 2</code> lands on the same things as <code>morning + night</code>. Dividing matters inside bigger formulas: <code>(morning + night) / 2 - day</code> is different from <code>morning + night - day</code>.</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>The page shows the <b>length</b> of the result before it's scaled back to 1. The average of two lists of length 1 is shorter when they point different ways: it's 1 when they're identical and 0.71 when they're unrelated. So the length of <code>(a + b) / 2</code> tells you how much a and b agree. Usually it's about 0.95, because of the part every embedding shares; tick <b>Take away what everything shares</b> and the lengths spread out.</p>
+        <p>Formulas like <code>2 * big - small</code> go <em>past</em> big, in the direction from small to big. Does it land on “huge”? Formulas like <code>dog + "baby"</code> mix two ideas. Nobody promises any of these will work: the model was never trained to do arithmetic, so each result is an experiment.</p>
+        <p>Multiplying two words together isn't allowed: there are several ways to multiply lists, and none of them means much here.</p>
+      </details>
+    </details>
+  </section>
+
   <section id="axesSec" class="locked">
-    <h2>6. Your own 3D space</h2>
+    <h2>7. Your own 3D space</h2>
     <p>Choose three <span class="term" data-t="direction">directions</span>, each from one word to another. Everything you added is placed along them. Drag to turn the space.</p>
     <div class="axes">
       <span class="dot" style="background:var(--ax1)"></span><input type="text" id="ax1a" value="small"><span>→</span><input type="text" id="ax1b" value="big">
@@ -1068,7 +1104,7 @@ function drawDirection(canvas, size) {
   $("starFacts").innerHTML = `<p><b>${DIR_LABEL[dirShown][0]}</b>: the average change over ${d.n} word pairs such as ${d.ex.join(", ")}.</p>
     <p>Bright rays: the <b>${k}</b> numbers that moved the same way in at least 9 of every 10 pairs. Pale rays: the rest.</p>
     <p>The biggest number holds only <b>${share(1)}%</b> of the change, and the biggest ten <b>${share(10)}%</b>. So this isn't one ray: it's a direction spread over many numbers.</p>
-    <p class="meta">Try it in section 6 with an axis like ${DIR_LABEL[dirShown][1]}.</p>`;
+    <p class="meta">Try it in section 7 with an axis like ${DIR_LABEL[dirShown][1]}.</p>`;
 }
 
 function drawBigStar() {
@@ -1138,6 +1174,186 @@ function renderArith() {
      ${KIND_ICON[it.kind]} ${labelHtml(it)}${used.has(it) ? " (used above)" : ""}</li>`).join("");
 }
 
+// ---------- your own formula ----------
+// Grammar: expr = term (("+"|"-") term)*; term = unary (("*"|"/") unary | unary)*  (a bare number
+// before a word multiplies it); unary = ("-"|"+") unary | atom; atom = number | word | "(" expr ")" | average(...)
+function tokenize(src) {
+  const toks = [], s = src.replace(/[−–—]/g, "-").replace(/[×·]/g, "*").replace(/÷/g, "/");
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if ("+-*/(),".includes(c)) { toks.push({ t: c }); i++; continue; }
+    const q = { '"': '"', "'": "'", "“": "”", "‘": "’" }[c];
+    if (q) {
+      const j = s.indexOf(q === "”" ? "”" : q, i + 1);
+      if (j < 0) throw new Error(`A quote ${c} isn't closed.`);
+      toks.push({ t: "word", v: s.slice(i + 1, j).trim() }); i = j + 1; continue;
+    }
+    const num = /^(\d+\.?\d*|\.\d+)/.exec(s.slice(i));
+    if (num && !/[\p{L}]/u.test(s[i + num[0].length] || "")) { toks.push({ t: "num", v: +num[0] }); i += num[0].length; continue; }
+    // a word: everything up to the next operator, bracket or comma (spaces inside are kept, then trimmed)
+    let j = i;
+    while (j < s.length && !"+-*/(),\"“".includes(s[j])) j++;
+    let w = s.slice(i, j).trim();
+    // "picture:" followed by a quoted label
+    if (/^(picture|sound|video|word)\s*:$/i.test(w) && /["“']/.test(s[j] || "")) {
+      const close = { '"': '"', "“": "”", "'": "'" }[s[j]], k = s.indexOf(close, j + 1);
+      if (k < 0) throw new Error("A quote isn't closed.");
+      w += s.slice(j + 1, k); j = k + 1;
+    }
+    toks.push({ t: "word", v: w }); i = j;
+  }
+  return toks;
+}
+function parseFormula(src) {
+  const toks = tokenize(src);
+  let p = 0;
+  const peek = () => toks[p]?.t, next = () => toks[p++];
+  const want = (t, msg) => { if (peek() !== t) throw new Error(msg); return next(); };
+  function expr() {
+    let n = term();
+    while (peek() === "+" || peek() === "-") { const op = next().t; n = { op, a: n, b: term() }; }
+    return n;
+  }
+  function term() {
+    let n = unary();
+    for (;;) {
+      if (peek() === "*" || peek() === "/") { const op = next().t; n = { op, a: n, b: unary() }; }
+      else if (n.num != null && (peek() === "word" || peek() === "(")) n = { op: "*", a: n, b: unary() }; // 2 big
+      else return n;
+    }
+  }
+  function unary() {
+    if (peek() === "-") { next(); return { op: "neg", a: unary() }; }
+    if (peek() === "+") { next(); return unary(); }
+    return atom();
+  }
+  function atom() {
+    const tk = next();
+    if (!tk) throw new Error("The formula ends too soon.");
+    if (tk.t === "num") return { num: tk.v };
+    if (tk.t === "(") { const n = expr(); want(")", "A bracket ( isn't closed."); return n; }
+    if (tk.t === "word") {
+      if (!tk.v) throw new Error("There's an empty word in quotes.");
+      if (/^(average|avg|mean)$/i.test(tk.v) && peek() === "(") {
+        next(); const args = [expr()];
+        while (peek() === ",") { next(); args.push(expr()); }
+        want(")", "average( needs a closing bracket.");
+        return { op: "avg", args };
+      }
+      return { word: tk.v };
+    }
+    throw new Error(tk.t === ")" ? "There's a ) without a (." : `Something is missing before “${tk.t}”.`);
+  }
+  const tree = expr();
+  if (p < toks.length) throw new Error(toks[p].t === ")" ? "There's a ) without a (." : `I don't understand the part starting “${toks[p].v ?? toks[p].t}”. Is an operator missing?`);
+  return tree;
+}
+function formulaWords(n, out = []) {
+  if (n.word) out.push(n.word);
+  for (const k of ["a", "b"]) if (n[k]) formulaWords(n[k], out);
+  n.args?.forEach((x) => formulaWords(x, out));
+  return out;
+}
+// Values are numbers or lists (Float32Array). things maps each word to its item.
+function evalFormula(n, things) {
+  if (n.num != null) return n.num;
+  if (n.word) return vecOf(things.get(n.word));
+  if (n.op === "neg") { const a = evalFormula(n.a, things); return typeof a === "number" ? -a : scale(a, -1); }
+  if (n.op === "avg") {
+    const vs = n.args.map((x) => evalFormula(x, things));
+    if (vs.some((v) => typeof v === "number")) throw new Error("average( ) needs words, not numbers.");
+    return scale(vs.reduce((s, v) => add(s, v)), 1 / vs.length);
+  }
+  const a = evalFormula(n.a, things), b = evalFormula(n.b, things);
+  const na = typeof a === "number", nb = typeof b === "number";
+  switch (n.op) {
+    case "+": case "-":
+      if (na !== nb) throw new Error(`Can't ${n.op === "+" ? "add" : "subtract"} a number and a word. Try multiplying instead, like 2 * big.`);
+      return na ? (n.op === "+" ? a + b : a - b) : n.op === "+" ? add(a, b) : sub(a, b);
+    case "*":
+      if (!na && !nb) throw new Error("Can't multiply two words together. Multiply a word by a number, like 2 * big.");
+      return na && nb ? a * b : na ? scale(b, a) : scale(a, b);
+    case "/":
+      if (!nb) throw new Error("Can only divide by a number, like (morning + night) / 2.");
+      if (b === 0) throw new Error("Can't divide by 0.");
+      return na ? a / b : scale(a, 1 / b);
+  }
+}
+
+let fx = null; // { src, tree, things: Map(word → item), used: Set(items) }
+let fxRun = 0;
+async function runFormula(src) {
+  src = (src ?? $("fxIn").value).trim();
+  if (!src) return;
+  $("fxIn").value = src;
+  $("fxMsg").textContent = ""; $("fxMsg").className = "meta";
+  let tree;
+  try { tree = parseFormula(src); } catch (e) { fxError(e.message); return; }
+  const words = [...new Set(formulaWords(tree))];
+  if (!words.length) { fxError("Put at least one word in the formula."); return; }
+  if (!model) { fxError("Load the model first."); return; }
+  $("fxMsg").textContent = "working…";
+  const run = ++fxRun, things = new Map();
+  try {
+    const its = await Promise.all(words.map((w) => ensureThing(/^(picture|sound|video|word)\s*:/i.test(w) ? w : "word:" + w, "Formulas")));
+    words.forEach((w, k) => things.set(w, its[k]));
+  } catch (e) { if (run === fxRun) fxError(e.message); return; }
+  if (run !== fxRun) return; // a newer formula was started meanwhile
+  fx = { src, tree, things, used: new Set(things.values()) };
+  refreshAll();
+}
+function fxError(msg) { fx = null; $("fxMsg").textContent = msg; $("fxMsg").className = "err"; renderFormula(); }
+function formulaResult() {
+  if (!fx) return null;
+  for (const it of fx.things.values()) if (!items.includes(it) || !it.vec) return null; // something was removed
+  const v = evalFormula(fx.tree, fx.things);
+  if (typeof v === "number") throw new Error(`That's just the number ${+v.toFixed(4)}. Put a word in it.`);
+  return { v: scale(v, 1 / (norm(v) || 1)), len: norm(v) };
+}
+function renderFormula() {
+  let r = null;
+  try { r = formulaResult(); } catch (e) { $("fxMsg").textContent = e.message; $("fxMsg").className = "err"; }
+  if (!r) { drawStar($("fxStar"), null, 200, 1); $("fxList").innerHTML = ""; if (!fx && !$("fxMsg").textContent) $("fxMsg").textContent = ""; return; }
+  if (r.len < 1e-6) { $("fxMsg").textContent = "The result is all zeros, so it has no direction and nothing is nearest."; $("fxMsg").className = "err"; drawStar($("fxStar"), null, 200, 1); $("fxList").innerHTML = ""; return; }
+  $("fxMsg").className = "meta";
+  $("fxMsg").innerHTML = `<b>${esc(fx.src)}</b> · length before scaling to 1: <b>${r.len.toFixed(2)}</b>`;
+  drawStar($("fxStar"), r.v, 200, starScale());
+  const ranked = ready().map((it) => ({ it, s: dot(r.v, vecOf(it)) })).sort((x, y) => y.s - x.s).slice(0, 10);
+  const top = Math.max(...ranked.map((x) => x.s), .01);
+  $("fxList").innerHTML = ranked.map(({ it, s }) =>
+    `<li class="${fx.used.has(it) ? "used" : ""}"><span style="width:44px;text-align:right">${s.toFixed(2)}</span>
+     <span class="sbar" style="width:${Math.max(2, 120 * s / top)}px"></span>
+     ${KIND_ICON[it.kind]} ${labelHtml(it)}${fx.used.has(it) ? " (in the formula)" : ""}</li>`).join("");
+}
+// Each example also adds a few possible answers (right and wrong), since a result can only land on things on the page.
+const FX_EXAMPLES = [
+  ["(morning + night) / 2", ["evening", "noon", "afternoon", "midnight"]],
+  ["puppy - dog + cat", ["kitten", "calf", "lion"]],
+  ["Paris - France + Japan", ["Tokyo", "London", "Rome"]],
+  ["bread + cheese + tomato", ["pizza", "cake", "salad"]],
+  ["(hot + cold) / 2", ["warm", "freezing", "boiling"]],
+  ["2 * big - small", ["huge", "medium", "tiny"]],
+  ["bird - fly + swim", ["fish", "penguin", "dolphin"]],
+  ["(blue + yellow) / 2", ["green", "purple", "orange"]],
+];
+for (const [src, cands] of FX_EXAMPLES) {
+  const b = document.createElement("button");
+  b.textContent = src; b.title = "Also adds some possible answers: " + cands.join(", ");
+  b.onclick = () => { addThings(cands, "Formulas"); runFormula(src); };
+  $("fxExamples").appendChild(b);
+}
+$("fxGo").addEventListener("click", () => runFormula());
+$("fxIn").addEventListener("keydown", (e) => { if (e.key === "Enter") runFormula(); });
+$("fxGuessGo").addEventListener("click", async () => {
+  const w = $("fxGuess").value.trim();
+  if (!w) return;
+  $("fxGuess").value = "";
+  try { await ensureThing(w, "Formulas"); refreshAll(); } catch (e) { $("fxMsg").textContent = e.message; }
+});
+$("fxGuess").addEventListener("keydown", (e) => { if (e.key === "Enter") $("fxGuessGo").click(); });
+
 function refreshAll() {
   updateMean();
   renderItems();
@@ -1145,7 +1361,7 @@ function refreshAll() {
   fillSelect($("starB"), true, "nothing");
   fillSelect($("arB"), true, "nothing");
   fillSelect($("arC"), true, "nothing");
-  drawBigStar(); renderSim(); renderArith(); drawSpace();
+  drawBigStar(); renderSim(); renderArith(); renderFormula(); drawSpace();
 }
 for (const id of ["starA", "starB"]) $(id).addEventListener("change", () => { dirShown = null; drawBigStar(); });
 for (const id of ["arA", "arB", "arC"]) $(id).addEventListener("change", renderArith);
@@ -1439,7 +1655,7 @@ function aiError(e) {
 
 const GUIDE_SYSTEM = `You are the guide inside Embedding Explorer, a web page where school students (aged about 10 to 16) explore embeddings. Google's EmbeddingGemma 2 model runs in their browser and turns each word, picture, sound or video they add into a list of 768 numbers.
 
-The page has: 2. Add things. 3. Star view (one thing's 768 numbers drawn as 768 rays from a center; green positive, red negative; can also show A minus B). 4. A similarity grid. 5. Embedding arithmetic (A − B + C, with the nearest things to the result). 6. A 3D space whose three axes the student defines with word pairs. A bar at the top sets how many of the numbers to use (768, 512, 256 or 128) and can "take away what everything shares".
+The page has: 2. Add things. 3. Star view (one thing's 768 numbers drawn as 768 rays from a center; green positive, red negative; can also show A minus B). 4. A similarity grid. 5. Embedding arithmetic (A − B + C, with the nearest things to the result). 6. Your own formula: the student types arithmetic with words, numbers, + - * / and brackets, like (morning + night) / 2 or 2 * big - small, and sees the nearest things. 7. A 3D space whose three axes the student defines with word pairs. A bar at the top sets how many of the numbers to use (768, 512, 256 or 128) and can "take away what everything shares".
 
 Facts you can rely on:
 - Similarity is cosine similarity: 1 = same direction, 0 = unrelated. Every embedding has length 1.
@@ -1457,7 +1673,7 @@ Facts you can rely on:
 How to help:
 - Answer in under 100 words of plain language for a curious teenager. Use Markdown.
 - If no fact above explains why the model did something, say that nobody can be sure, and suggest an experiment that would tell them more. Don't make up reasons.
-- The model is already trained and can't be changed. Only suggest things the student can do on this page: add words, pictures, sounds or videos, change the settings, and use sections 3 to 6.
+- The model is already trained and can't be changed. Only suggest things the student can do on this page: add words, pictures, sounds or videos, change the settings, and use sections 3 to 7.
 - Talk about the section named in LOOKING AT unless the student asks about something else.
 - Use the real numbers from the page summary. Never invent a number; if one is missing, say how to see it.
 - You can't see the pictures or hear the sounds, only their labels and numbers. Say so if it matters.
@@ -1466,6 +1682,7 @@ How to help:
   [[add: word]] adds a word or short phrase.
   [[try: A - B + C]] sets up embedding arithmetic (missing words are added).
   [[star: A - B]] or [[star: A]] shows a star.
+  [[formula: (morning + night) / 2]] works out a formula in section 6 (put phrases in double quotes).
   A plain label means a word (new words are added). For a picture, sound or video already added, write picture:label, sound:label or video:label, for example [[star: picture:tiger - tiger]].
 - For a challenge, pick one from CHALLENGE IDEAS in the page summary (or one just like them), say exactly what counts as success, and don't give away the answer. When the student says they've done it, check it against the numbers in the summary.
 - Use American spelling.`;
@@ -1515,6 +1732,15 @@ function snapshot(compact) {
       `Nearest things to it, not counting its own inputs: ${fmt(ranked.filter(([it]) => !inputs.has(it))) || "none"}. ` +
       `Its own inputs score: ${ranked.filter(([it]) => inputs.has(it)).map(([it, s]) => `${describe(it)} ${s.toFixed(2)}`).join(", ")}.`);
   }
+  try {
+    const r = formulaResult();
+    if (r) {
+      const ranked = list.map((it) => [it, dot(r.v, vecOf(it))]).sort((x, y) => y[1] - x[1]);
+      const fmt = (rs) => rs.slice(0, 4).map(([it, s]) => `${describe(it)} ${s.toFixed(2)}`).join(", ");
+      lines.push(`FORMULA (section 6): ${fx.src} (length before scaling ${r.len.toFixed(2)}). Nearest things not in the formula: ${fmt(ranked.filter(([it]) => !fx.used.has(it))) || "none"}. ` +
+        `Things in the formula score: ${fmt(ranked.filter(([it]) => fx.used.has(it)))}.`);
+    }
+  } catch {}
   lines.push(...challengeIdeas(list));
   if (placed) {
     lines.push(`3D SPACE axes: ` + placed.axes.map(([n, p]) => `"${n}"→"${p}"`).join(", ") + " (positions run from -1 to 1)");
@@ -1562,7 +1788,7 @@ function md(src) {
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
     .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>")
-    .replace(/\[\[\s*(add|try|star)\s*:\s*([^\]]+?)\s*\]\]/gi, (_, kind, arg) => unusable(kind.toLowerCase(), arg) ? ""
+    .replace(/\[\[\s*(add|try|star|formula)\s*:\s*([^\]]+?)\s*\]\]/gi, (_, kind, arg) => unusable(kind.toLowerCase(), arg) ? ""
       : `<button class="act" data-act="${kind.toLowerCase()}" data-arg="${arg}">${actLabel(kind.toLowerCase(), arg)}</button>`);
   const out = [];
   let list = null;
@@ -1588,13 +1814,19 @@ function md(src) {
 const PLACEHOLDER = /^(an? |your |new |another |some )*(new )?(word|thing|phrase|example)s?$|^[ABCDX]$/i;
 function unusable(kind, arg) {
   if (/&lt;/.test(arg)) return true;
+  if (kind === "formula") {
+    try {
+      const ws = formulaWords(parseFormula(arg.replace(/&quot;/g, '"').replace(/&amp;/g, "&")));
+      return !ws.length || ws.some((w) => PLACEHOLDER.test(w) || (/^(picture|sound|video)\s*:/i.test(w) && !findThing(w)));
+    } catch { return true; }
+  }
   const ts = terms(arg);
   if (!ts.length || ts.every((t) => PLACEHOLDER.test(t.label))) return true;
   if (kind === "add" && findThing(arg)) return true; // it's already on the page
   return ts.some((t) => /^(picture|sound|video)\s*:/i.test(t.label) && !findThing(t.label));
 }
 function actLabel(kind, arg) {
-  return kind === "add" ? `＋ add ${arg}` : kind === "try" ? `▶ try ${arg}` : `✳ star of ${arg}`;
+  return kind === "add" ? `＋ add ${arg}` : kind === "try" ? `▶ try ${arg}` : kind === "formula" ? `ƒ work out ${arg}` : `✳ star of ${arg}`;
 }
 
 function logMsg(cls, html) {
@@ -1674,11 +1906,11 @@ function findThing(ref) {
   return items.find((it) => it.kind === kind && it.label.toLowerCase() === l)
     || (!m && items.find((it) => it.label.toLowerCase() === l));
 }
-async function ensureThing(ref) {
+async function ensureThing(ref, set) {
   if (!model) throw new Error("Load the model first.");
   const label = ref.trim().replace(/^word\s*:\s*/i, "").replace(/^"|"$/g, "");
   if (/^(picture|sound|video)\s*:/i.test(label) && !findThing(label)) throw new Error(`There's no ${label} on the page.`);
-  const it = findThing(ref) || addItem("text", { text: label, label });
+  const it = findThing(ref) || addItem("text", { text: label, label, set });
   while (!it.vec && !it.err) await new Promise((r) => setTimeout(r, 150));
   if (it.err) throw new Error(it.err);
   return it;
@@ -1694,6 +1926,7 @@ function terms(expr) {
 async function runAction(kind, arg) {
   try {
     if (kind === "add") { await ensureThing(arg); return; }
+    if (kind === "formula") { await runFormula(arg.replace(/&quot;/g, '"')); $("formulaSec").scrollIntoView({ behavior: "smooth" }); return; }
     const ts = terms(arg);
     const its = [];
     for (const t of ts) its.push(await ensureThing(t.label));
@@ -1785,7 +2018,7 @@ checkNano();
 
 drawSpace();
 window.explorer = { get items() { return items; }, dims, snapshot, guidePrompt, GUIDE_SYSTEM, askAI, md, checkNano, // for poking around in the console
-  embedText: async (t) => (await embedInput("text", textForModel(t))).vec, addThings, fallbackIdea };
+  embedText: async (t) => (await embedInput("text", textForModel(t))).vec, addThings, fallbackIdea, parseFormula, runFormula };
 </script>
 </body>
 </html>

@@ -12,7 +12,8 @@ Students can:
 2. See any embedding as a **star**: one ray per number, green for positive and red for negative. They can also see the difference between two embeddings as a star. Pointing at a ray shows which everyday words are unusually high and low for that number (see below).
 3. Compare everything with everything in a similarity grid.
 4. Do **embedding arithmetic** (A − B + C) and see what is nearest the result.
-5. Build their own **3D space** from three word pairs (for example small → big) and see where everything lands.
+5. Write their **own formula** with words, numbers, + − × ÷ and brackets, such as `(morning + night) / 2` (lands on "evening") or `puppy - dog + cat` (lands on "kitten"), and see what is nearest.
+6. Build their own **3D space** from three word pairs (for example small → big) and see where everything lands.
 
 A 🧭 **Guide** (an AI) can be opened from anywhere on the page. It is given a text summary of the page: what has been added, the nearest neighbors, and the current star, arithmetic and 3D views, plus challenge ideas the page works out from the student's own things. It can't see the pictures or hear the sounds. It suggests experiments, explains surprises and sets challenges the student can check. Its suggestions come with buttons that add words or set up the star or arithmetic view. "What the guide was told" shows exactly what it received.
 

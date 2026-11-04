@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Embedding Explorer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23f7f6f2'/%3E%3Cg stroke-width='4.5' stroke-linecap='round'%3E%3Cpath d='M32 32V4M32 32L52 12M32 32L58 40M32 32L22 56M32 32L8 30' stroke='%231a8f3c'/%3E%3Cpath d='M32 32L46 8M32 32L56 26M32 32L44 54M32 32L12 48M32 32L18 14' stroke='%23d03a2f'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='4' fill='%232f5bd3'/%3E%3C/svg%3E">
 <style>
 :root {
   --bg: #f7f6f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #5f6368; --line: #dcdad3;
@@ -54,11 +55,22 @@ table.times td, table.times th { padding: 2px 10px 2px 0; text-align: left; }
 .card .x { position: absolute; top: 2px; right: 4px; border: none; background: none; padding: 2px 6px; color: var(--muted); }
 .card.busy { opacity: .55; }
 .card audio { width: 100%; height: 28px; }
+.card .retry { font-size: 12px; padding: 1px 6px; margin-top: 2px; }
+.choosing .card { cursor: pointer; }
+.choosing .card.chosen { outline: 3px solid var(--neg); outline-offset: -1px; opacity: .6; }
+.sets button { font-size: 14px; padding: 4px 9px; }
+.removebar { border: 1px solid var(--neg); border-radius: 10px; padding: 8px 10px; margin: 8px 0; font-size: 15px; }
+.removebar #removeGroups button { font-size: 13px; padding: 3px 8px; margin: 2px; }
 
 .starwrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
 #bigStar { width: 380px; height: 380px; max-width: 100%; }
 .facts { font-size: 15px; min-width: 220px; flex: 1; }
 .facts b { font-variant-numeric: tabular-nums; }
+#bigStar { cursor: crosshair; touch-action: manipulation; }
+.rayinfo { font-size: 14px; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 6px; }
+.rayinfo:empty { display: none; }
+.rayinfo .w { color: var(--muted); }
+.rayinfo button.rayref { font-size: 13px; padding: 1px 6px; margin: 1px 2px; }
 
 .simwrap { overflow-x: auto; }
 table.sim { border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -87,6 +99,14 @@ table.sim th img { height: 28px; display: block; margin: 0 auto; }
   box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .lens label { display: inline-flex; gap: 6px; align-items: center; }
 .lens a { color: var(--accent); font-size: 14px; }
+
+/* technical words with an explanation on hover or tap */
+.term { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+#tip { position: fixed; z-index: 50; max-width: 300px; background: var(--ink); color: var(--bg); font-size: 14px; line-height: 1.4;
+  padding: 7px 10px; border-radius: 8px; box-shadow: 0 3px 12px rgba(0,0,0,.25); pointer-events: none; }
+#tip b { color: inherit; }
+details.more { margin: 6px 0 4px; padding-left: 10px; border-left: 3px solid var(--line); }
+details.more summary { color: var(--accent); }
 
 /* the guide */
 .guide-fab { position: fixed; right: 16px; bottom: 16px; z-index: 20; border-radius: 999px; padding: 10px 16px;
@@ -125,11 +145,17 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
 <body>
 <main>
   <h1>Embedding Explorer</h1>
-  <p class="lede">An AI model turns a word, a picture, a sound or a video into a list of 768 numbers, called an <em>embedding</em>. Things with similar meanings get similar lists — even when one is a word and the other is a photo.</p>
+  <p class="lede">An AI <span class="term">model</span> turns a word, a picture, a sound or a video into a list of 768 numbers, called an <span class="term">embedding</span>. Things with similar meanings get similar lists — even when one is a word and the other is a photo. Words with a dotted line under them explain themselves when you point at or tap them.</p>
 
   <section id="loadSec">
     <h2>1. Load the model</h2>
     <p>The model (Google's EmbeddingGemma 2) runs inside this browser, so what you add stays on this computer. It downloads once and is then remembered.</p>
+    <details class="more">
+      <summary>More detail</summary>
+      <p>Most AI runs on a company's computers: you send your words or pictures away and get an answer back. This one is small enough to run on your own computer. It has a few hundred million learned settings for words, plus separate parts for pictures and sounds that turn them into the same kind of list.</p>
+      <p>The model was trained by showing it enormous numbers of matching pairs, such as a photo and its caption, and nudging its settings so that matching pairs get similar lists and mismatched pairs get different ones. Nobody told it what any of the 768 numbers should mean; it worked out its own way of using them.</p>
+      <p>The <span class="term">4-bit</span> version stores each setting less exactly so the download is smaller. With a <span class="term">graphics chip</span> a word takes about a tenth of a second; without one, words still work but pictures, sounds and videos can take minutes.</p>
+    </details>
     <div class="row choices">
       <label><input type="checkbox" checked disabled> Words</label>
       <label><input type="checkbox" id="wantVision" checked> Pictures &amp; videos</label>
@@ -158,15 +184,15 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
 
   <div id="lens" class="lens" hidden>
     <label>Use the first <select id="dims">
-      <option>768</option><option>512</option><option>256</option><option>128</option>
-    </select> of the 768 numbers</label>
-    <label><input type="checkbox" id="center"> Take away what everything shares</label>
+      <option>768</option><option>512</option><option selected>256</option><option>128</option>
+    </select> of the 768 <span class="term">numbers</span></label>
+    <label><input type="checkbox" id="center"> Take away what everything <span class="term" data-t="shared part">shares</span></label>
     <a href="#why">Why?</a>
   </div>
 
   <section id="addSec" class="locked">
     <h2>2. Add things</h2>
-    <p>Type a word or sentence, or add a picture, sound or video. You can also drop files onto this page.</p>
+    <p>Type a word or sentence, or add a picture, sound or video. You can also drop files onto this page, or add a whole set of examples.</p>
     <div class="row">
       <input type="text" id="textIn" placeholder="a word or a sentence" style="flex:1;min-width:180px">
       <button id="addText">Add</button>
@@ -175,26 +201,35 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <button id="addFile">📁 Picture, sound or video file</button>
       <button id="snap" data-need="vision">📷 Take a photo</button>
       <button id="record" data-need="audio">🎤 Record 4 seconds</button>
-      <button id="examples">✨ Add examples</button>
-      <button id="clearAll">Remove all</button>
+      <button id="removeBtn">🗑 Remove some…</button>
       <input type="file" id="fileIn" accept="image/*,audio/*,video/*" multiple hidden>
+    </div>
+    <div class="row sets" id="sets"><span class="meta">Add a set:</span></div>
+    <div class="removebar" id="removeBar" hidden>
+      <div>Click the things to remove, or choose a group: <span id="removeGroups"></span></div>
+      <div class="row"><button id="removeGo" class="primary" disabled>Remove 0</button><button id="removeCancel">Cancel</button></div>
     </div>
     <div class="grid" id="items"></div>
     <details>
       <summary>How the words are given to the model</summary>
-      <p>The model works best when text starts with a short instruction. Each word or sentence you add is actually sent as:</p>
+      <p>The model works best when text starts with a short <span class="term">instruction</span>. Each word or sentence you add is actually sent as:</p>
       <div class="row"><select id="prefix">
         <option value="task: search result | query: ">task: search result | query: <i>your text</i></option>
         <option value="task: sentence similarity | query: ">task: sentence similarity | query: <i>your text</i></option>
         <option value="">your text (no instruction)</option>
       </select></div>
       <p>The first works well for matching words to pictures and sounds; the second for comparing sentences with each other. Try switching and watch the numbers change.</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>The same model is used for different jobs: finding the web page that answers a question, finding sentences that mean the same, sorting texts into groups. During training each job had its own instruction in front of the text, so the instruction tells the model which job the list is for. A question like “How old are you?” and its answer “I am twelve” should be close for searching, but “How old are you?” and “What is your age?” should be close for sentence similarity.</p>
+        <p>Before the model sees any text, the text is cut into <em>tokens</em>: whole words, or pieces of rarer words. The model makes one list per token, lets every token look at all the others, and finally averages them into one list of 768 numbers. That's why a sentence gets one embedding, not one per word.</p>
+      </details>
     </details>
   </section>
 
   <section id="starSec" class="locked">
     <h2>3. Star view</h2>
-    <p>Each of the numbers is drawn as a ray from the center: <span style="color:var(--pos)">green</span> for positive, <span style="color:var(--neg)">red</span> for negative, longer for bigger. Pick a second thing to see the <em>difference</em> between the two.</p>
+    <p>Each of the numbers is drawn as a <span class="term">ray</span> from the center: <span style="color:var(--pos)">green</span> for positive, <span style="color:var(--neg)">red</span> for negative, longer for bigger. Pick a second thing to see the <em>difference</em> between the two. Point at a ray to see what it seems to be about.</p>
     <div class="row">
       <select id="starA"></select>
       <span>minus</span>
@@ -202,36 +237,64 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
     </div>
     <div class="starwrap">
       <canvas id="bigStar"></canvas>
-      <div class="facts" id="starFacts"></div>
+      <div class="facts"><div id="starFacts"></div><div id="rayInfo" class="rayinfo"></div></div>
     </div>
+    <details>
+      <summary>What do the rays mean?</summary>
+      <p>Point at a ray (or tap it) to see which everyday words have unusually high or low values for that number. These come from a study: the model made embeddings for about 2,800 words, and for each of the 768 numbers we listed the words where it was highest and lowest.</p>
+      <p>A few numbers lean toward one kind of word, such as music or sports. But most mix unrelated words together: the model doesn't keep one number per idea. The longest rays are different again: they're big for everything, so they say almost nothing about what a thing is.</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>For each number, the study found the average value over all 2,800 words, and how much it usually varies. A word is “high” for a number when its value is far above that average. If the words in a group (animals, food, feelings, music and so on) are high on average, the page says that group leans that way. About a third of the numbers have such a leaning group; the others don't.</p>
+        <p>Why don't the numbers mean one thing each? The model has to fit far more ideas than it has numbers. It seems to store each idea as a <em>direction</em>, a mix of many numbers, and many ideas share each number. Researchers call this <em>superposition</em>, and finding the real directions is an active area of research. The arrows in section 6 are directions like that, which you choose yourself.</p>
+        <p>The study used words, so the meanings fit pictures and sounds less well. And the six longest rays (numbers 116, 392, 112, 555, 733 and 30) are about the same for every word and picture, but a bit different for sounds, so they partly say what <em>kind</em> of thing it is.</p>
+      </details>
+    </details>
     <details id="why">
       <summary>Why do all the stars look alike?</summary>
-      <p>Every embedding this model makes contains a big shared part that is almost the same for a word, a photo or a sound. In the example set, that shared part is about two thirds of each list, and just six positions (such as numbers 111 and 115) carry almost half of it. That is why every star has the same few long rays, and why even “idea” and “horse” come out 0.70 alike.</p>
+      <p>Every embedding this model makes contains a big shared part that is almost the same for a word, a photo or a sound. In the example set, that shared part is about two thirds of each list, and just six positions (such as numbers 112 and 116) carry almost half of it. That is why every star has the same few long rays, and why even “idea” and “horse” come out 0.70 alike.</p>
       <p>Tick <b>Take away what everything shares</b> at the top. It subtracts the average of everything you have added, leaving what makes each thing different. The stars stop looking alike, unrelated things score near 0, and related things such as “unicorn” and “horse” stay well above 0. The average depends on what you have added, so adding more things changes it.</p>
-      <p>Even then, 768 rays are too many to tell apart by eye. Use the first 128 numbers as well and the differences are easy to see.</p>
+      <p>Even then, 768 rays are too many to tell apart by eye, which is why the page starts by using the first 256 numbers. Try 128 and the differences are even easier to see.</p>
       <p>A few rays may still reach the edge: the rays are scaled to fit 99% of the numbers, and the few bigger ones are cut off.</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>Think of each embedding as an arrow in a space with 768 directions. If every arrow also has a long piece pointing the same way, all the arrows end up in a narrow cone, and any two of them look alike. Researchers have found this “cone” in most language models. One explanation is that some numbers act as a kind of background the model uses for its own bookkeeping, not to say anything about meaning.</p>
+        <p>Taking away the average moves the center of the cone to the middle. Then what's left is how each thing differs from the others on the page, which is what you usually want to see. But the average changes with what's on the page: with only animals, “dog” and “cat” differ in small ways; add some cars and “dog” and “cat” suddenly look closer to each other, because the cars pull the average toward them.</p>
+      </details>
     </details>
     <details>
       <summary>Why can I use fewer numbers?</summary>
-      <p>This model was trained so that the first numbers carry the most important information. Keeping only the first 256 of the 768 loses very little; keeping 128 loses more, especially for pictures and sounds. The setting at the top changes every section.</p>
+      <p>This model was trained so that the first numbers carry the most important information. Keeping only the first 256 of the 768 loses very little, so the page starts there. Keeping 128 loses more. The setting at the top changes every section.</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>The training is called <span class="term">Matryoshka</span> training. While learning, the model was scored not only on how well all 768 numbers worked, but also on how well just the first 512, 256 and 128 worked. So it learned to put the most useful information first, like packing a suitcase with the important things on top.</p>
+        <p>Shorter lists are cheaper to store and quicker to compare, which matters when a search engine holds billions of them. After cutting a list short, the page scales it back to length 1 so that similarities still run from −1 to 1.</p>
+        <p>We measured it with 560 everyday words in 20 groups (animals, food, feelings…). Using all 768 numbers, 62% of each word's five nearest words were from its own group. With 256 numbers it was 59%, with 128 it was 53%, and with 64 only 41%.</p>
+      </details>
     </details>
   </section>
 
   <section id="simSec" class="locked">
     <h2>4. Who is close to whom?</h2>
-    <p>Each square compares two things: 1 means the same direction, 0 means unrelated. Darker means closer.</p>
+    <p>Each square shows the <span class="term">similarity</span> of two things: 1 means the same direction, 0 means unrelated. Darker means closer.</p>
     <div class="simwrap" id="simTable"></div>
     <details>
       <summary>Something to notice</summary>
-      <p>Compare a word with a picture of the same thing, and two words with each other. Words tend to be closer to other words, and pictures to other pictures, even when the meanings match. Researchers call this the <em>modality gap</em>. So look at which picture is closest to a word, not just at the size of the number.</p>
+      <p>Compare a word with a picture of the same thing, and two words with each other. Words tend to be closer to other words, and pictures to other pictures, even when the meanings match. Researchers call this the <span class="term">modality gap</span>. So look at which picture is closest to a word, not just at the size of the number.</p>
       <p>Most squares are between 0.5 and 0.8 because of the part every embedding shares (see “Why do all the stars look alike?” above). Tick <b>Take away what everything shares</b> at the top and the numbers spread out around 0.</p>
-      <p>The number is the <em>cosine similarity</em>: multiply the two lists number by number and add everything up (each list has been scaled to length 1 first).</p>
+      <p>The number is the <span class="term">cosine similarity</span>: multiply the two lists number by number and add everything up (each list has been scaled to length 1 first).</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>Why multiply and add? Where both lists have big numbers of the same sign, the product is big and positive and pushes the total up. Where one is positive and the other negative, the product is negative and pulls it down. So the total is large when the two lists agree in many places. Because both lists have length 1, the total can't be more than 1 (identical) or less than −1 (exactly opposite).</p>
+        <p>Similarity isn't the same as “means the same”. “Hot” and “cold” are often close, because they're used in the same kinds of sentences: both describe temperature. In a study with 2,800 words, “cold” was the fourth-nearest word to “hot”, just after “heat”, “warm” and “temperature”.</p>
+        <p>The modality gap appears because the picture part and the word part of the model start out separate and are only trained to agree on which picture goes with which caption. Nothing in training asks a picture of a dog to be closer to the word “dog” than the word “puppy” is.</p>
+      </details>
     </details>
   </section>
 
   <section id="arithSec" class="locked">
     <h2>5. Embedding arithmetic</h2>
-    <p>Lists of numbers can be added and subtracted. What is closest to the result?</p>
+    <p>Lists of numbers can be added and subtracted: that's embedding <span class="term">arithmetic</span>. What is <span class="term">nearest</span> to the result?</p>
     <div class="row">
       <select id="arA"></select><span>minus</span><select id="arB"></select><span>plus</span><select id="arC"></select>
     </div>
@@ -239,11 +302,21 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <canvas id="arStar" style="width:200px;height:200px"></canvas>
       <ol class="nearest" id="arList"></ol>
     </div>
+    <details>
+      <summary>Why does it land on something odd?</summary>
+      <p>The result is usually nearest its own inputs, so look at what comes after them. And it can only land on things that are on the page. In a study with 2,800 words, tiger − cat + dog landed nearest <b>wolf</b>. With no wolf on the page, the nearest thing is just whatever is left, often with a low score like 0.2: a weak match, not an answer.</p>
+      <p>Taking away “cat” also takes away what cats share with other animals. So “horse” and “dog” lose points for being animals, but “house” doesn't. Add “wolf” and try again.</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>The score of each thing is roughly its similarity to tiger, minus its similarity to cat, plus its similarity to dog. With the first 128 numbers and the shared part taken away, “house” scored 0.15 with tiger, 0.08 with cat and 0.26 with dog, while “horse” scored 0.10, 0.13 and 0.19. Add them up and house wins, 0.33 to 0.16. Nobody knows exactly why “house” is that close to “dog” with only 128 numbers. With all 768 numbers, “horse” beats “house”.</p>
+        <p>The famous example is king − man + woman, which lands near queen. In the study it did: with all 768 numbers, “queen” came first, then “women” and “princess”. Try it with the 👑 set. Arithmetic like this works when the difference between two words (man → woman) is a direction the model uses the same way for other pairs (king → queen). It works for some pairs and not others.</p>
+      </details>
+    </details>
   </section>
 
   <section id="axesSec" class="locked">
     <h2>6. Your own 3D space</h2>
-    <p>Choose three directions, each from one word to another. Everything you added is placed along them. Drag to turn the space.</p>
+    <p>Choose three <span class="term" data-t="direction">directions</span>, each from one word to another. Everything you added is placed along them. Drag to turn the space.</p>
     <div class="axes">
       <span class="dot" style="background:var(--ax1)"></span><input type="text" id="ax1a" value="small"><span>→</span><input type="text" id="ax1b" value="big">
       <span class="dot" style="background:var(--ax2)"></span><input type="text" id="ax2a" value="quiet"><span>→</span><input type="text" id="ax2b" value="loud">
@@ -254,6 +327,12 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
     <details>
       <summary>How the places are worked out</summary>
       <p>The direction from “small” to “big” is the embedding of “big” minus the embedding of “small”. A thing's place along that direction is how much its own embedding points the same way. The places are then centered and stretched to fill the box, so only where things are compared with each other matters.</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>Each embedding has 768 numbers, so it lives in a space with 768 directions, which nobody can picture. Here you pick three directions you care about and look at the space only along those, a bit like a shadow of a 3D object on a wall shows only two of its directions.</p>
+        <p>“How much it points the same way” is the same multiply-and-add as similarity. A tiger scores high on small→big if its list has more in common with “big” than with “small”. The three directions you pick may not be at right angles to each other inside the model: “quiet→loud” and “small→big” could partly point the same way, so things that are big may also drift toward loud.</p>
+        <p>Try directions that aren't about the senses, like “bad→good”, “old→new” or “boring→exciting”, and see where pictures and sounds land.</p>
+      </details>
     </details>
   </section>
   <p class="meta" style="text-align:center;color:var(--muted);font-size:13px">
@@ -319,8 +398,14 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
   <div class="row"><button id="camSnap" class="primary">Snap</button><button id="camCancel">Cancel</button></div>
 </div></div>
 
+<script>
+// From a study of 2,834 words: for each of the 768 numbers, the everyday words (indexes into vocab)
+// that are unusually high and low there, and a group of words that leans high or low ("" if none).
+// "shared" lists the numbers that are big for everything: [average for words, pictures, sounds].
+const RAYS = {"vocab":["dog","cat","horse","cow","pig","sheep","goat","lion","tiger","bear","wolf","fox","rabbit","mouse","rat","elephant","giraffe","zebra","monkey","gorilla","deer","camel","kangaroo","koala","panda","squirrel","hedgehog","otter","whale","dolphin","shark","fish","octopus","crab","turtle","frog","snake","lizard","crocodile","eagle","owl","parrot","penguin","duck","chicken","swan","bee","ant","butterfly","spider","apple","banana","orange","grape","strawberry","lemon","cherry","pear","peach","mango","bread","cheese","butter","milk","egg","rice","pasta","pizza","soup","salad","sandwich","cake","cookie","chocolate","candy","sugar","honey","salt","pepper","carrot","potato","tomato","onion","bean","corn","meat","chicken soup","sausage","pancake","ice cream","juice","tea","coffee","water","yogurt","noodles","pie","jam","nut","cereal","head","hair","face","eye","ear","nose","mouth","tooth","tongue","neck","shoulder","arm","elbow","hand","finger","thumb","leg","knee","foot","toe","heart","brain","bone","skin","blood","stomach","back","chest","lip","chin","house","home","school","library","hospital","shop","market","park","garden","beach","forest","mountain","river","lake","ocean","island","desert","city","village","farm","street","bridge","castle","church","museum","zoo","airport","station","kitchen","bedroom","classroom","playground","cave","jungle","field","valley","country","town","office","restaurant","chair","table","bed","door","window","lamp","clock","cup","plate","spoon","fork","knife","bottle","box","bag","book","pencil","pen","paper","scissors","key","phone","computer","television","camera","ball","toy","doll","kite","umbrella","hat","shoe","shirt","coat","dress","sock","glove","ring","mirror","brush","hammer","ladder","rope","candle","basket","blanket","pillow","bucket","bell","wheel","car","bus","train","truck","bicycle","motorcycle","boat","ship","airplane","helicopter","rocket","taxi","tractor","van","submarine","scooter","tram","canoe","sled","skateboard","tree","flower","grass","leaf","rock","stone","sand","mud","sky","cloud","rain","snow","wind","storm","thunder","lightning","sun","moon","star","planet","fire","ice","rainbow","fog","wave","seed","root","branch","volcano","earthquake","red","blue","green","yellow","orange color","purple","pink","brown","black","white","gray","gold","silver","one","two","three","four","five","six","seven","eight","nine","ten","twenty","hundred","thousand","million","zero","first","second","third","half","dozen","morning","afternoon","evening","night","day","week","month","year","today","tomorrow","yesterday","Monday","Sunday","January","summer","winter","spring","autumn","birthday","holiday","hour","minute","century","weekend","midnight","mother","father","sister","brother","baby","child","boy","girl","man","woman","grandmother","grandfather","friend","teacher","student","doctor","nurse","farmer","police officer","firefighter","king","queen","prince","princess","pilot","chef","artist","scientist","soldier","neighbor","happy","sad","angry","afraid","scared","excited","bored","tired","calm","worried","proud","lonely","surprised","nervous","jealous","grateful","joy","fear","anger","sadness","love","hate","hope","shame","delight","idea","truth","freedom","justice","peace","beauty","wisdom","knowledge","courage","honesty","democracy","theory","meaning","reason","belief","faith","memory","dream","thought","imagination","purpose","chance","luck","fairness","kindness","run","walk","jump","swim","fly","climb","dance","sing","read","write","draw","paint","cook","eat","drink","sleep","laugh","cry","talk","shout","whisper","listen","think","learn","play","throw","catch","push","pull","build","big","small","tall","short","long","fast","slow","hot","cold","warm","new","old","young","heavy","light","soft","hard","loud","quiet","bright","dark","clean","dirty","wet","dry","rich","poor","easy","difficult","strange","music","song","piano","guitar","drum","violin","trumpet","flute","singer","band","concert","melody","rhythm","choir","orchestra","football","soccer","tennis","basketball","baseball","cricket","golf","swimming","running race","skiing","boxing","hockey","rugby","goal","team","atom","molecule","energy","electricity","gravity","magnet","robot","machine","engine","battery","internet","software","algorithm","experiment","laboratory","microscope","telescope","chemistry","physics","biology","mathematics","equation","computer program","data","signal","because","very","just","also","then","How are you?","How old are you?","What is your age?","Where do you live?","I am hungry.","The dog is sleeping.","It is raining outside.","I love my family.","Please close the door.","What time is it?","The cat chased the mouse.","We went to the beach.","She is reading a book.","Can you help me?","Thank you very much."],"rays":[[[364,88,421,36,334,252],[220,175,519,535,479,471],"people",""],[[58,49,57,38,39,27],[393,503,347,154,346,228],"",""],[[461,519,203,247,419,460],[65,237,478,118,148,84],"","music"],[[485,491,419,492,318,59],[86,340,321,40,452,475],"sports",""],[[527,80,87,415,453,166],[297,513,208,124,327,182],"",""],[[408,380,191,370,158,134],[342,350,139,351,142,450],"",""],[[152,155,356,250,10,262],[542,343,540,499,81,537],"",""],[[475,504,235,474,81,473],[272,532,146,138,421,502],"music",""],[[535,329,410,339,144,77],[167,148,305,150,34,14],"feelings",""],[[108,109,100,159,85,360],[271,534,522,224,272,542],"","colors"],[[130,131,125,175,218,135],[407,344,371,363,481,480],"",""],[[371,439,372,342,473,360],[145,501,152,155,23,237],"feelings",""],[[266,447,70,438,432,538],[109,36,18,218,105,19],"","animals"],[[237,320,478,20,482,244],[428,106,401,216,528,282],"music",""],[[274,66,61,68,86,161],[347,500,263,363,514,501],"colors",""],[[230,35,319,495,491,388],[354,159,536,154,370,173],"sports",""],[[510,210,451,255,504,254],[484,154,432,140,174,169],"",""],[[146,123,209,462,140,165],[18,51,75,516,515,74],"",""],[[492,238,332,540,339,329],[104,258,421,496,241,442],"",""],[[208,85,116,224,515,46],[338,305,337,529,148,479],"",""],[[127,165,449,102,245,423],[382,150,201,118,115,385],"",""],[[227,193,228,134,168,226],[140,25,57,78,163,175],"","colors"],[[447,156,319,542,413,104],[519,32,195,355,41,28],"",""],[[355,332,535,333,18,341],[150,49,236,151,414,386],"",""],[[222,250,534,318,228,212],[217,433,58,405,109,205],"",""],[[285,524,73,300,363,15],[533,245,184,122,539,161],"",""],[[177,35,86,200,63,12],[507,375,501,361,362,369],"",""],[[379,382,302,460,376,456],[224,82,510,101,520,60],"feelings",""],[[71,171,116,232,405,240],[104,423,144,344,480,459],"",""],[[282,406,178,171,150,386],[533,247,86,196,237,269],"","whole sentences"],[[180,10,253,415,189,214],[104,62,112,88,206,531],"",""],[[424,115,374,492,377,486],[198,436,32,503,258,30],"",""],[[39,287,489,140,514,11],[542,62,79,71,487,89],"",""],[[142,293,463,453,166,143],[343,134,399,233,347,225],"","vehicles"],[[149,480,65,532,510,345],[203,388,349,150,530,459],"",""],[[266,488,344,507,383,217],[294,295,542,256,46,296],"","numbers"],[[254,389,57,39,201,103],[537,63,303,409,168,94],"",""],[[278,425,218,415,424,323],[16,111,86,150,36,239],"",""],[[162,392,537,188,531,185],[219,229,51,232,217,87],"",""],[[405,396,301,370,324,134],[163,161,333,148,432,54],"",""],[[238,34,440,432,502,246],[194,209,112,391,137,523],"","sports"],[[57,523,329,149,229,255],[418,99,448,95,495,33],"","colors"],[[514,394,393,224,355,154],[109,173,376,436,360,106],"big ideas",""],[[43,35,30,4,424,86],[539,211,341,139,480,413],"animals",""],[[460,300,109,357,458,372],[380,88,373,500,75,241],"",""],[[304,228,494,160,156,168],[265,120,243,205,434,213],"","the body"],[[18,75,513,246,211,133],[379,433,407,387,434,333],"",""],[[87,343,148,387,247,153],[274,192,193,509,50,280],"music",""],[[541,1,431,538,357,535],[31,481,124,38,28,515],"",""],[[98,240,74,229,370,72],[85,488,447,520,126,393],"nature and weather","sports"],[[68,239,27,494,143,197],[368,407,127,378,241,381],"food",""],[[252,246,206,290,510,27],[86,44,372,278,223,73],"","whole sentences"],[[533,95,22,289,28,237],[106,460,438,270,455,405],"",""],[[311,184,492,367,324,456],[535,531,107,402,106,180],"times and dates",""],[[207,44,402,254,220,104],[322,541,492,455,369,358],"",""],[[490,211,316,411,303,305],[273,187,206,152,274,50],"","colors"],[[254,509,403,360,106,520],[19,344,280,134,199,368],"",""],[[530,529,381,190,531,439],[418,244,146,250,262,46],"","music"],[[520,491,431,383,509,180],[307,446,487,195,369,528],"",""],[[84,210,427,90,426,420],[211,208,143,347,414,346],"","vehicles"],[[479,356,42,88,22,29],[304,170,201,401,91,429],"music","whole sentences"],[[496,492,387,352,409,367],[300,24,286,139,158,394],"",""],[[411,490,93,366,325,450],[216,154,175,184,82,173],"",""],[[430,347,47,534,423,33],[224,107,169,488,342,506],"",""],[[540,520,416,361,373,402],[111,387,112,22,117,74],"",""],[[237,102,360,231,489,280],[479,327,468,120,527,469],"","music"],[[216,370,213,82,110,175],[289,302,287,343,67,293],"","numbers"],[[327,200,255,503,420,418],[536,403,55,387,301,396],"",""],[[38,257,400,138,466,149],[427,193,393,519,78,356],"",""],[[7,513,31,107,74,36],[480,414,530,465,334,119],"colors",""],[[269,67,114,424,71,224],[242,306,251,534,457,368],"","numbers"],[[132,364,160,397,341,310],[428,89,42,181,105,75],"",""],[[229,38,362,540,198,361],[280,245,173,278,314,92],"",""],[[523,497,227,135,132,417],[37,104,284,12,478,44],"",""],[[473,371,513,422,471,466],[38,521,260,127,316,310],"music",""],[[8,38,449,7,210,163],[275,276,403,215,87,491],"",""],[[476,441,310,391,509,381],[290,535,15,45,539,533],"",""],[[497,510,453,223,126,509],[69,202,67,471,114,13],"",""],[[482,354,282,71,188,189],[1,538,25,533,0,454],"music","animals"],[[75,420,250,534,318,451],[225,193,491,496,363,497],"","sports"],[[345,488,494,475,216,61],[448,150,147,369,303,143],"sports",""],[[114,357,12,218,160,113],[237,216,373,211,219,224],"",""],[[76,217,152,80,511,332],[537,326,307,476,157,315],"colors","music"],[[247,491,116,204,313,316],[513,70,473,498,499,82],"colors",""],[[540,481,356,66,416,420],[404,164,3,402,405,509],"",""],[[223,192,506,520,505,514],[101,95,476,62,94,354],"","food"],[[287,231,48,475,412,480],[86,68,6,69,217,79],"",""],[[55,238,267,86,176,43],[147,167,478,370,49,137],"","sports"],[[42,86,45,393,25,123],[539,337,189,139,335,170],"",""],[[142,444,376,254,188,294],[479,415,112,56,32,45],"","music"],[[489,186,168,194,440,266],[538,525,142,425,254,533],"","whole sentences"],[[527,349,265,11,240,415],[66,178,225,495,177,95],"",""],[[517,480,122,481,86,468],[457,340,254,191,351,173],"music","colors"],[[290,296,524,291,50,408],[377,108,381,85,359,406],"numbers","the body"],[[22,12,165,48,325,339],[212,260,269,178,119,453],"animals",""],[[161,137,126,363,477,244],[538,61,13,213,86,446],"",""],[[515,507,539,159,124,134],[197,240,136,75,94,389],"science and technology",""],[[25,186,23,460,354,241],[222,352,474,391,256,38],"",""],[[16,514,508,194,341,350],[314,326,415,237,539,365],"",""],[[503,11,65,432,250,344],[189,235,239,492,228,524],"","vehicles"],[[302,94,351,62,321,462],[362,361,347,269,375,504],"",""],[[229,260,352,347,353,159],[448,284,526,302,312,422],"people","numbers"],[[429,121,323,500,355,515],[58,119,536,434,444,381],"",""],[[478,435,84,362,466,367],[322,64,156,185,48,41],"",""],[[538,523,190,510,23,424],[231,210,507,81,274,315],"",""],[[203,532,422,158,76,163],[538,491,192,431,200,34],"",""],[[28,44,43,430,412,45],[281,399,512,476,127,124],"animals",""],[[539,206,123,512,194,411],[221,152,156,339,364,198],"",""],[[263,375,291,309,397,153],[90,274,19,281,52,471],"","food"],[[391,538,48,23,16,42],[295,455,323,66,265,438],"whole sentences",""],[[197,342,336,435,193,468],[22,442,375,30,151,213],"music","sports"],[[535,432,540,537,531,530],[517,394,204,518,441,138],"whole sentences",""],[[475,191,474,231,470,274],[149,3,345,368,138,85],"music",""],[[447,243,235,201,118,253],[360,32,27,376,537,231],"",""],[[316,153,99,542,383,533],[50,81,224,469,48,350],"","colors"],[[363,131,395,336,449,302],[231,513,225,67,88,470],"","vehicles"],[[360,376,372,158,170,160],[103,53,281,123,120,51],"","sports"],[[323,167,264,81,147,293],[259,23,228,258,503,111],"",""],[[520,303,8,81,474,509],[117,411,116,490,286,285],"",""],[[498,114,243,78,319,108],[156,229,228,212,140,127],"",""],[[479,503,269,95,451,534],[497,203,346,243,195,355],"",""],[[21,484,16,221,25,24],[279,503,107,270,280,276],"sports","colors"],[[305,457,160,284,400,447],[269,454,77,245,244,507],"",""],[[529,528,331,268,530,235],[324,171,240,233,437,178],"",""],[[93,422,193,165,500,182],[198,0,1,96,33,163],"","animals"],[[539,287,21,45,417,285],[536,173,347,229,493,302],"",""],[[392,406,215,165,203,440],[201,18,90,278,483,229],"","vehicles"],[[140,275,54,114,247,184],[536,117,295,103,176,310],"","numbers"],[[74,165,71,89,54,162],[299,504,111,387,35,4],"",""],[[97,200,124,296,182,173],[161,154,304,450,539,432],"",""],[[227,152,125,445,174,528],[97,7,450,424,410,155],"",""],[[366,362,376,541,383,367],[226,232,118,227,117,468],"big ideas","vehicles"],[[115,371,352,105,365,507],[124,84,32,43,488,158],"",""],[[357,379,149,534,376,247],[400,125,116,197,205,109],"","the body"],[[286,210,327,227,285,258],[161,64,92,343,530,54],"","food"],[[20,216,42,423,107,533],[413,211,379,436,409,200],"",""],[[429,519,285,444,299,394],[258,144,141,262,145,380],"",""],[[160,176,533,232,89,537],[82,493,427,254,473,103],"",""],[[264,249,202,135,127,144],[132,83,487,342,75,160],"",""],[[529,530,425,412,359,377],[169,437,161,264,151,482],"",""],[[468,476,298,475,478,472],[111,528,122,117,498,121],"music",""],[[380,330,391,447,427,417],[54,355,499,274,273,90],"","colors"],[[501,503,379,146,318,513],[24,86,373,94,540,393],"","animals"],[[486,494,27,14,12,108],[532,476,355,250,342,502],"sports",""],[[216,215,186,134,74,383],[41,420,314,86,25,72],"",""],[[276,412,313,540,245,388],[495,484,375,481,345,149],"","sports"],[[538,174,291,17,5,202],[19,328,75,155,261,332],"","people"],[[373,400,502,478,472,170],[446,205,261,462,119,96],"music",""],[[137,156,222,17,125,15],[447,501,76,357,445,46],"",""],[[134,473,287,160,194,22],[256,199,354,476,26,304],"",""],[[353,420,135,36,476,350],[236,486,94,17,480,21],"",""],[[494,213,237,63,206,172],[385,360,376,37,85,267],"",""],[[512,70,208,14,490,350],[506,185,204,410,427,240],"",""],[[364,467,312,462,365,456],[174,7,469,241,256,475],"feelings",""],[[537,117,303,314,448,222],[68,262,198,81,78,69],"times and dates",""],[[265,34,92,88,66,213],[487,448,346,393,488,196],"",""],[[538,13,70,220,26,37],[321,535,393,353,374,420],"",""],[[119,83,23,159,201,222],[77,50,274,420,488,354],"",""],[[535,385,241,214,198,10],[296,405,422,177,281,419],"",""],[[215,98,295,158,85,539],[262,312,386,253,227,225],"",""],[[434,363,410,57,212,493],[69,116,148,169,509,418],"",""],[[104,412,360,102,112,372],[294,369,520,148,436,512],"colors",""],[[486,485,137,214,487,495],[32,247,42,179,187,287],"sports",""],[[120,210,60,378,139,76],[163,16,199,502,531,19],"",""],[[32,369,514,262,273,223],[412,328,126,190,203,152],"colors",""],[[362,375,371,361,367,425],[221,183,302,304,493,85],"",""],[[53,328,268,52,141,482],[377,433,97,411,172,139],"",""],[[252,251,318,143,326,316],[438,288,524,172,199,14],"","numbers"],[[310,251,318,17,372,41],[432,63,109,435,454,431],"times and dates",""],[[425,206,195,114,379,156],[478,221,317,224,430,363],"the body",""],[[15,30,5,87,249,227],[312,122,417,206,517,127],"","the body"],[[510,511,105,528,414,116],[463,443,255,58,166,167],"music",""],[[285,245,148,312,153,498],[405,377,32,42,477,371],"",""],[[356,215,78,10,453,423],[267,31,209,30,511,311],"animals",""],[[533,0,99,68,527,325],[443,385,492,127,29,352],"little words like “the” and “of”",""],[[291,384,288,78,73,65],[35,229,347,230,156,39],"numbers",""],[[146,299,284,5,370,175],[240,310,344,491,499,142],"","vehicles"],[[100,212,294,339,266,231],[304,63,165,164,525,99],"",""],[[440,110,141,208,426,371],[533,286,33,338,64,434],"",""],[[336,521,371,341,198,286],[351,443,208,88,209,370],"",""],[[539,202,537,317,269,65],[354,2,351,344,364,273],"",""],[[535,529,540,346,197,339],[252,174,250,522,259,199],"whole sentences",""],[[130,307,304,10,245,533],[436,110,490,411,135,542],"",""],[[421,89,369,476,290,169],[459,345,406,528,331,529],"music",""],[[470,339,116,180,350,528],[6,145,270,300,227,234],"",""],[[312,433,520,387,395,323],[99,56,21,4,44,88],"","food"],[[182,495,61,425,5,263],[347,501,134,539,508,237],"",""],[[99,489,431,275,148,514],[293,435,525,412,479,105],"",""],[[542,424,358,152,374,375],[114,119,239,201,178,265],"feelings",""],[[174,176,536,331,514,198],[524,363,163,155,203,358],"",""],[[347,346,178,361,466,362],[103,272,468,429,470,388],"","music"],[[199,256,472,309,257,258],[456,491,97,5,464,60],"",""],[[63,475,75,324,446,94],[386,331,426,34,339,315],"food",""],[[289,217,509,436,520,164],[426,389,444,387,175,452],"",""],[[409,355,389,343,53,87],[419,206,9,213,258,492],"",""],[[243,51,258,353,170,295],[159,269,361,367,362,103],"",""],[[491,532,303,215,228,159],[29,324,266,329,28,113],"",""],[[322,86,326,136,318,491],[503,431,498,247,529,530],"",""],[[276,248,59,30,272,58],[499,515,512,77,86,213],"colors","science and technology"],[[284,205,5,184,285,110],[390,458,73,34,193,72],"numbers",""],[[538,533,485,193,257,486],[151,53,265,438,436,60],"sports",""],[[12,98,79,25,432,14],[462,247,456,524,300,428],"animals",""],[[342,341,483,484,0,352],[163,17,194,404,296,427],"people",""],[[347,474,111,112,477,333],[351,189,55,59,29,213],"the body",""],[[63,215,89,59,433,261],[322,409,201,329,211,405],"",""],[[537,315,38,443,176,256],[357,523,17,538,218,61],"times and dates",""],[[46,362,361,412,475,224],[508,168,447,157,282,11],"sports",""],[[495,314,51,239,435,294],[169,387,355,465,86,431],"",""],[[409,40,4,131,26,280],[513,241,302,260,347,361],"whole sentences",""],[[53,381,256,307,379,109],[522,73,160,171,434,38],"",""],[[528,530,218,324,529,207],[239,4,344,216,238,30],"","vehicles"],[[4,213,79,78,82,57],[501,406,392,508,255,495],"",""],[[203,537,200,292,118,119],[346,161,357,145,69,455],"",""],[[59,532,519,95,18,85],[478,482,514,133,16,438],"",""],[[72,472,529,408,4,136],[535,198,248,378,357,116],"",""],[[423,124,400,265,252,365],[196,540,199,3,341,24],"",""],[[490,492,95,77,212,411],[397,309,21,322,367,203],"sports",""],[[337,428,276,275,338,236],[493,487,271,494,207,239],"whole sentences","sports"],[[526,69,82,39,281,475],[121,402,254,385,370,248],"","big ideas"],[[483,92,230,89,324,283],[163,29,140,272,11,209],"",""],[[531,528,532,450,147,167],[281,533,25,234,487,536],"whole sentences",""],[[437,239,470,509,238,231],[93,337,204,335,370,31],"",""],[[104,9,474,362,361,130],[61,382,279,398,63,276],"","food"],[[64,151,514,410,12,522],[367,168,353,181,160,425],"",""],[[11,506,232,436,451,444],[407,201,322,214,406,184],"",""],[[297,233,398,283,380,505],[158,376,414,304,360,406],"",""],[[231,63,156,50,193,255],[542,460,499,15,463,293],"",""],[[137,440,438,526,172,531],[54,512,255,414,452,194],"little words like “the” and “of”",""],[[540,22,513,318,261,224],[267,336,222,346,110,489],"",""],[[294,461,325,84,250,505],[535,34,485,492,0,372],"little words like “the” and “of”","sports"],[[86,82,68,69,171,260],[538,47,531,46,490,239],"","whole sentences"],[[308,444,250,534,153,145],[347,356,493,62,506,75],"","sports"],[[146,6,295,472,155,434],[470,338,282,321,19,355],"",""],[[93,482,461,124,250,460],[346,321,358,211,306,363],"music",""],[[279,179,68,20,94,251],[41,364,415,416,540,455],"vehicles",""],[[60,498,266,507,23,178],[492,345,363,448,357,149],"",""],[[278,539,458,24,488,487],[210,22,386,85,385,41],"whole sentences",""],[[525,493,410,383,183,90],[158,268,143,245,223,390],"","vehicles"],[[330,65,538,87,420,207],[33,49,211,21,263,325],"whole sentences",""],[[242,539,87,396,317,139],[481,170,287,133,201,132],"whole sentences",""],[[348,432,482,377,270,386],[209,129,292,148,472,302],"",""],[[66,489,485,483,194,402],[129,348,534,33,170,427],"",""],[[484,542,289,495,474,483],[57,381,23,444,442,28],"sports",""],[[423,129,416,312,119,527],[473,474,485,513,204,486],"","music"],[[111,442,113,83,368,372],[268,473,14,66,13,538],"",""],[[346,34,338,38,36,14],[243,130,119,263,443,398],"",""],[[168,135,392,208,337,184],[124,329,367,274,269,328],"",""],[[486,133,186,347,6,126],[237,156,55,427,29,275],"",""],[[127,407,78,110,129,356],[432,533,540,539,412,513],"","whole sentences"],[[382,288,396,502,449,392],[200,204,411,91,202,67],"",""],[[139,539,238,0,244,354],[175,344,236,133,319,136],"",""],[[221,486,312,366,118,375],[295,246,262,161,356,319],"",""],[[417,244,31,433,434,283],[529,449,530,456,56,332],"",""],[[11,223,194,180,532,14],[432,480,423,160,393,252],"",""],[[477,330,185,320,342,405],[33,81,30,158,69,227],"","vehicles"],[[372,180,10,533,377,532],[258,185,128,296,135,46],"",""],[[462,238,372,203,94,383],[493,216,208,144,327,193],"",""],[[361,456,391,375,522,362],[142,287,343,313,305,246],"",""],[[137,269,82,417,297,148],[534,210,225,110,42,513],"",""],[[369,16,241,26,19,15],[525,312,390,317,401,403],"animals",""],[[411,535,428,149,128,45],[242,439,272,202,6,437],"",""],[[282,78,202,454,214,184],[538,112,326,342,132,339],"",""],[[352,444,28,360,376,466],[374,120,448,535,320,115],"",""],[[441,186,55,383,439,88],[294,84,242,4,15,477],"",""],[[535,531,420,61,274,492],[470,408,344,437,217,210],"","the body"],[[162,487,486,533,0,347],[417,443,281,421,273,276],"sports","colors"],[[539,385,217,538,534,345],[365,21,103,482,7,349],"whole sentences",""],[[67,60,219,410,248,214],[542,466,442,343,469,203],"food",""],[[311,347,120,57,32,383],[369,199,357,339,198,372],"",""],[[304,440,174,108,426,301],[310,496,196,399,121,100],"",""],[[47,46,353,49,110,5],[57,296,540,59,156,133],"",""],[[245,498,292,63,159,174],[277,475,100,227,267,408],"",""],[[476,172,478,100,475,468],[510,520,58,30,39,8],"music",""],[[517,346,375,389,367,362],[320,29,2,231,288,118],"",""],[[246,220,146,320,139,305],[362,367,127,44,371,464],"times and dates",""],[[339,254,443,3,409,300],[477,380,86,217,494,212],"",""],[[363,420,360,492,196,119],[309,472,323,458,166,257],"","times and dates"],[[461,371,352,422,363,314],[473,20,507,513,109,33],"","science and technology"],[[205,196,244,422,190,424],[361,366,375,362,367,260],"",""],[[43,459,220,454,14,320],[305,367,371,362,532,528],"",""],[[322,71,44,420,492,415],[371,195,52,180,536,475],"",""],[[493,528,215,11,340,259],[436,41,190,448,324,466],"sports",""],[[520,494,140,509,291,301],[1,467,390,184,403,531],"numbers",""],[[326,474,497,160,121,339],[535,405,93,48,103,500],"",""],[[366,99,389,388,135,73],[414,534,542,451,21,286],"big ideas",""],[[417,148,348,52,90,83],[430,383,426,88,537,72],"colors",""],[[406,446,194,372,68,92],[350,257,351,390,507,259],"",""],[[533,100,369,423,536,456],[489,91,487,74,214,529],"","sports"],[[290,26,183,165,331,425],[346,343,355,347,389,110],"","music"],[[437,507,345,280,56,467],[259,236,484,179,144,414],"",""],[[434,174,368,542,392,208],[343,319,488,235,427,324],"",""],[[367,357,397,390,430,404],[275,294,296,385,144,347],"","colors"],[[535,420,31,425,34,486],[127,383,171,174,177,498],"",""],[[100,20,136,404,116,497],[225,158,456,269,525,224],"",""],[[515,55,42,273,34,498],[380,387,406,404,104,161],"",""],[[151,499,406,288,200,284],[455,398,248,263,382,533],"",""],[[21,519,108,225,63,535],[433,77,352,289,156,525],"",""],[[278,262,274,275,0,416],[63,99,94,62,75,23],"","food"],[[28,15,239,122,121,397],[478,393,468,469,432,69],"","music"],[[42,326,23,503,345,117],[60,534,140,124,270,532],"","whole sentences"],[[344,349,526,3,74,395],[316,410,318,252,198,238],"","times and dates"],[[88,5,398,63,67,35],[147,491,278,535,154,156],"",""],[[379,39,277,13,308,168],[234,507,215,403,183,446],"",""],[[50,227,526,56,226,196],[215,125,178,540,101,216],"","whole sentences"],[[359,534,377,365,453,536],[274,204,403,344,486,510],"whole sentences",""],[[413,343,419,426,409,453],[404,533,349,129,241,19],"",""],[[185,183,188,540,253,268],[373,492,441,536,326,225],"",""],[[481,135,204,360,448,321],[243,496,430,537,219,523],"music",""],[[197,119,47,321,397,46],[154,149,345,417,502,355],"",""],[[127,42,29,173,39,515],[527,542,337,338,312,236],"",""],[[33,119,332,325,115,265],[474,373,417,390,219,409],"",""],[[462,344,398,498,86,99],[162,530,266,448,416,529],"",""],[[169,409,264,410,399,122],[95,132,342,202,451,355],"","describing words"],[[449,304,115,458,442,129],[249,490,49,330,31,493],"","music"],[[324,524,355,503,300,18],[478,184,317,471,481,445],"",""],[[325,88,152,245,143,275],[347,375,361,478,391,390],"numbers","feelings"],[[206,278,344,185,55,266],[169,129,463,209,174,480],"colors",""],[[238,176,235,196,109,297],[140,406,489,173,135,62],"vehicles",""],[[368,12,391,24,33,435],[530,161,267,521,146,479],"",""],[[165,41,320,57,53,94],[231,505,134,306,344,381],"",""],[[9,318,58,23,94,538],[426,214,424,227,264,477],"",""],[[542,361,54,14,26,55],[153,134,526,132,490,476],"feelings",""],[[323,40,283,25,327,376],[259,108,542,90,165,266],"",""],[[404,237,206,122,368,502],[309,107,314,345,168,91],"feelings",""],[[320,189,486,195,78,439],[256,457,29,448,260,121],"",""],[[114,219,165,218,423,150],[144,30,535,90,81,32],"",""],[[84,214,4,9,140,200],[293,360,283,386,450,442],"","numbers"],[[139,495,485,542,494,221],[14,528,100,290,476,79],"sports",""],[[53,230,235,105,87,156],[146,377,255,391,532,371],"","feelings"],[[445,379,539,349,21,322],[160,170,110,231,339,208],"",""],[[223,486,36,176,222,504],[373,128,374,393,380,213],"vehicles",""],[[218,542,224,191,472,479],[91,57,104,103,329,263],"",""],[[39,40,535,48,346,215],[22,43,271,276,359,219],"",""],[[238,193,411,173,116,85],[114,25,538,428,481,13],"",""],[[472,522,146,474,357,225],[485,179,40,364,83,529],"music",""],[[195,18,267,413,206,19],[542,522,148,149,99,529],"",""],[[218,350,38,112,503,105],[448,432,538,467,300,417],"",""],[[340,321,529,530,333,528],[189,538,1,434,503,238],"food",""],[[195,218,173,83,540,308],[304,305,344,317,268,163],"",""],[[527,83,242,164,510,211],[155,282,368,73,61,288],"little words like “the” and “of”",""],[[493,137,65,298,492,368],[359,1,46,451,132,509],"",""],[[127,530,312,461,263,98],[495,489,518,516,231,471],"whole sentences","sports"],[[539,533,39,282,538,277],[60,125,95,476,81,342],"numbers",""],[[350,135,327,406,390,423],[542,222,435,263,496,539],"","sports"],[[10,4,295,346,137,373],[240,330,211,111,540,528],"",""],[[301,456,474,454,470,405],[95,356,506,436,59,140],"",""],[[11,288,78,10,240,536],[460,491,521,295,101,139],"animals",""],[[86,289,269,450,44,142],[465,245,50,454,392,364],"",""],[[413,472,542,459,541,460],[320,481,130,296,321,233],"",""],[[426,445,358,534,508,515],[179,292,115,197,264,45],"","colors"],[[540,438,450,344,440,337],[137,462,150,159,2,130],"","places"],[[124,208,517,511,531,330],[429,80,213,217,91,190],"","sports"],[[538,329,8,282,15,432],[390,530,324,513,510,295],"",""],[[512,134,517,86,175,91],[269,483,409,375,252,373],"",""],[[366,490,516,459,437,386],[503,358,534,83,314,382],"",""],[[56,432,207,97,512,289],[539,128,532,121,106,530],"","whole sentences"],[[346,494,261,184,392,481],[199,534,304,256,113,377],"",""],[[5,217,90,422,144,182],[163,99,434,19,483,400],"",""],[[511,519,265,125,288,465],[235,223,440,126,278,88],"",""],[[516,505,355,254,416,390],[536,258,0,173,153,533],"","whole sentences"],[[351,404,536,173,255,344],[280,147,336,481,161,429],"",""],[[117,190,316,157,115,239],[17,79,328,289,333,330],"",""],[[434,257,342,61,101,213],[505,27,13,269,308,34],"",""],[[473,82,346,428,62,77],[286,505,432,408,287,104],"",""],[[474,11,35,54,34,471],[355,344,203,372,345,58],"","people"],[[275,52,418,24,210,522],[134,142,381,139,366,159],"",""],[[371,233,293,389,362,472],[495,516,502,278,388,110],"numbers","colors"],[[456,395,186,215,290,424],[190,322,246,30,353,148],"",""],[[404,129,388,535,331,11],[17,478,473,482,7,481],"whole sentences","music"],[[457,399,269,280,303,201],[229,228,85,163,479,412],"",""],[[126,439,463,542,444,50],[35,356,42,39,519,68],"","animals"],[[498,126,266,296,496,194],[229,87,471,58,161,88],"",""],[[283,413,325,397,141,521],[209,370,381,462,317,84],"",""],[[473,401,377,249,121,538],[540,373,178,152,69,308],"",""],[[527,392,110,460,526,457],[164,129,434,155,36,160],"",""],[[430,412,183,267,45,137],[313,315,282,224,148,257],"",""],[[173,237,178,540,536,447],[518,103,513,94,484,116],"",""],[[382,376,523,500,324,300],[510,492,147,189,475,129],"","sports"],[[443,219,259,241,127,107],[540,537,527,237,450,461],"",""],[[225,15,104,460,503,82],[300,370,261,367,404,302],"describing words",""],[[430,527,498,401,316,394],[371,58,531,262,118,362],"","whole sentences"],[[193,115,301,539,24,280],[222,64,354,499,387,418],"",""],[[130,151,240,311,159,175],[360,376,14,25,75,23],"","feelings"],[[396,397,384,398,409,333],[276,540,144,62,42,158],"","colors"],[[278,458,403,410,312,500],[321,289,184,493,234,370],"",""],[[175,235,239,403,224,510],[367,33,38,371,165,58],"vehicles",""],[[403,393,395,525,384,437],[470,73,518,67,15,82],"",""],[[435,207,190,357,433,528],[160,10,539,89,99,475],"",""],[[195,286,447,424,151,289],[390,35,352,345,79,37],"",""],[[90,104,57,324,99,313],[393,298,542,145,385,424],"food",""],[[486,490,411,316,356,215],[396,209,183,146,308,40],"sports",""],[[430,307,383,433,431,465],[474,513,237,473,143,86],"","vehicles"],[[432,237,156,530,279,529],[55,363,17,524,56,73],"",""],[[232,229,319,498,159,388],[420,416,310,205,432,462],"",""],[[24,540,325,23,117,30],[326,447,331,248,369,332],"",""],[[398,480,415,380,368,499],[539,20,16,246,17,25],"music",""],[[131,449,385,535,408,337],[241,91,251,199,494,486],"","music"],[[450,101,110,529,5,288],[66,192,303,494,314,158],"",""],[[85,492,526,18,217,38],[389,330,224,74,392,391],"",""],[[224,393,421,60,424,513],[110,482,390,478,222,456],"","music"],[[427,449,267,155,446,174],[403,432,228,203,513,485],"",""],[[528,180,529,533,530,536],[295,57,213,250,296,217],"","numbers"],[[112,316,18,42,309,538],[347,160,149,340,392,402],"",""],[[144,163,73,87,263,490],[154,329,111,396,354,347],"sports",""],[[342,48,428,456,475,324],[393,460,466,112,406,405],"",""],[[523,396,417,385,432,178],[184,153,32,56,72,275],"",""],[[284,238,171,294,274,111],[31,487,370,507,455,145],"numbers","music"],[[421,508,426,142,526,171],[537,538,530,71,346,21],"",""],[[202,336,468,469,457,346],[536,308,219,160,312,132],"",""],[[48,197,380,228,42,385],[444,447,364,451,316,307],"vehicles","describing words"],[[536,542,353,428,327,426],[77,507,45,162,415,453],"",""],[[443,176,86,531,85,67],[283,448,276,175,463,245],"",""],[[520,506,531,480,269,120],[89,238,399,539,218,214],"","big ideas"],[[424,437,45,51,338,268],[539,140,146,451,462,542],"",""],[[152,134,42,468,454,154],[274,299,275,48,293,115],"","colors"],[[114,47,403,49,224,435],[265,372,364,402,492,249],"colors",""],[[383,467,401,355,196,379],[17,440,413,13,107,235],"",""],[[85,337,106,428,124,301],[274,367,520,519,510,514],"","sports"],[[534,283,427,7,334,222],[536,533,457,54,542,524],"","colors"],[[316,313,273,351,532,427],[226,182,220,227,334,38],"",""],[[2,428,352,17,417,6],[176,324,154,325,85,298],"colors",""],[[235,239,66,77,198,178],[535,241,59,53,158,349],"vehicles",""],[[109,536,126,129,514,257],[142,397,143,393,389,94],"","big ideas"],[[213,413,407,212,87,182],[427,370,536,253,423,86],"music",""],[[312,115,357,149,367,403],[193,473,479,67,254,36],"","music"],[[491,350,406,475,352,447],[170,541,180,217,532,531],"","whole sentences"],[[176,345,424,347,513,173],[340,326,126,143,34,369],"",""],[[171,448,495,364,7,69],[533,423,501,536,500,46],"","music"],[[354,342,227,405,245,288],[33,49,9,12,19,530],"","animals"],[[41,372,347,540,526,120],[115,292,472,473,312,513],"","music"],[[381,344,365,301,88,337],[457,438,217,75,103,71],"",""],[[492,90,524,246,96,75],[418,512,10,496,504,7],"",""],[[48,112,431,351,42,540],[306,220,327,150,245,305],"",""],[[316,55,105,374,315,279],[383,539,2,430,406,185],"",""],[[219,261,412,151,57,310],[343,41,29,16,478,199],"","sports"],[[180,181,117,58,179,76],[538,438,517,542,227,415],"food",""],[[138,154,308,420,242,66],[228,18,402,381,210,393],"",""],[[538,45,14,527,376,64],[354,355,181,311,416,458],"",""],[[131,513,130,38,127,533],[407,82,498,81,276,371],"","numbers"],[[42,341,15,232,424,144],[97,280,54,275,179,96],"",""],[[503,112,104,434,98,177],[312,531,393,224,362,173],"","vehicles"],[[391,516,252,428,269,522],[127,168,285,16,169,353],"",""],[[341,403,293,372,340,534],[251,100,268,239,89,423],"",""],[[72,311,376,452,32,213],[228,519,156,182,94,530],"","whole sentences"],[[236,310,511,154,361,240],[86,262,143,44,177,463],"","food"],[[268,321,537,313,72,198],[388,444,247,251,53,492],"",""],[[537,323,303,92,135,529],[434,515,165,538,259,268],"",""],[[478,222,482,533,525,506],[245,22,24,9,54,146],"",""],[[532,22,535,169,534,470],[126,116,129,431,384,280],"",""],[[451,436,444,304,95,455],[135,489,504,353,162,408],"",""],[[327,342,29,346,295,27],[126,349,398,396,348,360],"",""],[[284,178,102,200,285,124],[340,280,175,274,269,211],"",""],[[383,510,156,165,464,326],[7,491,202,503,428,8],"",""],[[8,19,437,55,163,107],[403,250,187,194,369,478],"",""],[[426,454,485,524,195,110],[349,498,339,472,87,535],"",""],[[529,314,363,131,167,370],[97,420,50,405,524,104],"",""],[[479,275,520,428,229,264],[70,339,196,226,1,443],"",""],[[453,496,96,492,378,256],[159,243,22,306,172,457],"",""],[[247,234,271,208,1,490],[443,355,297,114,433,165],"",""],[[31,29,2,94,43,257],[515,193,384,164,537,275],"",""],[[116,264,110,267,390,253],[432,239,69,415,161,155],"","vehicles"],[[291,415,122,423,116,86],[67,231,436,523,169,462],"numbers",""],[[254,121,355,343,542,215],[135,307,174,317,319,136],"science and technology",""],[[173,494,237,533,482,428],[411,490,31,320,125,35],"music",""],[[115,509,119,485,326,232],[463,259,532,144,481,385],"","colors"],[[361,23,227,39,449,280],[196,477,394,123,406,268],"",""],[[199,252,255,229,210,351],[296,291,299,450,473,158],"","numbers"],[[498,538,27,6,475,499],[310,137,318,319,153,321],"","times and dates"],[[540,36,100,537,101,388],[527,459,136,169,481,523],"",""],[[164,136,304,306,452,149],[484,393,428,520,538,370],"","whole sentences"],[[87,359,377,83,416,32],[515,355,74,501,398,75],"",""],[[542,157,524,527,253,496],[124,372,79,513,172,208],"",""],[[485,488,529,530,540,487],[453,462,57,278,12,280],"sports","colors"],[[539,192,117,215,228,55],[356,270,368,388,493,154],"",""],[[223,23,206,172,448,411],[304,305,88,463,333,442],"",""],[[327,124,82,423,465,191],[470,334,281,106,128,286],"",""],[[360,376,24,455,493,269],[481,303,457,305,313,412],"",""],[[531,154,521,440,515,462],[88,86,57,64,30,96],"","food"],[[465,288,325,174,285,366],[234,41,5,470,70,432],"",""],[[513,457,514,255,168,446],[234,273,317,111,450,431],"","colors"],[[536,439,156,501,181,505],[16,45,28,41,2,21],"","animals"],[[54,313,321,36,401,186],[68,86,467,75,318,492],"","whole sentences"],[[231,72,489,150,74,321],[428,461,27,426,211,511],"",""],[[522,157,37,361,203,471],[491,531,11,351,457,267],"","whole sentences"],[[123,533,393,404,313,2],[112,141,285,489,178,42],"",""],[[262,378,255,199,382,204],[301,208,218,539,83,313],"colors",""],[[447,525,407,233,8,386],[432,213,209,175,217,258],"","music"],[[317,478,321,457,471,427],[499,205,203,83,23,202],"music",""],[[191,530,417,139,529,504],[410,98,40,440,21,223],"",""],[[507,383,403,348,395,432],[128,43,494,82,347,168],"",""],[[455,254,527,478,91,37],[294,172,134,512,4,280],"",""],[[5,2,162,3,380,180],[311,528,515,520,444,500],"food",""],[[263,451,244,28,388,11],[512,136,535,292,161,160],"",""],[[338,210,25,524,272,277],[387,531,336,120,134,346],"colors",""],[[470,171,267,109,512,127],[347,375,502,391,487,376],"",""],[[355,380,34,27,354,39],[455,446,525,537,189,115],"",""],[[144,19,166,408,59,272],[65,313,43,542,164,293],"",""],[[81,532,312,443,511,538],[163,475,233,241,206,341],"",""],[[23,348,314,528,388,304],[267,370,244,84,402,162],"times and dates",""],[[463,419,58,174,500,165],[525,453,487,407,495,132],"",""],[[398,375,361,391,44,362],[304,447,179,175,199,112],"",""],[[538,114,206,113,238,86],[139,231,306,486,195,458],"",""],[[405,372,19,285,357,155],[531,215,204,477,471,530],"",""],[[341,36,105,152,34,237],[428,533,423,536,279,113],"","colors"],[[465,288,431,104,454,466],[491,156,483,494,159,484],"little words like “the” and “of”","sports"],[[399,5,85,433,4,97],[176,203,202,222,213,200],"",""],[[368,387,5,208,65,252],[370,530,232,340,529,223],"",""],[[536,8,305,346,432,57],[428,517,518,515,520,378],"",""],[[62,412,128,379,38,393],[402,462,276,439,283,450],"",""],[[296,27,87,105,491,3],[328,314,120,178,88,163],"",""],[[467,22,0,92,379,16],[253,159,199,164,356,404],"",""],[[422,203,107,217,177,475],[286,86,20,10,495,370],"",""],[[92,249,540,140,89,486],[439,128,364,286,126,297],"",""],[[394,406,77,105,386,488],[129,370,361,221,147,235],"colors",""],[[66,443,95,412,59,385],[523,501,482,293,199,467],"",""],[[365,525,460,252,148,364],[133,491,176,237,487,35],"","sports"],[[302,61,392,477,205,282],[115,159,161,337,98,156],"sports",""],[[392,312,8,15,1,538],[45,77,189,94,60,67],"",""],[[86,90,494,170,274,433],[402,367,429,533,424,371],"sports","feelings"],[[117,353,127,45,158,325],[53,444,415,58,134,421],"",""],[[81,29,381,351,471,431],[274,90,145,86,334,176],"",""],[[22,269,511,44,85,36],[486,526,282,535,208,457],"the body",""],[[91,281,196,303,193,94],[536,206,127,113,111,184],"",""],[[447,156,125,200,524,97],[82,342,308,499,114,250],"",""],[[514,540,40,115,517,536],[269,57,58,391,87,500],"whole sentences",""],[[455,457,238,205,405,112],[67,229,534,250,82,255],"",""],[[507,399,475,423,494,24],[131,147,83,531,167,523],"",""],[[360,376,525,112,125,370],[499,540,356,476,98,337],"","colors"],[[178,233,287,411,340,109],[265,17,190,266,226,229],"the body",""],[[139,434,54,243,216,412],[367,377,369,375,384,269],"sports",""],[[343,234,537,169,256,203],[114,119,460,112,266,104],"","the body"],[[260,404,213,57,473,275],[229,339,6,424,537,180],"",""],[[237,523,356,10,510,465],[144,411,490,382,272,76],"",""],[[184,74,257,266,66,73],[316,448,428,115,318,351],"",""],[[230,235,487,495,69,486],[533,121,155,532,437,517],"sports",""],[[202,170,277,65,418,13],[478,367,525,512,288,149],"",""],[[151,258,117,236,96,303],[120,299,123,78,136,215],"",""],[[350,36,146,276,88,18],[122,520,432,457,512,456],"",""],[[538,533,14,385,122,61],[177,180,418,466,186,419],"animals",""],[[514,346,197,504,343,9],[51,475,298,312,443,242],"whole sentences",""],[[422,181,417,484,483,225],[267,319,406,183,404,502],"sports",""],[[276,307,207,280,497,442],[232,66,229,330,504,134],"colors",""],[[162,393,201,115,441,264],[481,84,323,47,190,470],"vehicles",""],[[323,263,304,483,443,537],[107,47,63,426,151,90],"",""],[[495,492,251,489,327,387],[542,529,209,330,530,114],"sports",""],[[358,374,96,346,118,14],[494,472,482,136,159,496],"",""],[[526,291,78,344,215,62],[149,507,219,134,426,176],"",""],[[529,541,530,380,366,525],[372,479,491,418,346,56],"","music"],[[293,436,298,448,397,309],[163,161,90,444,229,232],"",""],[[531,9,0,220,539,243],[77,405,379,515,383,466],"whole sentences",""],[[515,422,175,191,537,306],[477,41,137,481,496,536],"",""],[[327,305,373,190,304,311],[4,31,420,87,434,169],"","food"],[[322,216,331,340,458,43],[107,530,529,324,474,294],"",""],[[464,294,466,371,319,517],[190,289,334,212,290,15],"","colors"],[[239,503,492,205,514,42],[359,534,358,465,401,449],"vehicles",""],[[351,431,540,90,388,406],[477,367,159,375,174,217],"",""],[[405,413,7,516,432,420],[335,197,419,29,283,157],"",""],[[51,237,538,494,247,273],[498,399,290,258,120,288],"","numbers"],[[133,542,497,406,132,372],[505,30,222,255,3,494],"","vehicles"],[[392,406,409,103,208,262],[216,446,191,481,225,160],"",""],[[379,411,540,490,360,376],[300,215,370,402,112,401],"",""],[[407,405,189,69,137,404],[117,118,80,32,33,268],"","animals"],[[7,211,18,287,228,58],[429,367,194,325,426,417],"",""],[[421,169,532,254,262,364],[123,206,197,190,173,124],"",""],[[487,539,435,63,525,424],[49,419,71,34,318,239],"",""],[[71,527,375,361,362,386],[173,536,542,175,271,274],"",""],[[125,158,393,90,459,515],[523,261,372,365,442,350],"","little words like “the” and “of”"],[[3,6,24,330,525,275],[482,472,144,383,357,463],"colors",""],[[231,23,40,22,4,332],[267,97,420,516,399,289],"animals",""],[[172,216,219,270,507,447],[455,372,156,163,427,462],"",""],[[532,538,64,534,263,522],[84,294,398,289,242,477],"",""],[[253,503,538,532,154,443],[279,275,428,403,213,74],"","colors"],[[322,411,495,490,434,410],[343,210,355,324,121,512],"","science and technology"],[[400,326,373,318,284,483],[530,384,529,40,152,19],"",""],[[515,418,516,541,350,11],[491,432,415,496,493,86],"","sports"],[[293,352,507,294,327,77],[43,50,485,494,97,486],"","sports"],[[240,75,65,81,69,59],[354,390,443,427,219,445],"food",""],[[295,410,408,527,247,29],[89,530,168,184,534,517],"",""],[[269,537,239,473,531,471],[356,83,446,334,322,496],"music",""],[[305,403,213,46,66,114],[512,499,491,520,367,433],"colors",""],[[503,134,486,480,502,154],[528,426,54,535,408,56],"music",""],[[350,533,476,348,81,326],[513,47,521,283,178,111],"",""],[[377,536,429,179,359,205],[413,496,163,391,146,223],"",""],[[36,204,482,312,231,423],[45,473,173,298,316,157],"",""],[[241,370,275,463,457,529],[13,34,488,407,376,117],"",""],[[241,356,208,111,194,179],[502,453,275,232,168,434],"",""],[[374,382,468,432,397,450],[413,249,211,82,176,257],"",""],[[215,383,212,145,31,467],[76,74,230,208,179,239],"",""],[[33,355,41,385,381,233],[305,387,143,306,358,200],"",""],[[305,537,541,324,282,252],[192,424,217,98,454,48],"",""],[[293,263,410,364,239,299],[170,153,130,169,351,348],"",""],[[535,200,166,164,534,60],[29,55,380,443,445,525],"",""],[[514,32,94,238,67,33],[163,296,386,464,147,273],"",""],[[486,385,241,282,79,60],[193,372,64,515,357,536],"",""],[[157,344,356,67,160,158],[446,247,252,43,462,23],"",""],[[259,179,80,258,189,182],[382,287,517,529,531,396],"",""],[[161,175,503,180,87,498],[46,324,294,275,293,391],"",""],[[283,250,534,324,307,244],[127,478,86,204,109,138],"little words like “the” and “of”","music"],[[449,140,298,263,443,255],[226,166,221,227,201,160],"","vehicles"],[[405,181,233,72,201,158],[363,539,390,394,467,332],"","whole sentences"],[[493,145,535,137,528,430],[471,269,228,341,3,2],"","music"],[[159,186,458,253,141,208],[344,434,504,226,41,464],"",""],[[164,327,435,316,115,541],[360,499,376,355,204,432],"",""],[[415,403,17,267,443,153],[65,432,350,436,293,290],"",""],[[478,346,203,367,205,274],[503,435,416,451,4,276],"",""],[[539,73,533,423,252,349],[296,297,294,295,282,506],"",""],[[405,307,30,256,10,25],[467,66,471,505,509,470],"",""],[[383,158,122,24,445,285],[356,275,228,346,164,352],"",""],[[281,49,198,479,35,368],[452,491,165,195,457,176],"",""],[[291,369,147,194,59,460],[476,540,179,364,244,183],"",""],[[339,415,443,450,34,332],[519,161,225,99,208,176],"",""],[[535,82,55,326,314,321],[413,97,431,244,435,454],"",""],[[476,477,414,363,192,472],[272,381,424,171,203,67],"music",""],[[473,419,128,25,74,227],[427,460,4,408,433,165],"",""],[[27,369,349,407,238,216],[530,529,63,450,66,69],"",""],[[535,339,72,207,262,530],[536,156,299,38,157,298],"",""],[[528,22,11,529,10,24],[210,212,479,427,451,472],"","music"],[[468,302,415,473,298,482],[16,78,146,109,20,164],"music",""],[[215,232,182,483,510,404],[424,57,412,251,381,141],"",""],[[71,116,218,63,103,35],[487,373,466,478,314,136],"food",""],[[24,269,377,437,312,303],[268,352,198,487,152,457],"","sports"],[[510,102,397,515,456,281],[201,146,13,225,14,223],"","vehicles"],[[3,205,380,145,84,463],[399,508,356,504,381,379],"",""],[[191,79,261,469,207,78],[6,206,155,517,133,200],"",""],[[477,478,344,222,472,482],[366,248,384,526,16,199],"music",""],[[503,186,413,471,178,245],[73,530,127,422,311,529],"",""],[[402,296,399,141,159,146],[66,85,491,33,87,483],"","sports"],[[290,242,79,445,532,485],[466,460,459,365,248,433],"sports",""],[[513,473,530,209,321,533],[144,220,21,227,384,272],"whole sentences",""],[[486,343,108,502,347,344],[536,266,406,456,270,374],"sports",""],[[494,519,107,253,483,254],[95,478,455,468,292,442],"","music"],[[269,116,221,223,146,233],[6,16,25,79,463,355],"",""],[[213,370,259,539,255,299],[390,410,426,491,135,155],"",""],[[359,505,154,348,377,478],[107,20,427,94,12,6],"music",""],[[354,536,450,94,190,323],[72,133,185,226,432,429],"",""],[[315,449,450,190,210,329],[191,139,400,295,283,198],"",""],[[520,320,347,481,131,538],[64,300,452,103,439,44],"","colors"],[[257,262,142,17,1,199],[369,157,364,433,427,537],"",""],[[208,492,446,181,494,233],[393,134,398,169,421,15],"",""],[[538,98,523,535,491,542],[411,436,490,458,273,234],"","colors"],[[542,33,290,435,379,281],[142,317,256,211,490,326],"little words like “the” and “of”",""],[[427,401,336,206,503,453],[398,193,273,391,127,145],"","colors"],[[239,215,205,235,326,176],[86,55,53,91,125,68],"",""],[[258,125,248,467,3,305],[520,363,509,443,309,497],"colors",""],[[252,407,301,424,389,363],[45,15,68,88,36,86],"",""],[[476,389,341,466,40,354],[34,539,527,210,535,528],"",""],[[14,235,25,239,205,230],[540,432,416,537,300,420],"",""],[[532,314,308,68,99,86],[254,56,506,240,161,243],"","music"],[[1,538,487,0,530,218],[513,17,369,95,136,253],"",""],[[364,538,533,9,4,8],[497,288,120,470,214,190],"",""],[[354,517,402,281,62,342],[86,293,482,24,316,288],"","numbers"],[[540,272,337,173,330,188],[228,196,246,344,15,179],"colors",""],[[537,457,531,360,20,538],[117,352,389,426,478,364],"",""],[[302,231,293,346,167,457],[369,9,242,85,359,375],"",""],[[210,510,249,343,198,350],[375,181,361,362,540,442],"",""],[[444,395,384,403,523,249],[209,534,64,305,40,26],"",""],[[53,400,466,122,432,453],[346,529,530,321,95,532],"",""],[[157,326,168,398,372,31],[237,98,69,68,121,99],"","food"],[[37,231,221,442,157,150],[80,535,81,498,389,121],"vehicles","food"],[[502,269,311,17,376,248],[415,465,366,481,429,431],"",""],[[168,306,175,423,305,327],[28,538,328,363,12,70],"",""],[[375,194,361,193,382,436],[200,429,300,491,379,227],"",""],[[470,42,510,72,32,88],[405,359,377,63,369,367],"music","feelings"],[[23,162,163,72,523,226],[194,323,77,174,346,98],"",""],[[192,160,414,504,538,13],[288,334,349,7,286,51],"",""],[[456,213,426,526,296,210],[16,270,347,204,151,319],"",""],[[205,542,45,84,530,276],[225,375,315,361,511,206],"",""],[[98,500,510,117,194,431],[35,460,155,458,230,26],"","feelings"],[[365,274,67,379,504,455],[129,366,127,417,308,133],"vehicles",""],[[263,381,345,41,80,149],[507,328,501,500,363,410],"",""],[[533,343,367,276,379,146],[232,439,147,153,310,132],"feelings",""],[[494,432,190,247,483,276],[346,342,303,37,385,54],"colors",""],[[448,435,116,400,238,505],[346,376,347,407,538,367],"",""],[[179,86,203,66,75,19],[218,404,443,310,480,406],"",""],[[118,484,493,78,454,464],[351,48,204,128,499,102],"",""],[[379,420,112,99,139,355],[174,505,437,10,133,190],"",""],[[449,6,383,496,200,397],[158,197,535,169,41,232],"",""],[[202,469,470,336,476,59],[219,355,344,435,514,134],"music",""],[[347,212,403,312,464,451],[27,405,500,34,498,31],"",""],[[189,135,155,538,500,96],[195,420,282,437,540,158],"",""],[[103,384,393,506,377,532],[98,118,256,483,111,83],"",""],[[453,456,393,537,467,397],[471,432,492,414,260,0],"","music"],[[344,35,20,21,343,300],[248,262,198,230,128,525],"",""],[[316,432,96,345,537,269],[386,99,519,69,475,11],"",""],[[498,437,495,507,494,269],[383,351,48,58,354,440],"",""],[[416,222,322,417,187,60],[498,419,164,129,237,79],"",""],[[276,403,115,360,275,399],[94,298,410,63,491,533],"",""],[[292,274,310,75,490,344],[510,538,497,484,428,155],"colors",""],[[242,250,470,345,473,66],[540,457,216,56,291,446],"music",""],[[507,481,234,304,25,61],[205,125,277,87,88,81],"",""],[[112,247,117,119,331,303],[28,467,387,233,57,218],"",""],[[318,410,351,251,332,114],[296,520,300,443,521,228],"",""],[[145,35,37,45,137,165],[81,202,478,110,101,157],"",""],[[19,435,16,379,237,349],[345,447,528,510,367,522],"",""],[[542,535,455,539,32,143],[493,494,481,379,153,241],"","sports"],[[228,503,361,227,198,443],[108,436,365,416,12,128],"",""],[[539,129,196,168,314,154],[427,383,25,166,281,536],"",""],[[390,506,160,27,341,540],[162,361,413,244,380,179],"",""],[[393,264,386,368,57,8],[222,538,215,12,178,91],"","colors"],[[229,475,138,57,478,39],[491,443,444,314,81,372],"",""],[[206,437,281,81,471,356],[538,332,435,177,291,63],"","whole sentences"],[[62,325,38,517,529,102],[523,274,172,300,539,452],"","colors"],[[402,166,310,164,47,309],[8,361,485,362,371,375],"",""],[[330,352,128,70,519,499],[478,212,482,112,3,293],"",""],[[166,484,68,483,154,134],[539,16,289,270,360,198],"","whole sentences"],[[269,72,35,73,504,146],[542,328,110,417,123,535],"sports",""],[[87,111,236,433,443,507],[475,241,378,94,407,542],"","music"],[[47,89,136,508,2,531],[32,344,298,231,26,365],"",""],[[470,244,415,245,448,169],[375,361,362,269,465,210],"music","feelings"],[[445,407,24,458,278,19],[536,540,291,141,491,185],"",""],[[362,435,181,14,196,509],[112,241,243,111,541,5],"",""],[[486,483,425,88,118,415],[63,449,368,454,443,94],"music","describing words"],[[406,361,117,209,202,112],[81,28,42,29,76,141],"","food"],[[226,2,122,347,227,118],[377,359,478,24,379,428],"the body",""],[[371,109,461,425,428,357],[94,99,347,520,91,86],"","science and technology"],[[89,372,331,44,86,311],[323,429,160,432,174,236],"colors",""],[[409,85,30,28,177,199],[402,20,524,363,397,46],"",""],[[294,538,76,518,533,15],[394,385,180,164,402,528],"",""],[[339,418,124,249,541,352],[409,372,364,330,362,351],"","feelings"],[[391,197,196,95,464,367],[81,317,539,339,526,517],"",""],[[208,345,205,156,223,338],[33,422,384,259,385,16],"",""],[[103,472,425,9,49,292],[536,59,513,401,430,114],"",""],[[357,539,285,540,339,380],[437,67,224,193,244,188],"",""],[[319,247,246,534,49,305],[529,530,58,60,53,112],"",""],[[499,343,535,462,280,229],[348,526,435,381,349,369],"",""],[[331,356,255,24,330,392],[78,265,456,240,64,461],"",""],[[227,428,149,25,422,6],[101,274,56,409,160,370],"",""],[[425,371,502,91,539,505],[251,173,292,193,156,69],"",""],[[159,216,476,130,372,357],[434,408,542,524,289,324],"people",""],[[88,18,134,344,367,314],[316,511,79,41,325,231],"",""],[[469,279,479,416,341,66],[530,529,131,288,62,528],"",""],[[30,408,172,215,435,145],[245,282,273,313,56,384],"",""],[[278,437,230,279,164,458],[540,338,476,429,404,50],"","people"],[[25,466,454,492,356,525],[512,535,534,124,188,510],"",""],[[116,491,492,33,495,64],[126,528,18,19,51,135],"sports",""],[[355,95,274,61,37,98],[248,50,117,154,292,189],"colors",""],[[384,364,462,259,394,348],[92,482,213,241,242,274],"",""],[[392,380,384,366,238,351],[491,490,411,357,115,510],"",""],[[42,32,29,354,28,37],[310,297,309,307,316,188],"animals","little words like “the” and “of”"],[[106,128,193,532,415,333],[229,422,86,97,82,437],"",""],[[315,156,314,46,107,538],[237,197,233,456,19,16],"","vehicles"],[[28,536,120,204,220,275],[287,290,298,485,352,100],"vehicles",""],[[69,510,312,351,313,349],[278,279,25,345,374,358],"",""],[[536,447,406,318,524,174],[277,146,275,474,362,296],"","colors"],[[481,126,128,222,519,477],[205,78,331,27,437,208],"","colors"],[[382,424,491,86,263,338],[529,231,237,450,372,172],"",""],[[353,421,195,383,181,94],[37,38,159,22,229,21],"",""],[[53,444,22,247,456,280],[509,520,484,537,483,100],"colors",""],[[411,490,327,295,394,157],[540,529,530,121,454,172],"","whole sentences"],[[163,237,419,41,90,494],[327,533,182,32,187,195],"vehicles",""],[[109,343,100,508,475,104],[215,213,88,257,514,301],"",""],[[269,153,144,328,31,250],[206,430,83,500,184,231],"little words like “the” and “of”",""],[[30,38,110,78,73,50],[528,373,322,387,463,425],"the body",""],[[345,80,370,51,115,525],[449,325,486,514,380,248],"",""],[[541,528,34,354,19,376],[326,159,92,295,158,218],"","times and dates"],[[492,430,238,251,75,527],[424,471,287,86,225,101],"",""],[[6,10,72,5,537,533],[370,184,208,128,154,106],"",""],[[427,419,428,409,425,303],[539,386,411,342,123,490],"",""],[[61,114,63,345,494,483],[537,472,285,340,441,536],"","numbers"],[[38,542,526,366,56,81],[339,329,375,186,323,301],"",""],[[470,540,41,454,185,287],[58,424,438,387,530,312],"",""],[[325,438,314,437,381,217],[414,504,500,482,514,513],"","music"],[[306,399,263,344,327,434],[77,209,461,145,290,427],"",""],[[157,345,432,331,443,357],[121,533,202,0,10,201],"",""],[[85,365,70,202,487,535],[351,512,307,453,439,256],"music",""],[[50,498,22,39,433,430],[347,445,346,63,241,474],"","music"],[[368,121,16,322,185,69],[235,225,506,239,287,325],"big ideas","vehicles"],[[383,511,538,202,514,35],[118,316,521,164,206,348],"",""]],"shared":{"9":[-0.11,-0.06,-0.15],"29":[0.19,0.25,0.29],"111":[-0.31,-0.28,-0.38],"115":[0.35,0.34,0.18],"234":[0.08,-0.03,0.04],"341":[-0.15,-0.14,-0.24],"391":[0.32,0.28,0.19],"507":[-0.15,-0.13,-0.2],"554":[-0.25,-0.23,-0.2],"732":[0.22,0.19,0.17]},"n":2834};
+</script>
 <script type="module">
-import { AutoConfig, AutoModel, AutoProcessor, load_image, load_audio, load_video, env }
+import { AutoConfig, AutoModel, AutoProcessor, load_image, load_audio, RawImage, RawVideo, RawVideoFrame, env }
   from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/+esm";
 
 env.allowLocalModels = false;
@@ -425,7 +510,7 @@ $("loadBtn").addEventListener("click", async () => {
     document.querySelectorAll("[data-need]").forEach((b) => b.disabled = !loaded[b.dataset.need]);
     poleCache.clear();
     for (const it of items) { it.vec = null; embedItem(it); }
-    if (!items.length) addExamples();
+    if (!items.length) addThings(STARTER, "Starter");
   } catch (e) {
     failed = true;
     console.error(e);
@@ -467,7 +552,52 @@ async function decodeMedia(it) {
     if (a.length > MAX_AUDIO_SECONDS * 16000) { a = a.slice(0, MAX_AUDIO_SECONDS * 16000); it.note = `first ${MAX_AUDIO_SECONDS} s`; }
     return a;
   }
-  if (it.kind === "video") return load_video(it.src, { num_frames: VIDEO_FRAMES });
+  if (it.kind === "video") return loadVideo(it.src, VIDEO_FRAMES);
+}
+
+// Like Transformers.js's load_video, but it gives up with a message instead of waiting
+// forever when a video can't be downloaded, can't be played, or stops seeking.
+function waitFor(el, event, ms, what) {
+  return new Promise((resolve, reject) => {
+    const done = (f, x) => { clearTimeout(timer); el.removeEventListener(event, ok); el.removeEventListener("error", bad); f(x); };
+    const ok = () => done(resolve);
+    const bad = () => done(reject, new Error(`this browser can't play this video (${what})`));
+    const timer = setTimeout(() => done(reject, new Error(`the video stopped responding (${what})`)), ms);
+    el.addEventListener(event, ok); el.addEventListener("error", bad);
+  });
+}
+async function loadVideo(src, numFrames) {
+  let blob;
+  try {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 60000);
+    const res = await fetch(src, { signal: ctl.signal });
+    if (!res.ok) throw new Error(`the server said ${res.status}`);
+    blob = await res.blob(); clearTimeout(t);
+  } catch (e) { throw new Error("Couldn't download the video: " + (e.name === "AbortError" ? "it took too long" : e.message)); }
+  const url = URL.createObjectURL(blob);
+  const video = document.createElement("video");
+  video.muted = true; video.preload = "auto";
+  try {
+    const meta = waitFor(video, "loadedmetadata", 20000, "reading it");
+    video.src = url;
+    await meta;
+    const duration = video.duration;
+    if (!isFinite(duration) || !video.videoWidth) throw new Error("Couldn't read the video's length or size.");
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const frames = [];
+    for (let i = 0; i < numFrames; i++) {
+      const t = numFrames === 1 ? duration / 2 : Math.min(i * duration / (numFrames - 1), Math.max(0, duration - 0.05));
+      const seeked = waitFor(video, "seeked", 15000, `frame ${i + 1}`);
+      video.currentTime = t;
+      await seeked;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      frames.push(new RawVideoFrame(new RawImage(d.data, canvas.width, canvas.height, 4), t));
+    }
+    return new RawVideo(frames, duration);
+  } finally { video.removeAttribute("src"); video.load(); URL.revokeObjectURL(url); }
 }
 
 async function embedItem(it) {
@@ -559,24 +689,80 @@ document.addEventListener("drop", (e) => {
   addFiles(e.dataTransfer.files);
 });
 
-$("clearAll").addEventListener("click", () => { items = []; refreshAll(); });
+// ---------- sets of examples ----------
+// Words are plain strings; pictures, sounds and videos are [kind, file, label] from SAMPLES.
+const STARTER = ["dog", "cat", "apple", "house", ["image", "corgi.jpg", "corgi"], ["image", "house.jpg", "house"], ["audio", "dog_barking.wav", "dog barking"]];
+const SETS = [
+  { name: "Animals", icon: "🐾", things: ["dog", "cat", "tiger", "horse", "puppy", "kitten", "butterfly", "turtle", "beetle",
+    ["image", "corgi.jpg", "corgi"], ["image", "cats.jpg", "cats"], ["image", "tiger.jpg", "tiger"], ["image", "butterfly.jpg", "butterfly"],
+    ["image", "beetle.png", "beetle"], ["audio", "dog_barking.wav", "dog barking"], ["audio", "cat_meow.wav", "cat meowing"]] },
+  { name: "Food", icon: "🍎", things: ["apple", "banana", "bread", "cheese", "pizza", "soup", "fruit", "breakfast", ["image", "bread_small.png", "bread"]] },
+  { name: "Places", icon: "🏞️", things: ["beach", "house", "city", "lake", "mountain", "airport", "savanna", "street",
+    ["image", "beach.png", "beach"], ["image", "house.jpg", "house"], ["image", "airport.jpg", "airport"], ["image", "savanna.jpg", "savanna"],
+    ["image", "moraine-lake.png", "lake"], ["image", "new-york.jpg", "New York"], ["image", "city-streets.jpg", "city street"]] },
+  { name: "Questions", icon: "💬", things: ["How are you?", "How are you doing?", "How old are you?", "What is your age?",
+    "When were you born?", "Where do you live?", "What is your name?", "What time is it?"] },
+  { name: "Feelings", icon: "😊", things: ["happy", "joyful", "sad", "miserable", "angry", "calm", "excited", "scared"] },
+  { name: "Kings and queens", icon: "👑", things: ["king", "queen", "man", "woman", "prince", "princess", "boy", "girl"] },
+  { name: "Opposites", icon: "↔️", things: ["hot", "cold", "big", "small", "fast", "slow", "light", "dark", "happy", "sad"] },
+  { name: "Speech and music", icon: "🎵", things: ["a speech", "piano music", "someone speaking French", "someone speaking Japanese",
+    ["audio", "jfk.wav", "JFK speech"], ["audio", "mlk.wav", "MLK speech"], ["audio", "piano.wav", "piano"],
+    ["audio", "french-audio.wav", "French speech"], ["audio", "japanese-audio.wav", "Japanese speech"]] },
+  { name: "Videos", icon: "🎬", things: ["sea turtle", "a courtroom", ["video", "sea-turtle.mp4", "sea turtle"], ["video", "courtroom.mp4", "courtroom"]] },
+];
 
-function addExamples() {
-  const words = ["dog", "cat", "tiger", "butterfly", "house", "beach", "turtle", "a speech", "piano music", "apple", "fruit"];
-  for (const w of words) addItem("text", { text: w, label: w });
-  const media = [
-    ["image", "corgi.jpg", "corgi"], ["image", "cats.jpg", "cats"], ["image", "tiger.jpg", "tiger"],
-    ["image", "butterfly.jpg", "butterfly"], ["image", "house.jpg", "house"], ["image", "beach.png", "beach"],
-    ["audio", "dog_barking.wav", "dog barking"], ["audio", "cat_meow.wav", "cat meowing"],
-    ["audio", "jfk.wav", "JFK speech"], ["audio", "piano.wav", "piano"],
-    ["video", "sea-turtle.mp4", "sea turtle"],
-  ];
-  for (const [kind, file, label] of media) {
-    if ((kind === "audio" && !loaded.audio) || (kind !== "audio" && !loaded.vision)) continue;
-    addItem(kind, { src: SAMPLES + file, label });
+function addThings(things, set) {
+  let skipped = 0;
+  for (const t of things) {
+    const [kind, file, label] = typeof t === "string" ? ["text", null, t] : t;
+    if ((kind === "audio" && !loaded.audio) || ((kind === "image" || kind === "video") && !loaded.vision)) { skipped++; continue; }
+    const src = file && SAMPLES + file;
+    if (items.some((it) => it.kind === kind && (kind === "text" ? it.text === label : it.src === src))) continue;
+    addItem(kind, kind === "text" ? { text: label, label, set } : { src, label, set });
+  }
+  if (skipped) status(`Some of the set was left out: load the model with ${loaded.vision ? "sounds" : loaded.audio ? "pictures & videos" : "pictures, videos and sounds"} to add those.`);
+}
+for (const s of SETS) {
+  const b = document.createElement("button");
+  b.textContent = `${s.icon} ${s.name}`;
+  b.title = "Adds: " + s.things.map((t) => typeof t === "string" ? t : `${KIND_ICON[t[0]]} ${t[2]}`).join(", ");
+  b.onclick = () => addThings(s.things, s.name);
+  $("sets").appendChild(b);
+}
+
+// ---------- removing several things at once ----------
+let choosing = null; // a Set of chosen items while the remove bar is open
+function updateRemoveBar() {
+  if (!choosing) return;
+  $("removeGo").textContent = `Remove ${choosing.size}`;
+  $("removeGo").disabled = !choosing.size;
+  const groups = [["Everything", () => true]];
+  for (const k of ["text", "image", "audio", "video"]) if (items.some((it) => it.kind === k)) groups.push([`All ${KIND_NAME[k]}s`, (it) => it.kind === k]);
+  for (const name of new Set(items.map((it) => it.set).filter(Boolean))) groups.push([`The ${name} set`, (it) => it.set === name]);
+  $("removeGroups").innerHTML = "";
+  for (const [label, test] of groups) {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.onclick = () => {
+      const these = items.filter(test), all = these.every((it) => choosing.has(it));
+      these.forEach((it) => all ? choosing.delete(it) : choosing.add(it));
+      renderItems(); updateRemoveBar();
+    };
+    $("removeGroups").appendChild(b);
   }
 }
-$("examples").addEventListener("click", addExamples);
+function openRemove(open) {
+  choosing = open ? new Set() : null;
+  $("removeBar").hidden = !open;
+  $("items").classList.toggle("choosing", open);
+  renderItems(); updateRemoveBar();
+}
+$("removeBtn").addEventListener("click", () => openRemove(!choosing));
+$("removeCancel").addEventListener("click", () => openRemove(false));
+$("removeGo").addEventListener("click", () => {
+  items = items.filter((it) => !choosing.has(it));
+  openRemove(false); refreshAll(); placeEverything();
+});
 
 // camera
 let camStream = null;
@@ -700,8 +886,8 @@ function renderItems() {
   const S = starScale();
   for (const it of items) {
     const card = document.createElement("div");
-    card.className = "card" + (it.busy ? " busy" : "");
-    const meta = it.err ? `<span style="color:var(--warn)">${esc(it.err)}</span>`
+    card.className = "card" + (it.busy ? " busy" : "") + (choosing?.has(it) ? " chosen" : "");
+    const meta = it.err ? `<span style="color:var(--warn)">${esc(it.err)}</span>${model && !/^Load the model/.test(it.err) ? ` <button class="retry">Try again</button>` : ""}`
       : it.busy ? "working…" : it.vec ? `${fmtMs(it.ms)}${it.note ? " · " + it.note : ""}` : "waiting";
     card.innerHTML = `<button class="x" title="Remove">×</button>
       <div class="thumb">${itemThumb(it)}</div>
@@ -711,7 +897,14 @@ function renderItems() {
     c.style.width = c.style.height = "90px";
     card.appendChild(c);
     if (it.vec) drawStar(c, vecOf(it), 90, S);
-    card.querySelector(".x").onclick = () => { items = items.filter((x) => x !== it); refreshAll(); };
+    card.querySelector(".x").onclick = (e) => { e.stopPropagation(); items = items.filter((x) => x !== it); choosing?.delete(it); refreshAll(); updateRemoveBar(); };
+    const retry = card.querySelector(".retry");
+    if (retry) retry.onclick = (e) => { e.stopPropagation(); embedItem(it); };
+    card.onclick = (e) => {
+      if (!choosing || e.target.closest("audio,button")) return;
+      choosing.has(it) ? choosing.delete(it) : choosing.add(it);
+      card.classList.toggle("chosen", choosing.has(it)); updateRemoveBar();
+    };
     box.appendChild(card);
   }
 }
@@ -725,24 +918,97 @@ function fillSelect(sel, withNone, noneLabel) {
 }
 const byId = (id) => items.find((it) => String(it.id) === String(id));
 
+// ---------- what the rays seem to be about (from a study of 2,800 words; see RAYS) ----------
+let bigStar = null;   // { v, size, S, a, b } as last drawn
+let rayPinned = null; // a ray chosen by click or tap
+function rayAt(e) {
+  if (!bigStar) return null;
+  const r = $("bigStar").getBoundingClientRect();
+  const x = e.clientX - r.left - bigStar.size / 2, y = e.clientY - r.top - bigStar.size / 2;
+  if (Math.hypot(x, y) < 8) return null;
+  const n = bigStar.v.length;
+  let a = Math.atan2(y, x) + Math.PI / 2;
+  if (a < 0) a += 2 * Math.PI;
+  return Math.round(a / (2 * Math.PI) * n) % n;
+}
+function highlightRay(i) {
+  const { v, size, S } = bigStar;
+  drawStar($("bigStar"), v, size, S);
+  if (i == null) return;
+  const g = $("bigStar").getContext("2d"), n = v.length, c = size / 2, R = size / 2 - 2;
+  const ang = (2 * Math.PI * i) / n - Math.PI / 2, r = Math.max(14, R * Math.min(1, Math.abs(v[i]) / S));
+  g.strokeStyle = css("--accent"); g.lineWidth = 4; g.lineCap = "round";
+  g.beginPath(); g.moveTo(c, c); g.lineTo(c + r * Math.cos(ang), c + r * Math.sin(ang)); g.stroke();
+  g.lineCap = "butt";
+}
+const rayWords = (ks) => ks.map((k) => esc(RAYS.vocab[k])).join(", ");
+function rayHint(i) {
+  if (RAYS.shared[i]) return "big for everything";
+  const [, , hi, lo] = RAYS.rays[i];
+  return hi ? `${hi}?` : lo ? `not ${lo}?` : "no clear theme";
+}
+function showRay(i) {
+  if (!bigStar || i == null) { $("rayInfo").innerHTML = bigStar ? longestRays() : ""; return; }
+  const { v, a, b } = bigStar, x = v[i];
+  const [hiW, loW, hi, lo] = RAYS.rays[i];
+  const sh = RAYS.shared[i];
+  const sign = x >= 0 ? "green" : "red";
+  let h = `<p><b>Number ${i + 1}</b> · ${b ? `${esc(a.label)} minus ${esc(b.label)}` : esc(a.label)}: <b>${x >= 0 ? "+" : ""}${x.toFixed(3)}</b> (${sign})</p>`;
+  if (sh) {
+    h += `<p>This number is big for everything: about ${sh[0]} for words, ${sh[1]} for pictures and ${sh[2]} for sounds. It's part of what every embedding shares, so it says little about what a thing is` +
+      (Math.abs(sh[2] - sh[0]) > 0.04 ? `, though it's a bit different for sounds.` : ".") + `</p>`;
+  } else {
+    h += `<p><span class="w">Everyday words unusually high here:</span> ${rayWords(hiW)}<br><span class="w">…and unusually low:</span> ${rayWords(loW)}</p>`;
+    h += `<p>${hi && lo ? `Words about ${hi} tend to be high here, and words about ${lo} low.` : hi ? `Words about ${hi} tend to be high here.` : lo ? `Words about ${lo} tend to be low here.`
+      : "No clear theme: like most of the 768 numbers, this one is used for many unrelated things."}</p>`;
+  }
+  $("rayInfo").innerHTML = h + `<p class="meta">${rayPinned != null ? "Tap the star again to let go." : "Click to keep this ray."} <a href="#" class="raywhy">Why are most numbers unclear?</a></p>`;
+}
+function longestRays() {
+  const { v } = bigStar;
+  const top = [...v.keys()].sort((p, q) => Math.abs(v[q]) - Math.abs(v[p])).slice(0, 5);
+  return `<p><span class="w">Longest rays:</span> ${top.map((i) => `<button class="rayref" data-ray="${i}">${i + 1}: ${esc(rayHint(i))}</button>`).join("")}</p>` +
+    `<p class="meta">Point at a ray to see what it seems to be about.</p>`;
+}
+$("bigStar").addEventListener("pointermove", (e) => {
+  if (e.pointerType === "touch" || rayPinned != null || !bigStar) return;
+  const i = rayAt(e); highlightRay(i); showRay(i);
+});
+$("bigStar").addEventListener("pointerleave", () => { if (rayPinned == null && bigStar) { highlightRay(null); showRay(null); } });
+$("bigStar").addEventListener("click", (e) => {
+  const i = rayAt(e);
+  rayPinned = rayPinned != null || i == null ? null : i;
+  if (bigStar) { highlightRay(rayPinned ?? i); showRay(rayPinned ?? (e.pointerType === "mouse" ? i : null)); }
+});
+$("rayInfo").addEventListener("click", (e) => {
+  const b = e.target.closest("button.rayref");
+  if (b) { rayPinned = +b.dataset.ray; highlightRay(rayPinned); showRay(rayPinned); return; }
+  if (e.target.closest("a.raywhy")) {
+    e.preventDefault();
+    const d = $("rayInfo").closest("section").querySelectorAll("details")[0];
+    d.open = true; d.querySelector("details.more").open = true; d.scrollIntoView({ behavior: "smooth" });
+  }
+});
+
 function drawBigStar() {
   const a = byId($("starA").value), b = byId($("starB").value);
   const canvas = $("bigStar"), size = Math.min(380, canvas.parentElement.clientWidth);
   canvas.style.width = canvas.style.height = size + "px";
-  if (!a) { drawStar(canvas, null, size, 1); $("starFacts").innerHTML = "Add something first."; return; }
+  if (!a) { bigStar = null; drawStar(canvas, null, size, 1); $("starFacts").innerHTML = "Add something first."; showRay(null); return; }
   const S = starScale(), va = vecOf(a);
+  bigStar = { v: b ? sub(va, vecOf(b)) : va, size, S, a, b };
+  if (rayPinned != null && rayPinned >= bigStar.v.length) rayPinned = null;
+  highlightRay(rayPinned); showRay(rayPinned);
   if (!b) {
-    drawStar(canvas, va, size, S);
     const p = va.filter((x) => x > 0).length;
     $("starFacts").innerHTML = `<p>${KIND_ICON[a.kind]} <b>${esc(a.label)}</b></p>
       <p><b>${va.length}</b> rays: <b>${p}</b> green, <b>${va.length - p}</b> red.</p>
       <p>Biggest number: <b>${Math.max(...va).toFixed(3)}</b><br>Smallest: <b>${Math.min(...va).toFixed(3)}</b></p>`;
   } else {
-    const vb = vecOf(b), d = sub(va, vb);
-    drawStar(canvas, d, size, S);
+    const vb = vecOf(b), d = bigStar.v;
     $("starFacts").innerHTML = `<p>${KIND_ICON[a.kind]} <b>${esc(a.label)}</b> minus ${KIND_ICON[b.kind]} <b>${esc(b.label)}</b></p>
-      <p>Size of the difference: <b>${norm(d).toFixed(3)}</b><br><span class="meta">(0 = identical, 2 = opposite)</span></p>
-      <p>Similarity: <b>${dot(va, vb).toFixed(3)}</b></p>
+      <p>Size of the ${term("difference")}: <b>${norm(d).toFixed(3)}</b><br><span class="meta">(0 = identical, 2 = opposite)</span></p>
+      <p>${term("Similarity", "similarity")}: <b>${dot(va, vb).toFixed(3)}</b></p>
       <p class="meta">Drawn at the same scale as the single stars, so a small star means a small difference.</p>`;
   }
 }
@@ -905,6 +1171,48 @@ function drawSpace() {
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", refreshAll);
 })();
 
+// ---------- explanations of technical words ----------
+const TERMS = {
+  embedding: "The list of numbers a model makes for a word, picture, sound or video. Things with similar meanings get similar lists.",
+  model: "A program that learned from a huge number of examples. This one turns words, pictures, sounds and videos into embeddings. It doesn't change while you use it.",
+  similarity: "How much two lists of numbers point the same way. 1 means the same direction, 0 means unrelated, and below 0 means pointing away from each other.",
+  "cosine similarity": "The kind of similarity used here. Multiply the two lists number by number and add up the results, after scaling each list to length 1. It's the cosine of the angle between them.",
+  "4-bit": "How exactly each of the model's learned settings is stored. 4-bit settings make a smaller download; 8-bit ones are a little more exact.",
+  "graphics chip": "The part of a computer built for drawing images (the GPU). It can do thousands of multiplications at once, which makes the model much faster. Browsers reach it through WebGPU.",
+  numbers: "Each embedding is a list of 768 numbers. “Number 37” means the 37th position, in every embedding. Researchers call each position a dimension.",
+  "shared part": "The average of every embedding on the page. Taking it away leaves what makes each thing different from the rest.",
+  ray: "One line of the star. Each ray shows one of the numbers: its direction says which number, its length how big, its color whether it's positive (green) or negative (red).",
+  "modality gap": "Words, pictures and sounds are different “modalities”. Even when they mean the same thing, the model keeps each kind in its own region, so words score higher with words.",
+  arithmetic: "Adding or taking away lists of numbers, one position at a time. The result is a new list, and the page shows what's nearest to it.",
+  nearest: "The things whose lists have the highest similarity to the new list.",
+  difference: "How far apart the two lists are, measured as the length of one minus the other. 0 means identical; 2 means exactly opposite.",
+  instruction: "A short phrase put in front of your words, like “task: search result | query:”. The model was trained with these, so it knows what job the embedding is for.",
+  direction: "A list of numbers made by subtracting two embeddings. It points from one word toward the other.",
+  matryoshka: "Named after Russian nesting dolls: the model was trained so that the first numbers of the list work on their own, like a smaller doll inside a bigger one.",
+};
+const tip = document.createElement("div");
+tip.id = "tip"; tip.hidden = true; tip.setAttribute("role", "tooltip");
+document.body.appendChild(tip);
+let tipFor = null;
+function showTip(el) {
+  const text = TERMS[el.dataset.t || el.textContent.toLowerCase()];
+  if (!text) return;
+  tipFor = el; tip.textContent = text; tip.hidden = false;
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+  tip.style.top = (r.bottom + 6 + h > innerHeight ? r.top - h - 6 : r.bottom + 6) + "px";
+}
+function hideTip() { tip.hidden = true; tipFor = null; }
+document.addEventListener("mouseover", (e) => { const t = e.target.closest?.(".term"); if (t) showTip(t); else if (tipFor) hideTip(); });
+document.addEventListener("focusin", (e) => { const t = e.target.closest?.(".term"); if (t) showTip(t); });
+document.addEventListener("focusout", hideTip);
+document.addEventListener("click", (e) => { const t = e.target.closest?.(".term"); if (t) { e.preventDefault(); tipFor === t ? hideTip() : showTip(t); } else if (tipFor) hideTip(); });
+addEventListener("scroll", hideTip, { passive: true });
+// Static text marks its terms by hand; this makes them reachable by keyboard.
+const markTerms = (root = document) => root.querySelectorAll(".term:not([tabindex])").forEach((el) => el.tabIndex = 0);
+markTerms();
+const term = (word, key) => `<span class="term" tabindex="0"${key ? ` data-t="${key}"` : ""}>${word}</span>`;
+
 // ---------- the guide: an AI that sees a summary of this page ----------
 const AI_STORE = "embex.ai", KEY_STORE = "embex.keys";
 const PROVIDERS = {
@@ -1050,12 +1358,14 @@ The page has: 2. Add things. 3. Star view (one thing's 768 numbers drawn as 768 
 
 Facts you can rely on:
 - Similarity is cosine similarity: 1 = same direction, 0 = unrelated. Every embedding has length 1.
-- About two thirds of every embedding is a part they all share, and a few positions (such as 111 and 115) are big for everything. So raw similarities are mostly 0.5 to 0.85 and all stars look alike. "Take away what everything shares" subtracts the average of what has been added; then unrelated things score near 0. The average depends on what has been added.
+- About two thirds of every embedding is a part they all share, and a few positions (such as numbers 112 and 116) are big for everything. So raw similarities are mostly 0.5 to 0.85 and all stars look alike. "Take away what everything shares" subtracts the average of what has been added; then unrelated things score near 0. The average depends on what has been added.
 - Modality gap: words score higher with other words, and pictures with other pictures, even when the meaning matches. Compare rankings across kinds, not raw numbers.
 - The first numbers matter most (Matryoshka training). 256 numbers lose very little; 128 lose more, especially for pictures and sounds.
 - Animal sounds are a weak spot: in testing, a dog barking came out slightly nearer "cat" than "dog". Speech and music match well.
 - Videos are embedded as 16 still frames; sounds use at most 30 seconds.
 - Words are sent with a short instruction in front, shown under "How the words are given to the model".
+- Star rays: each ray is one of the numbers. A study of 2,800 words found that a few numbers lean toward one kind of word (music, sports), most mix unrelated words, and the longest rays (numbers 116, 392, 112, 555, 733, 30) are big for everything. Pointing at a ray shows the study's words for it.
+- Taking away B in arithmetic also takes away what B shares with other things: tiger − cat + dog penalizes every animal, which can let a non-animal like "house" come first. With 2,800 words, tiger − cat + dog landed nearest "wolf".
 - Embedding arithmetic makes a new list of 768 numbers, not a single number. The page shows the things nearest to that list. It often lands nearest one of its own inputs, so look at the nearest thing that isn't an input. It can only find things that have been added: "king − man + woman" can't land on "queen" unless "queen" has been added.
 
 How to help:
@@ -1217,6 +1527,19 @@ function showWho() {
     : P.local ? "Gemini Nano isn't available here. Choose an AI in AI settings." : `Add a ${P.name} key in AI settings to use the guide.`;
 }
 
+const isBlank = (html) => { const d = document.createElement("div"); d.innerHTML = html; return d.textContent.trim().length < 12 && !d.querySelector("button"); };
+// When the AI gives nothing usable, the page offers an idea of its own.
+function fallbackIdea() {
+  const has = (w) => items.some((it) => it.kind === "text" && it.text.toLowerCase() === w);
+  const ideas = [];
+  if (has("tiger") && has("cat") && has("dog") && !has("wolf")) ideas.push("What do you think tiger − cat + dog should be? Add your guess, then try it.\n\n[[add: wolf]]\n[[try: tiger - cat + dog]]");
+  if (!has("queen")) ideas.push("A famous test: does king − man + woman land on queen? Predict first, then try it.\n\n[[try: king - man + woman]]");
+  if (!$("center").checked) ideas.push("Tick **Take away what everything shares** at the top, then look at the stars again. Which pairs drop the most in section 4?");
+  if (!has("cold") && !has("hot")) ideas.push("Are opposites close or far apart? Guess how similar *hot* and *cold* will be, then add them and check section 4.\n\n[[add: hot]]\n[[add: cold]]");
+  ideas.push("Point at the longest rays in the star view and read what they seem to be about. Can you find a ray that leans toward music or sports?");
+  return "Here's an idea from the page (the AI didn't come up with one this time):\n\n" + ideas[Math.floor(Math.random() * ideas.length)];
+}
+
 let asking = false;
 async function askGuide(question) {
   question = question.trim();
@@ -1230,10 +1553,19 @@ async function askGuide(question) {
   const box = logMsg("ai", "<p>Thinking…</p>");
   const t0 = performance.now();
   try {
-    const text = await askAI(GUIDE_SYSTEM, prompt, {
+    const opts = {
       onText: (t) => { box.innerHTML = md(t); $("guideLog").scrollTop = 1e9; },
       onStatus: (s) => { box.innerHTML = `<p>${esc(s)}</p>`; },
-    });
+    };
+    const ask = (p) => askAI(GUIDE_SYSTEM, p, opts).catch((e) => { if (e?.code === "empty") return ""; throw e; });
+    let text = await ask(prompt);
+    // Small models sometimes answer with nothing, or only with a button that can't work.
+    if (isBlank(md(text))) {
+      log(`guide (${ai.provider}): blank answer, asking again`);
+      box.innerHTML = "<p>Thinking again…</p>";
+      text = await ask(prompt + "\n\n(Answer in two or three sentences of plain words, using real words from the page summary, then one button.)");
+    }
+    if (isBlank(md(text))) text = fallbackIdea();
     box.innerHTML = md(text);
     history.push({ who: "student", text: question }, { who: "guide", text });
     log(`guide (${ai.provider}): ${fmtMs(performance.now() - t0)}`);
@@ -1364,7 +1696,8 @@ $("aiSave").addEventListener("click", () => {
 checkNano();
 
 drawSpace();
-window.explorer = { get items() { return items; }, dims, snapshot, guidePrompt, GUIDE_SYSTEM, askAI, md, checkNano }; // for poking around in the console
+window.explorer = { get items() { return items; }, dims, snapshot, guidePrompt, GUIDE_SYSTEM, askAI, md, checkNano, // for poking around in the console
+  embedText: async (t) => (await embedInput("text", textForModel(t))).vec, addThings, fallbackIdea };
 </script>
 </body>
 </html>

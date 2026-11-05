@@ -17,7 +17,7 @@
   </nav>
 
   <h1>Prompts and responses</h1>
-  <p class="lede">Every prompt Ken Kahn gave Claude while making Embedding Explorer, with a few sentences on what Claude did in response. The whole app came from these 25 messages, over three days in November 2026.</p>
+  <p class="lede">Every prompt Ken Kahn gave Claude while making Embedding Explorer, with a few sentences on what Claude did in response. The whole app came from these 28 messages, over three days in November 2026.</p>
   <p class="meta">Ken's prompts are copied exactly, typos and all. The screenshots he attached aren't reproduced here. Messages marked “sent while Claude was working” arrived in the middle of a task. Times are UK time. Summaries written by Claude; the full story is in <a href="making-of.html">How it was made</a>.</p>
 
   <h2>Day one · November 3</h2>
@@ -209,6 +209,24 @@ Before you run it, predict: will kitten come first, or something else? Then try 
     <p class="when">25 · 10:45</p>
     <div class="prompt">Please produce a page with all of my prompts and a few sentences about your responses - link the page from the making of page and vice versa</div>
     <p>This page. Claude collected the prompts from the conversation's own record, including the ones sent mid-task, and linked this page and the making-of page to each other.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">26 · 10:52</p>
+    <div class="prompt">Would it be feasible to have an option of loading the 2800 words you used in testing? The similarity matrix might become too unwieldy and the popup menus for choosing words too but are there other problems?</div>
+    <p>Claude checked the code and found more problems with adding 2,800 ordinary items: every card draws its own star, the page redraws everything as each word finishes, embedding them all would take about five minutes, the 3D space would be unreadable, and one of the guide's challenge ideas compares every pair of words. It suggested a separate word list instead: shipped already embedded, never shown as cards, and searched only by the nearest-word lists in sections 5 and 6.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">27 · 10:55</p>
+    <div class="prompt">Yes, build it</div>
+    <p>Claude built it. A 2.2 MB file holds 2,838 words, each stored as 8-bit numbers (rounding changes a word's numbers by a similarity of less than 0.0004). A checkbox under the lists in sections 5 and 6, “Also search 2,838 everyday words”, adds them to the search, marked 📖. The list is switched off, with a reason, if the student changes the instruction or uses a model it wasn't made with.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">28 · 10:56 · sent while Claude was working</p>
+    <div class="prompt">What do mean by "instruction" in "The shipped vectors only match the default instruction and the graphics-chip model. If a student changes the instruction..."</div>
+    <p>The instruction is the short phrase the app puts in front of every word before the model sees it: “dog” is really sent as “task: search result | query: dog”. Students can change it in section 2 under “How the words are given to the model”. Each choice gives slightly different numbers, so the stored word list only matches the default.</p>
   </div>
 
   <footer>Embedding Explorer by Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer">source</a> (MIT license)</footer>

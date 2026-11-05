@@ -12,6 +12,7 @@ Students can:
 2. See any embedding as a **star**: one ray per number, green for positive and red for negative. They can also see the difference between two embeddings as a star. Pointing at a ray shows which everyday words are unusually high and low for that number (see below).
 3. Compare everything with everything in a similarity grid.
 4. Do **embedding arithmetic** (A − B + C) and see what is nearest the result.
+   Sections 5 and 6 can also search **2,838 everyday words** that aren't on the page (`vocab.bin`, made by `tools/build-vocab.mjs` from the study's embeddings), so a result isn't limited to what students thought to add.
 5. Write their **own formula** with words, numbers, + − × ÷ and brackets, such as `(morning + night) / 2` (lands on "evening") or `puppy - dog + cat` (lands on "kitten"), and see what is nearest.
 6. Build their own **3D space** from three word pairs (for example small → big) and see where everything lands.
 

@@ -6,7 +6,7 @@
 //   - Model and engine files are split into pieces named "<file>.partNN.mp4" (uploaded as video/mp4,
 //     which the asset store accepts for any binary data). "<file>" is the Hugging Face path with
 //     "/" turned into "_", e.g. onnx_model_q4.onnx_data.part03.mp4.
-//   - Example media keep their names (corgi.jpg, sea-turtle.mp4); sounds are stored as "<name>.wav.mp4".
+//   - Example media keep their names (corgi.jpg, sea-turtle.mp4); sounds are stored as "<name>.wav.mp4", and the word list as "vocab.bin.mp4".
 // The page gets window.__EMBEX_PACK__ = { files: { name: { size, parts } }, media: { file: url } },
 // and index.html serves the model and the examples from it (see PACK in index.html).
 import fs from "node:fs";
@@ -25,7 +25,7 @@ for (const line of fs.readFileSync(assetsFile, "utf8").split(/\r?\n/)) {
   const url = "/_blob/" + id;
   const m = /^(.+)\.part(\d+)\.mp4$/.exec(name);
   if (m) (pieces[m[1]] ||= []).push([+m[2], url, +bytes]);
-  else pack.media[name.replace(/\.wav\.mp4$/, ".wav")] = url;
+  else pack.media[name.replace(/\.(wav|bin)\.mp4$/, ".$1")] = url;
 }
 for (const [file, ps] of Object.entries(pieces)) {
   ps.sort((a, b) => a[0] - b[0]);

@@ -78,6 +78,14 @@ table.times td, table.times th { padding: 2px 10px 2px 0; text-align: left; }
 .sets button { font-size: 14px; padding: 4px 9px; }
 .removebar { border: 1px solid var(--neg); border-radius: 10px; padding: 8px 10px; margin: 8px 0; font-size: 15px; }
 .removebar #removeGroups button { font-size: 13px; padding: 3px 8px; margin: 2px; }
+.challenge { border: 1px solid var(--accent); border-radius: 10px; padding: 8px 12px; margin: 8px 0; font-size: 15px; position: relative; }
+.challenge p { margin: 6px 0; }
+.challenge .x { position: absolute; top: 4px; right: 6px; border: none; background: none; color: var(--muted); }
+.lean { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; margin: 10px 0; font-size: 14px; }
+.lean .track { position: relative; height: 20px; border-bottom: 1px solid var(--line); min-width: 120px; }
+.lean .mid { position: absolute; left: 50%; top: 0; bottom: -1px; border-left: 1px dashed var(--muted); }
+.lean .pt { position: absolute; top: 3px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; }
+.lean .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
 
 .starwrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
 #bigStar { width: 380px; height: 380px; max-width: 100%; }
@@ -227,6 +235,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <button id="removeBtn">🗑 Remove some…</button>
     </div>
     <div class="row sets" id="sets"><span class="meta">Add a set:</span></div>
+    <div class="challenge" id="challenge" hidden></div>
     <div class="removebar" id="removeBar" hidden>
       <div>Click the things to remove, or choose a group: <span id="removeGroups"></span></div>
       <div class="row"><button id="removeGo" class="primary" disabled>Remove 0</button><button id="removeCancel">Cancel</button></div>
@@ -871,6 +880,7 @@ const SETS = [
     "When were you born?", "Where do you live?", "What is your name?", "What time is it?"] },
   { name: "Feelings", icon: "😊", things: ["happy", "joyful", "sad", "miserable", "angry", "calm", "excited", "scared"] },
   { name: "Kings and queens", icon: "👑", things: ["king", "queen", "man", "woman", "prince", "princess", "boy", "girl"] },
+  { name: "Dogs, cats, men and women", icon: "🐕", things: ["dog", "cat", "man", "woman", "boy", "girl", "king", "queen", "father", "mother"], challenge: true },
   { name: "Opposites", icon: "↔️", things: ["hot", "cold", "big", "small", "fast", "slow", "light", "dark", "happy", "sad"] },
   { name: "Speech and music", icon: "🎵", things: ["a speech", "piano music", "someone speaking French", "someone speaking Japanese",
     ["audio", "jfk.wav", "JFK speech"], ["audio", "mlk.wav", "MLK speech"], ["audio", "piano.wav", "piano"],
@@ -896,8 +906,53 @@ for (const s of SETS) {
   const b = document.createElement("button");
   b.textContent = `${s.icon} ${s.name}`;
   b.title = "Adds: " + s.things.map((t) => typeof t === "string" ? t : `${KIND_ICON[t[0]]} ${t[2]}`).join(", ");
-  b.onclick = () => addThings(s.things, s.name);
+  b.onclick = () => { addThings(s.things, s.name); if (s.challenge) showChallenge(); };
   $("sets").appendChild(b);
+}
+
+// ---------- the dogs-and-cats challenge ----------
+const HINTON_PAIRS = [["man", "woman"], ["boy", "girl"], ["king", "queen"], ["father", "mother"]];
+function showChallenge() {
+  const box = $("challenge");
+  box.hidden = false;
+  box.innerHTML = `<button class="x" title="Close">✕</button>
+    <p><b>🐕 Challenge: dogs, cats, men and women</b></p>
+    <p>Geoffrey Hinton, one of the pioneers of modern AI, said in a lecture that in word embeddings “man” is closer to “dog” than to “cat”, and “woman” is closer to “cat” than to “dog”. Does this model agree?</p>
+    <p>First look in section 4: find <b>man</b> and <b>woman</b> in the grid and compare their numbers for <b>dog</b> and <b>cat</b>. Then predict: in each pair below, which word leans further toward cat?</p>
+    <p class="meta">${HINTON_PAIRS.map((p) => p.join(" / ")).join(" · ")}</p>
+    <button id="leanBtn" class="primary">Check: draw the dog ↔ cat line</button>
+    <div id="leanOut"></div>`;
+  box.querySelector(".x").onclick = () => { box.hidden = true; };
+  $("leanBtn").onclick = drawLean;
+}
+async function drawLean() {
+  const out = $("leanOut");
+  if (!model) { out.textContent = "Load the model first."; return; }
+  out.textContent = "working…";
+  const v = async (w) => view(await poleVec(w));
+  const dog = await v("dog"), cat = await v("cat");
+  const lean = async (w) => { const x = await v(w); return dot(x, cat) - dot(x, dog); }; // above 0: closer to cat
+  const rows = [];
+  for (const [a, b] of HINTON_PAIRS) rows.push([a, b, await lean(a), await lean(b)]);
+  const max = Math.max(...rows.flatMap((r) => [Math.abs(r[2]), Math.abs(r[3])])) || 1;
+  const pos = (x) => (50 + 45 * x / max).toFixed(1);
+  const f = (x) => (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(3);
+  const fits = rows.filter((r) => r[3] > r[2]).length;
+  const exact = rows.filter((r) => r[2] < 0 && r[3] > 0).length;
+  const dot_ = (w, x, color) => `<div class="pt" style="left:${pos(x)}%;background:var(${color})" title="${w}: ${f(x)}"></div>`;
+  out.innerHTML = `<div class="lean">
+      <span></span><div class="ends"><span>← closer to dog</span><span>closer to cat →</span></div><span class="meta">gap</span>
+      ${rows.map(([a, b, la, lb]) => `<span><b style="color:var(--ax2)">${a}</b> / <b style="color:var(--ax1)">${b}</b></span>
+        <div class="track"><div class="mid"></div>${dot_(a, la, "--ax2")}${dot_(b, lb, "--ax1")}</div>
+        <span class="meta">${lb > la ? "✓" : "✗"} ${f(lb - la)}</span>`).join("")}
+    </div>
+    <p>In <b>${fits} of ${rows.length}</b> pairs the second word sits further toward cat than the first. In <b>${exact}</b> of them the first word is on the dog side of the dashed line and the second on the cat side, which is exactly what Hinton described.</p>
+    <p class="meta">Each dot shows how much closer the word is to cat than to dog (its similarity to cat minus its similarity to dog), stretched so the biggest fills the line. Point at a dot for its number.</p>
+    <details><summary>Why the grid made them look the same</summary>
+      <p>The differences are in the second or third decimal place. About two thirds of every embedding is a part that all words share, so any two words score about 0.7 to 0.8 and small differences in meaning hardly show.</p>
+      <p>Each gap is also small compared with how much words differ in general: two words picked at random often differ by as much. So no single pair proves anything. What counts is whether the pairs agree. In our tests with 256 and with 768 numbers, all six pairs we tried (these four plus men/women and male/female) leaned the same way, though “man” itself was a tiny bit closer to cat.</p>
+      <p>A model learns this kind of lean from the text it was trained on, which is one way the habits of human writing end up inside AI. Try ticking “Take away what everything shares”, or using fewer numbers, and check again.</p>
+    </details>`;
 }
 
 // ---------- removing several things at once ----------
@@ -1796,6 +1851,7 @@ Facts you can rely on:
 - Star rays: each ray is one of the numbers. A study of 2,800 words found that a few numbers lean toward one kind of word (music, sports), most mix unrelated words, and the longest rays (numbers 116, 392, 112, 555, 733, 30) are big for everything. Pointing at a ray shows the study's words for it.
 - One → many (dog → dogs), now → past (walk → walked), plain → -er (big → bigger) and thing → idea are each a consistent direction, but spread over many numbers: the biggest single number holds only 1–5% of the change, so "dogs minus dog" has no single long ray for plural. Some numbers move the same way in 90% or more of pairs. The star view has buttons that show these directions.
 - Taking away B in arithmetic also takes away what B shares with other things: tiger − cat + dog penalizes every animal, which can let a non-animal like "house" come first. With 2,800 words, tiger − cat + dog landed nearest "wolf".
+- Geoffrey Hinton said in a lecture that in word embeddings "man" is closer to "dog" than to "cat" and "woman" closer to "cat" than to "dog". In this model those similarities differ only in the second or third decimal place, and "man" is in fact a tiny bit closer to "cat". But in all six male/female pairs tested (man/woman, men/women, boy/girl, male/female, father/mother, king/queen), with 256 or 768 numbers, the female word leaned further toward "cat", by between 0.002 and 0.03. One pair alone proves little (random words differ that much); the agreement across pairs is the evidence. The "Dogs, cats, men and women" set has a challenge that draws this as a dog ↔ cat line.
 - Embedding arithmetic makes a new list of 768 numbers, not a single number. The page shows the things nearest to that list. It often lands nearest one of its own inputs, so look at the nearest thing that isn't an input. It can only find things that have been added: "king − man + woman" can't land on "queen" unless "queen" has been added.
 
 How to help:
@@ -1899,6 +1955,8 @@ function challengeIdeas(list) {
     }
     out.push(`- Find two words less similar than ${describe(lo[0])} and ${describe(lo[1])} (${lo[2].toFixed(2)}, the least similar pair so far).`);
   }
+  const hasWord = (w) => words.some((it) => it.text.toLowerCase() === w);
+  if (["man", "woman", "dog", "cat"].every(hasWord)) out.push(`- Hinton's claim: is "man" closer to "dog" than to "cat", and "woman" closer to "cat" than to "dog"? Compare in the grid (section 4), then press "Check: draw the dog ↔ cat line" in the Dogs, cats, men and women challenge.`);
   out.push(`- Find three words A, B, C where A − B + C lands nearest a fourth word that isn't one of them (check in section 5).`);
   if (!$("center").checked) out.push(`- Tick "Take away what everything shares", then find two words that still score above 0.5.`);
   return out.length ? ["CHALLENGE IDEAS (checkable on the page):", ...out] : [];
@@ -1984,6 +2042,7 @@ function fallbackIdea() {
   const ideas = [];
   if (has("tiger") && has("cat") && has("dog") && !has("wolf")) ideas.push("What do you think tiger − cat + dog should be? Add your guess, then try it.\n\n[[add: wolf]]\n[[try: tiger - cat + dog]]");
   if (!has("queen")) ideas.push("A famous test: does king − man + woman land on queen? Predict first, then try it.\n\n[[try: king - man + woman]]");
+  if (!has("queen") || !has("mother")) ideas.push("Geoffrey Hinton said that “man” is closer to “dog” than to “cat”, and “woman” closer to “cat”. What do you predict? Add the 🐕 **Dogs, cats, men and women** set and try its challenge.");
   if (!$("center").checked) ideas.push("Tick **Take away what everything shares** at the top, then look at the stars again. Which pairs drop the most in section 4?");
   if (!has("cold") && !has("hot")) ideas.push("Are opposites close or far apart? Guess how similar *hot* and *cold* will be, then add them and check section 4.\n\n[[add: hot]]\n[[add: cold]]");
   ideas.push("Point at the longest rays in the star view and read what they seem to be about. Can you find a ray that leans toward music or sports?");

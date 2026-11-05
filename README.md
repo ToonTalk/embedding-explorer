@@ -8,7 +8,7 @@ It runs Google's [EmbeddingGemma 2](https://huggingface.co/google/embeddinggemma
 
 Students can:
 
-1. Add words, sentences, photos (including from the webcam), sound recordings and videos, or whole sets of examples (animals, food, places, questions, feelings, kings and queens, opposites, speech and music, videos). Several things can be removed at once.
+1. Add words, sentences, photos (including from the webcam), sound recordings and videos, or whole sets of examples (animals, food, places, questions, feelings, kings and queens, dogs, cats, men and women, opposites, emoji, speech and music, videos). The dogs, cats, men and women set comes with a challenge: test Geoffrey Hinton's remark that "man" is closer to "dog" and "woman" closer to "cat", pair by pair, on a dog ↔ cat line. Several things can be removed at once.
 2. See any embedding as a **star**: one ray per number, green for positive and red for negative. They can also see the difference between two embeddings as a star. Pointing at a ray shows which everyday words are unusually high and low for that number (see below).
 3. Compare everything with everything in a similarity grid.
 4. Do **embedding arithmetic** (A − B + C) and see what is nearest the result.

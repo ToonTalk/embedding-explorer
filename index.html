@@ -384,6 +384,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
         <ol class="nearest" id="fxList"></ol>
         <div class="vocabrow"><label class="meta"><input type="checkbox" class="vocabBox"> Also search</label> <span class="term meta" data-t="wordlist">2,838 everyday words</span> <span class="meta vocabNote"></span></div>
         <div class="row"><input type="text" id="fxGuess" placeholder="a word you think is close" style="flex:1;min-width:150px"><button id="fxGuessGo">Add my guess</button></div>
+        <div id="fxGuessInfo" class="meta"></div>
         <div id="fxRayInfo" class="rayinfo"></div>
       </div>
     </div>
@@ -1531,6 +1532,7 @@ function evalFormula(n, things) {
 }
 
 let fx = null; // { src, tree, things: Map(word → item), used: Set(items) }
+const fxGuesses = new Set(); // things added with "Add my guess", newest last
 let fxRun = 0;
 async function runFormula(src) {
   src = (src ?? $("fxIn").value).trim();
@@ -1563,17 +1565,26 @@ function formulaResult() {
 function renderFormula() {
   let r = null;
   try { r = formulaResult(); } catch (e) { $("fxMsg").textContent = e.message; $("fxMsg").className = "err"; }
+  $("fxGuessInfo").innerHTML = "";
   if (!r) { fxView.set(null); drawStar($("fxStar"), null, 200, 1); $("fxList").innerHTML = ""; if (!fx && !$("fxMsg").textContent) $("fxMsg").textContent = ""; return; }
   if (r.len < 1e-6) { $("fxMsg").textContent = "The result is all zeros, so it has no direction and nothing is nearest."; $("fxMsg").className = "err"; fxView.set(null); drawStar($("fxStar"), null, 200, 1); $("fxList").innerHTML = ""; return; }
   $("fxMsg").className = "meta";
   $("fxMsg").innerHTML = `<b>${esc(fx.src)}</b> · length before scaling to 1: <b>${r.len.toFixed(2)}</b>`;
   fxView.set({ v: r.v, size: 200, S: starScale(), label: esc(fx.src) });
-  const ranked = searchPool().map((p) => ({ ...p, s: dot(r.v, p.x) })).sort((x, y) => y.s - x.s).slice(0, 10);
+  const all = searchPool().map((p) => ({ ...p, s: dot(r.v, p.x) })).sort((x, y) => y.s - x.s);
+  const ranked = all.slice(0, 10);
   const top = Math.max(...ranked.map((x) => x.s), .01);
   $("fxList").innerHTML = ranked.map(({ it, word, s }) =>
     `<li class="${it && fx.used.has(it) ? "used" : ""}"><span style="width:44px;text-align:right">${s.toFixed(2)}</span>
      <span class="sbar" style="width:${Math.max(2, 120 * s / top)}px"></span>
      ${poolLabel(it, word)}${it && fx.used.has(it) ? " (in the formula)" : ""}</li>`).join("");
+  // Where each guess came, even when it's too far down to be in the list.
+  const others = all.filter((p) => !(p.it && fx.used.has(p.it)));
+  const ord = (n) => n.toLocaleString("en-US") + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+  $("fxGuessInfo").innerHTML = [...fxGuesses].filter((it) => items.includes(it) && !fx.used.has(it)).slice(-3).reverse().map((it) => {
+    const k = others.findIndex((p) => p.it === it);
+    return k < 0 ? "" : `<div>Your guess ${KIND_ICON[it.kind]} <b>${labelHtml(it)}</b>: ${others[k].s.toFixed(2)}, <b>${ord(k + 1)}</b> of ${others.length.toLocaleString("en-US")} things not in the formula${k ? ` (the top one, ${others[0].it ? labelHtml(others[0].it) : esc(others[0].word)}, scores ${others[0].s.toFixed(2)})` : ""}.</div>`;
+  }).join("");
   showVocabNote();
 }
 
@@ -1651,7 +1662,11 @@ $("fxGuessGo").addEventListener("click", async () => {
   const w = $("fxGuess").value.trim();
   if (!w) return;
   $("fxGuess").value = "";
-  try { await ensureThing(w, "Formulas"); refreshAll(); } catch (e) { $("fxMsg").textContent = e.message; }
+  try {
+    const it = await ensureThing(w, "Formulas");
+    fxGuesses.delete(it); fxGuesses.add(it);
+    refreshAll();
+  } catch (e) { $("fxMsg").textContent = e.message; }
 });
 $("fxGuess").addEventListener("keydown", (e) => { if (e.key === "Enter") $("fxGuessGo").click(); });
 

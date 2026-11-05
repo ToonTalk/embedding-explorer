@@ -1,0 +1,83 @@
+{
+  "triplets": [
+    ["Same meaning, different words", "How old are you?", "What is your age?", "How are you?"],
+    ["Same meaning, different words", "I'm starving", "I am very hungry", "I'm staring"],
+    ["Same meaning, different words", "Can you help me?", "I need your assistance", "Can you hear me?"],
+    ["Same meaning, different words", "She passed away last night", "She died yesterday evening", "She passed the exam last night"],
+    ["Same meaning, different words", "The movie was boring", "I fell asleep during the film", "The movie was exciting"],
+    ["Same meaning, different words", "Shut the window", "Close the window", "Shut up"],
+
+    ["Idioms", "He kicked the bucket", "He died", "He kicked the ball"],
+    ["Idioms", "It's raining cats and dogs", "It's pouring with rain", "Cats and dogs are pets"],
+    ["Idioms", "Break a leg tonight!", "Good luck with your performance!", "I broke my leg tonight"],
+    ["Idioms", "That exam was a piece of cake", "That exam was very easy", "I ate a piece of cake"],
+
+    ["Who did what to whom", "The dog bit the man", "A man was bitten by a dog", "The man bit the dog"],
+    ["Who did what to whom", "The cat chased the mouse", "The mouse was chased by the cat", "The mouse chased the cat"],
+    ["Who did what to whom", "Alice gave Bob a book", "Bob received a book from Alice", "Bob gave Alice a book"],
+    ["Who did what to whom", "The teacher praised the student", "The student was praised by the teacher", "The student praised the teacher"],
+
+    ["Not", "I like this movie", "I enjoy this film", "I don't like this movie"],
+    ["Not", "Everyone passed the test", "Nobody failed the test", "Nobody passed the test"],
+    ["Not", "The shop is open", "The shop is not closed", "The shop is not open"],
+    ["Not", "It is safe to swim here", "Swimming here is fine", "It is not safe to swim here"],
+
+    ["Words with two meanings", "I sat on the bank of the river", "We had a picnic at the water's edge", "I put my money in the bank"],
+    ["Words with two meanings", "The bat flew out of the cave", "A small flying mammal left its cave", "He swung the bat at the ball"],
+    ["Words with two meanings", "Apple released a new phone", "The tech company launched a smartphone", "I ate an apple"],
+    ["Words with two meanings", "The pitcher threw the ball", "The baseball player made a throw", "The pitcher of water was full"],
+
+    ["Other languages", "Where is the train station?", "¿Dónde está la estación de tren?", "Where is the swimming pool?"],
+    ["Other languages", "I love you", "Je t'aime", "I lost you"],
+    ["Other languages", "Good morning", "Guten Morgen", "Good night"],
+    ["Other languages", "The cat is sleeping", "猫が寝ています", "The car is parked"],
+    ["Other languages", "Thank you very much", "Muchas gracias", "Very much later"],
+
+    ["Question and answer", "What is the capital of France?", "Paris is the capital of France.", "France is a country in Western Europe."],
+    ["Question and answer", "How many legs does a spider have?", "Spiders have eight legs.", "Spiders spin webs to catch insects."],
+    ["Question and answer", "Why is the sky blue?", "Air scatters blue sunlight more than red.", "The sky is blue."],
+    ["Question and answer", "Who wrote Romeo and Juliet?", "Shakespeare wrote the play.", "Romeo and Juliet are characters in a play."],
+
+    ["Emoji", "🐶", "dog", "airplane"],
+    ["Emoji", "🍕", "pizza", "bicycle"],
+    ["Emoji", "❤️", "love", "rock"],
+    ["Emoji", "😢", "sad", "happy"],
+
+    ["Newer words", "TikTok", "a short video app", "a clock ticking"],
+    ["Newer words", "COVID-19", "a coronavirus pandemic", "a computer virus"],
+    ["Newer words", "ChatGPT", "an AI chatbot", "a chat room"],
+    ["Newer words", "Bitcoin", "a cryptocurrency", "a bit of a coin"],
+
+    ["Spelling mistakes", "I recieved your mesage", "I got your message", "I deleted your message"],
+    ["Spelling mistakes", "definately tommorow", "certainly tomorrow", "definitely yesterday"],
+
+    ["Numbers", "I have three children", "I have 3 kids", "I have thirty children"],
+    ["Numbers", "The meeting is at 5 pm", "The meeting is at five in the afternoon", "The meeting is at 5 am"]
+  ],
+  "analogies": [
+    ["king", "man", "woman", "queen"],
+    ["puppy", "dog", "cat", "kitten"],
+    ["paris", "france", "japan", "tokyo"],
+    ["paris", "france", "italy", "rome"],
+    ["london", "england", "germany", "berlin"],
+    ["walked", "walk", "swim", "swam"],
+    ["ran", "run", "eat", "ate"],
+    ["bigger", "big", "small", "smaller"],
+    ["cars", "car", "child", "children"],
+    ["mice", "mouse", "goose", "geese"],
+    ["brother", "boy", "girl", "sister"],
+    ["uncle", "man", "woman", "aunt"],
+    ["prince", "boy", "girl", "princess"],
+    ["hot", "cold", "dark", "light"],
+    ["fish", "water", "air", "bird"],
+    ["doctor", "hospital", "school", "teacher"],
+    ["kitten", "cat", "dog", "puppy"],
+    ["calf", "cow", "horse", "foal"],
+    ["france", "french", "spanish", "spain"],
+    ["euro", "europe", "japan", "yen"],
+    ["glove", "hand", "foot", "sock"],
+    ["day", "sun", "moon", "night"],
+    ["summer", "hot", "cold", "winter"],
+    ["breakfast", "morning", "evening", "dinner"]
+  ]
+}

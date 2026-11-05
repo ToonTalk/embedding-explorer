@@ -1,0 +1,54 @@
+missing: he husband dogs cats
+
+USE
+  man      dog 0.444 cat 0.430  (dog−cat +0.014)   woman   dog 0.382 cat 0.321 (dog−cat +0.061)   opposite
+  men      dog 0.356 cat 0.308  (dog−cat +0.048)   women   dog 0.318 cat 0.323 (dog−cat -0.006)   fits Hinton
+  boy      dog 0.428 cat 0.319  (dog−cat +0.109)   girl    dog 0.408 cat 0.368 (dog−cat +0.040)   fits Hinton
+  male     dog 0.375 cat 0.384  (dog−cat -0.010)   female  dog 0.395 cat 0.385 (dog−cat +0.010)   opposite
+  father   dog 0.404 cat 0.347  (dog−cat +0.057)   mother  dog 0.496 cat 0.494 (dog−cat +0.003)   fits Hinton
+  king     dog 0.386 cat 0.354  (dog−cat +0.032)   queen   dog 0.316 cat 0.356 (dog−cat -0.040)   fits Hinton
+
+USE centered
+  man      dog 0.105 cat 0.079  (dog−cat +0.025)   woman   dog 0.079 cat -0.015 (dog−cat +0.094)   opposite
+  men      dog 0.083 cat 0.012  (dog−cat +0.070)   women   dog 0.050 cat 0.057 (dog−cat -0.006)   fits Hinton
+  boy      dog 0.188 cat 0.031  (dog−cat +0.157)   girl    dog 0.144 cat 0.084 (dog−cat +0.060)   fits Hinton
+  male     dog 0.105 cat 0.117  (dog−cat -0.012)   female  dog 0.129 cat 0.112 (dog−cat +0.017)   opposite
+  father   dog 0.167 cat 0.086  (dog−cat +0.081)   mother  dog 0.203 cat 0.197 (dog−cat +0.006)   fits Hinton
+  king     dog 0.043 cat -0.010  (dog−cat +0.052)   queen   dog -0.015 cat 0.043 (dog−cat -0.058)   fits Hinton
+
+Gemma 768
+  man      dog 0.753 cat 0.763  (dog−cat -0.009)   woman   dog 0.753 cat 0.766 (dog−cat -0.013)   fits Hinton
+  men      dog 0.723 cat 0.727  (dog−cat -0.004)   women   dog 0.719 cat 0.735 (dog−cat -0.015)   fits Hinton
+  boy      dog 0.767 cat 0.758  (dog−cat +0.009)   girl    dog 0.762 cat 0.774 (dog−cat -0.012)   fits Hinton
+  male     dog 0.723 cat 0.713  (dog−cat +0.010)   female  dog 0.732 cat 0.741 (dog−cat -0.010)   fits Hinton
+  father   dog 0.726 cat 0.727  (dog−cat -0.001)   mother  dog 0.724 cat 0.727 (dog−cat -0.003)   fits Hinton
+  king     dog 0.732 cat 0.730  (dog−cat +0.002)   queen   dog 0.737 cat 0.761 (dog−cat -0.024)   fits Hinton
+
+Gemma 256
+  man      dog 0.767 cat 0.768  (dog−cat -0.001)   woman   dog 0.761 cat 0.770 (dog−cat -0.010)   fits Hinton
+  men      dog 0.738 cat 0.727  (dog−cat +0.010)   women   dog 0.723 cat 0.745 (dog−cat -0.021)   fits Hinton
+  boy      dog 0.760 cat 0.750  (dog−cat +0.010)   girl    dog 0.765 cat 0.785 (dog−cat -0.020)   fits Hinton
+  male     dog 0.728 cat 0.718  (dog−cat +0.010)   female  dog 0.740 cat 0.755 (dog−cat -0.015)   fits Hinton
+  father   dog 0.754 cat 0.734  (dog−cat +0.019)   mother  dog 0.747 cat 0.735 (dog−cat +0.011)   fits Hinton
+  king     dog 0.741 cat 0.755  (dog−cat -0.014)   queen   dog 0.746 cat 0.789 (dog−cat -0.043)   fits Hinton
+
+Gemma 768 centered
+  man      dog 0.078 cat 0.090  (dog−cat -0.012)   woman   dog 0.108 cat 0.134 (dog−cat -0.026)   fits Hinton
+  men      dog 0.016 cat 0.006  (dog−cat +0.010)   women   dog -0.008 cat 0.023 (dog−cat -0.031)   fits Hinton
+  boy      dog 0.178 cat 0.125  (dog−cat +0.053)   girl    dog 0.148 cat 0.171 (dog−cat -0.024)   fits Hinton
+  male     dog 0.036 cat -0.024  (dog−cat +0.060)   female  dog 0.044 cat 0.057 (dog−cat -0.013)   fits Hinton
+  father   dog 0.045 cat 0.026  (dog−cat +0.019)   mother  dog 0.044 cat 0.033 (dog−cat +0.011)   fits Hinton
+  king     dog 0.088 cat 0.061  (dog−cat +0.027)   queen   dog 0.095 cat 0.157 (dog−cat -0.063)   fits Hinton
+
+Gemma 128
+  man      dog 0.864 cat 0.858  (dog−cat +0.006)   woman   dog 0.833 cat 0.849 (dog−cat -0.016)   fits Hinton
+  men      dog 0.834 cat 0.828  (dog−cat +0.007)   women   dog 0.811 cat 0.834 (dog−cat -0.023)   fits Hinton
+  boy      dog 0.869 cat 0.850  (dog−cat +0.019)   girl    dog 0.837 cat 0.857 (dog−cat -0.020)   fits Hinton
+  male     dog 0.831 cat 0.821  (dog−cat +0.011)   female  dog 0.816 cat 0.837 (dog−cat -0.021)   fits Hinton
+  father   dog 0.811 cat 0.817  (dog−cat -0.005)   mother  dog 0.832 cat 0.833 (dog−cat -0.001)   opposite
+  king     dog 0.832 cat 0.837  (dog−cat -0.005)   queen   dog 0.815 cat 0.852 (dog−cat -0.036)   fits Hinton
+
+How big is a 0.01–0.03 lean? Spread of (dog − cat) lean over all words, and random pairs:
+  Gemma 768  sd of lean 0.014; mean male−female gap 0.014; random pairs with a gap that big: 42%
+  Gemma 256  sd of lean 0.018; mean male−female gap 0.022; random pairs with a gap that big: 36%
+  USE        sd of lean 0.044; mean male−female gap 0.030; random pairs with a gap that big: 60%

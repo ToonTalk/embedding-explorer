@@ -10,6 +10,10 @@ How the page's ray meanings (`const RAYS` in `index.html`) were made.
 
 Words use the page's default instruction, `task: search result | query: `, with the 4-bit model on WebGPU.
 
+## Then and now
+
+[then-and-now/](then-and-now/README.md) compares the model from Ken Kahn's 2023 essay (the TF.js Universal Sentence Encoder) with EmbeddingGemma 2 on 43 sentence tests, 24 analogies and 2,856 words, and checks Geoffrey Hinton's dogs-and-cats remark.
+
 ## Directions: one → many, now → past, plain → -er, thing → idea
 
 `pairs.json` lists 40 singular/plural pairs, 40 present/past pairs, 20 plain/-er pairs, and 30 concrete and 30 abstract nouns. `node collect-pairs.mjs` embeds them (to `pairs-vecs.bin`), and `node directions.mjs` measures each direction and writes `dirs.js` (`const DIRS` in `index.html`).

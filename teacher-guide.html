@@ -68,7 +68,8 @@
     <li>Missions 4 and 5 (word math and inventing formulas). Ask each group to find one formula that works and one that fails, and to explain both.</li>
     <li>Mission 7 (building a 3D space).</li>
     <li>Mission 8 (testing Geoffrey Hinton's dogs-and-cats claim). A good way into how models pick up habits from the text they learn from, and why a tiny effect can still be real when many cases agree.</li>
-    <li>Optional: Mission 9, checking the AI guide. A good discussion of trusting AI.</li>
+    <li>Mission 9 (then and now): how a 2018 model and this one handle other languages, “not”, newer words and word order. Good for discussing how fast AI has changed, and what is still hard.</li>
+    <li>Optional: Mission 10, checking the AI guide. A good discussion of trusting AI.</li>
   </ul>
 
   <h2>Common misunderstandings</h2>
@@ -100,6 +101,7 @@
   </table></div>
   <p class="meta">* From a study of 2,800 words using all 768 numbers, with the shared part taken away, which lowers every score. With the first 128 numbers and only the starter examples, tiger − cat + dog lands on “house”: taking away “cat” also takes away what every animal shares. The app explains this under “Why does it land on something odd?”.</p>
   <ul>
+    <li><b>Then and now:</b> given a sentence, one that means the same and a look-alike, the 2018 Universal Sentence Encoder (used in the 2023 essay) chose right in 23 of 43 tests and this model in 34. The old model fails all seven in the Then and now set. This model gets six; neither can tell “The dog bit the man” from “The man bit the dog”. Details are in <a href="https://github.com/ToonTalk/embedding-explorer/tree/main/study/then-and-now">study/then-and-now</a>.</li>
     <li><b>Dogs, cats, men and women:</b> in the grid man and woman score almost the same with dog and cat (about 0.77 each with 256 numbers; man is in fact a hair closer to cat). But in all six pairs we tried (man/woman, men/women, boy/girl, male/female, father/mother, king/queen) the female word leaned further toward cat, by between 0.002 and 0.03. Each gap alone is no bigger than between random words; the agreement is the evidence. The old Universal Sentence Encoder agreed in only four of the six.</li>
     <li><b>Why the stars look alike:</b> about 66% of each list is shared, and six of the 768 numbers hold 44% of that shared part.</li>
     <li><b>Pictures and video:</b> 7 of 7 example pictures and videos landed nearest the right word. The dog barking sound landed slightly nearer “cat” than “dog”, with 4-bit and 8-bit models alike.</li>

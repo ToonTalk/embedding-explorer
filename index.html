@@ -86,6 +86,9 @@ table.times td, table.times th { padding: 2px 10px 2px 0; text-align: left; }
 .lean .mid { position: absolute; left: 50%; top: 0; bottom: -1px; border-left: 1px dashed var(--muted); }
 .lean .pt { position: absolute; top: 3px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; }
 .lean .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
+.tn { border-top: 1px solid var(--line); padding: 6px 0; font-size: 14px; }
+.tn .yes { color: var(--pos); font-weight: 600; }
+.tn .no { color: var(--neg); font-weight: 600; }
 
 .starwrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
 #bigStar { width: 380px; height: 380px; max-width: 100%; }
@@ -868,6 +871,18 @@ document.addEventListener("drop", (e) => {
 // ---------- sets of examples ----------
 // Words are plain strings; pictures, sounds and videos are [kind, file, label] from SAMPLES.
 const STARTER = ["dog", "cat", "apple", "house", ["image", "corgi.jpg", "corgi"], ["image", "house.jpg", "house"], ["audio", "dog_barking.wav", "dog barking"]];
+// Sentences the model in Ken Kahn's 2023 essay (the TF.js Universal Sentence Encoder) got wrong:
+// [sentence, same meaning, look-alike, old model's similarities [same, look-alike], what it tests].
+// Measured in study/then-and-now.
+const THEN_NOW = [
+  ["Where is the train station?", "¿Dónde está la estación de tren?", "Where is the swimming pool?", [0.03, 0.60], "another language"],
+  ["The cat is sleeping", "猫が寝ています", "The car is parked", [0.19, 0.31], "another language"],
+  ["I love you", "Je t'aime", "I lost you", [0.32, 0.66], "another language"],
+  ["The bat flew out of the cave", "A small flying mammal left its cave", "He swung the bat at the ball", [0.57, 0.61], "a word with two meanings"],
+  ["The shop is open", "The shop is not closed", "The shop is not open", [0.62, 0.65], "“not”"],
+  ["ChatGPT", "an AI chatbot", "a chat room", [0.41, 0.48], "a word newer than the old model"],
+  ["The dog bit the man", "A man was bitten by a dog", "The man bit the dog", [0.65, 0.90], "who did what to whom"],
+];
 const SETS = [
   { name: "Animals", icon: "🐾", things: ["dog", "cat", "tiger", "horse", "puppy", "kitten", "butterfly", "turtle", "beetle",
     ["image", "corgi.jpg", "corgi"], ["image", "cats.jpg", "cats"], ["image", "tiger.jpg", "tiger"], ["image", "butterfly.jpg", "butterfly"],
@@ -880,7 +895,7 @@ const SETS = [
     "When were you born?", "Where do you live?", "What is your name?", "What time is it?"] },
   { name: "Feelings", icon: "😊", things: ["happy", "joyful", "sad", "miserable", "angry", "calm", "excited", "scared"] },
   { name: "Kings and queens", icon: "👑", things: ["king", "queen", "man", "woman", "prince", "princess", "boy", "girl"] },
-  { name: "Dogs, cats, men and women", icon: "🐕", things: ["dog", "cat", "man", "woman", "boy", "girl", "king", "queen", "father", "mother"], challenge: true },
+  { name: "Dogs, cats, men and women", icon: "🐕", things: ["dog", "cat", "man", "woman", "boy", "girl", "king", "queen", "father", "mother"], challenge: "hinton" },
   { name: "Opposites", icon: "↔️", things: ["hot", "cold", "big", "small", "fast", "slow", "light", "dark", "happy", "sad"] },
   { name: "Speech and music", icon: "🎵", things: ["a speech", "piano music", "someone speaking French", "someone speaking Japanese",
     ["audio", "jfk.wav", "JFK speech"], ["audio", "mlk.wav", "MLK speech"], ["audio", "piano.wav", "piano"],
@@ -888,6 +903,7 @@ const SETS = [
   { name: "Emoji", icon: "😀", things: ["🐶", "🐱", "🐯", "🍎", "🍕", "🚗", "🏠", "😀", "😢", "😡", "❤️", "⭐", "🎵", "⚽", "🌧️", "🔥",
     "dog", "happy", "sad", "fire"] },
   { name: "Videos", icon: "🎬", things: ["sea turtle", "a courtroom", ["video", "sea-turtle.mp4", "sea turtle"], ["video", "courtroom.mp4", "courtroom"]] },
+  { name: "Then and now", icon: "⏳", things: THEN_NOW.flatMap((r) => r.slice(0, 3)), challenge: "thenNow" },
 ];
 
 function addThings(things, set) {
@@ -906,13 +922,14 @@ for (const s of SETS) {
   const b = document.createElement("button");
   b.textContent = `${s.icon} ${s.name}`;
   b.title = "Adds: " + s.things.map((t) => typeof t === "string" ? t : `${KIND_ICON[t[0]]} ${t[2]}`).join(", ");
-  b.onclick = () => { addThings(s.things, s.name); if (s.challenge) showChallenge(); };
+  b.onclick = () => { addThings(s.things, s.name); if (s.challenge) CHALLENGES[s.challenge](); };
   $("sets").appendChild(b);
 }
 
 // ---------- the dogs-and-cats challenge ----------
 const HINTON_PAIRS = [["man", "woman"], ["boy", "girl"], ["king", "queen"], ["father", "mother"]];
-function showChallenge() {
+const CHALLENGES = { hinton: showHinton, thenNow: showThenNow };
+function showHinton() {
   const box = $("challenge");
   box.hidden = false;
   box.innerHTML = `<button class="x" title="Close">✕</button>
@@ -952,6 +969,45 @@ async function drawLean() {
       <p>The differences are in the second or third decimal place. About two thirds of every embedding is a part that all words share, so any two words score about 0.7 to 0.8 and small differences in meaning hardly show.</p>
       <p>Each gap is also small compared with how much words differ in general: two words picked at random often differ by as much. So no single pair proves anything. What counts is whether the pairs agree. In our tests with 256 and with 768 numbers, all six pairs we tried (these four plus men/women and male/female) leaned the same way, though “man” itself was a tiny bit closer to cat.</p>
       <p>A model learns this kind of lean from the text it was trained on, which is one way the habits of human writing end up inside AI. Try ticking “Take away what everything shares”, or using fewer numbers, and check again.</p>
+    </details>`;
+}
+
+// ---------- the then-and-now challenge ----------
+function showThenNow() {
+  const box = $("challenge");
+  box.hidden = false;
+  box.innerHTML = `<button class="x" title="Close">✕</button>
+    <p><b>⏳ Challenge: then and now</b></p>
+    <p>Ken Kahn's <a href="https://toontalk.github.io/AI/apps/embeddings/index.html" target="_blank" rel="noopener">2023 essay on embeddings</a> used an older model, Google's Universal Sentence Encoder from 2018. This set has ${THEN_NOW.length} sentences. Each comes with one that means the same and a look-alike that means something different. The old model put the look-alike closer every time.</p>
+    <p>Predict: which will this model get right? Check a few in the grid (section 4), then press Check.</p>
+    <button id="thenNowBtn" class="primary">Check: then and now</button>
+    <div id="thenNowOut"></div>`;
+  box.querySelector(".x").onclick = () => { box.hidden = true; };
+  $("thenNowBtn").onclick = drawThenNow;
+}
+async function drawThenNow() {
+  const out = $("thenNowOut");
+  if (!model) { out.textContent = "Load the model first."; return; }
+  out.textContent = "working…";
+  const v = async (w) => view(await poleVec(w));
+  const rows = [];
+  for (const [a, same, alike, then, what] of THEN_NOW) {
+    const va = await v(a);
+    rows.push({ a, same, alike, then, what, now: [dot(va, await v(same)), dot(va, await v(alike))] });
+  }
+  const mark = ([x, y]) => x > y ? `<span class="yes">✓</span>` : `<span class="no">✗</span>`;
+  const pair = ([x, y]) => `${x.toFixed(2)} vs ${y.toFixed(2)} ${mark([x, y])}`;
+  const right = rows.filter((r) => r.now[0] > r.now[1]).length;
+  const last = rows[rows.length - 1];
+  out.innerHTML = `<p class="meta">In each row the first number is the similarity to the sentence that means the same, the second to the look-alike. Higher first is right.</p>
+    ${rows.map((r) => `<div class="tn"><b>${esc(r.a)}</b> <span class="meta">(${r.what})</span><br>
+      same meaning: ${esc(r.same)} · look-alike: ${esc(r.alike)}<br>
+      <span class="meta">Then:</span> ${pair(r.then)} &nbsp; <span class="meta">Now:</span> ${pair(r.now)}</div>`).join("")}
+    <p>This model gets <b>${right} of ${rows.length}</b>. The old one got 0 of ${rows.length}.${last.now[0] > last.now[1] ? "" : " Neither can tell who bit whom: both read “The dog bit the man” and “The man bit the dog” as almost the same sentence."}</p>
+    <p class="meta">Compare the two numbers within a row, not numbers between the models: this model gives almost every pair a higher score. The old numbers were measured with the same TF.js model the essay used. The new ones are worked out now, with the settings at the top of the page.</p>
+    <details><summary>Why does the new model do better?</summary>
+      <p>The old model was much smaller, learned mostly from English, and knew about 8,000 pieces of words. Anything else, like 猫 or 🐶, it could hardly read: the everyday words it put nearest 🐶 were “minimum”, “dedicated” and “multi”. This model says “dog”, “puppy” and “animal”. It learned from far more text, in many languages, including text written after ChatGPT appeared in 2022.</p>
+      <p>For single English words the two models are about even. In a test with 560 everyday words in 20 groups, both put about 62% of each word's five nearest neighbors in its own group. Both still fail “who did what to whom” and most idioms: “He kicked the bucket” comes out closer to “He kicked the ball” than to “He died”.</p>
     </details>`;
 }
 
@@ -1852,6 +1908,7 @@ Facts you can rely on:
 - One → many (dog → dogs), now → past (walk → walked), plain → -er (big → bigger) and thing → idea are each a consistent direction, but spread over many numbers: the biggest single number holds only 1–5% of the change, so "dogs minus dog" has no single long ray for plural. Some numbers move the same way in 90% or more of pairs. The star view has buttons that show these directions.
 - Taking away B in arithmetic also takes away what B shares with other things: tiger − cat + dog penalizes every animal, which can let a non-animal like "house" come first. With 2,800 words, tiger − cat + dog landed nearest "wolf".
 - Geoffrey Hinton said in a lecture that in word embeddings "man" is closer to "dog" than to "cat" and "woman" closer to "cat" than to "dog". In this model those similarities differ only in the second or third decimal place, and "man" is in fact a tiny bit closer to "cat". But in all six male/female pairs tested (man/woman, men/women, boy/girl, male/female, father/mother, king/queen), with 256 or 768 numbers, the female word leaned further toward "cat", by between 0.002 and 0.03. One pair alone proves little (random words differ that much); the agreement across pairs is the evidence. The "Dogs, cats, men and women" set has a challenge that draws this as a dog ↔ cat line.
+- Then and now: Ken Kahn's 2023 essay used Google's Universal Sentence Encoder (2018). Given a sentence, one that means the same and a look-alike, the old model chose right in 23 of 43 tests and this model in 34. This model wins clearly on other languages ("Where is the train station?" vs its Spanish: old 0.03, new 0.94), emoji, words newer than 2018 (ChatGPT, TikTok), "not", and words with two meanings. For single English words they're about even. Both fail on who did what to whom ("The dog bit the man" vs "The man bit the dog") and on most idioms. The "Then and now" set has a challenge that shows old and new numbers.
 - Embedding arithmetic makes a new list of 768 numbers, not a single number. The page shows the things nearest to that list. It often lands nearest one of its own inputs, so look at the nearest thing that isn't an input. It can only find things that have been added: "king − man + woman" can't land on "queen" unless "queen" has been added.
 
 How to help:

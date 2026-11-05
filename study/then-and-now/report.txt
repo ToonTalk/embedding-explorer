@@ -1,0 +1,150 @@
+TRIPLETS: does the model put the same-meaning one closer than the look-alike?
+
+category                                  USE     Gemma 768     Gemma 256 Gemma sim-768
+Same meaning, different words             5/6           5/6           5/6           5/6
+Idioms                                    2/4           2/4           2/4           1/4
+Who did what to whom                      0/4           1/4           1/4           0/4
+Not                                       1/4           3/4           4/4           4/4
+Words with two meanings                   3/4           4/4           4/4           4/4
+Other languages                           1/5           5/5           5/5           5/5
+Question and answer                       2/4           2/4           2/4           3/4
+Emoji                                     4/4           4/4           4/4           4/4
+Newer words                               2/4           4/4           4/4           4/4
+Spelling mistakes                         2/2           2/2           2/2           2/2
+Numbers                                   1/2           2/2           2/2           2/2
+ALL                                     23/43         34/43         35/43         34/43
+
+row detail: close / far (USE | Gemma 768 | Gemma sim-768)
+How old are you? → What is your age? | How are you?
+    USE 0.85/0.33 ✓   Gemma 0.97/0.83 ✓   Gemma-sim 0.98/0.89 ✓
+I'm starving → I am very hungry | I'm staring
+    USE 0.78/0.58 ✓   Gemma 0.94/0.81 ✓   Gemma-sim 0.97/0.87 ✓
+Can you help me? → I need your assistance | Can you hear me?
+    USE 0.74/0.54 ✓   Gemma 0.92/0.81 ✓   Gemma-sim 0.94/0.90 ✓
+She passed away last night → She died yesterday evening | She passed the exam last night
+    USE 0.80/0.50 ✓   Gemma 0.95/0.81 ✓   Gemma-sim 0.97/0.88 ✓
+The movie was boring → I fell asleep during the film | The movie was exciting
+    USE 0.62/0.82 ✗   Gemma 0.82/0.83 ✗   Gemma-sim 0.85/0.86 ✗
+Shut the window → Close the window | Shut up
+    USE 0.69/0.68 ✓   Gemma 0.96/0.84 ✓   Gemma-sim 0.99/0.88 ✓
+He kicked the bucket → He died | He kicked the ball
+    USE 0.48/0.58 ✗   Gemma 0.73/0.88 ✗   Gemma-sim 0.82/0.93 ✗
+It's raining cats and dogs → It's pouring with rain | Cats and dogs are pets
+    USE 0.69/0.68 ✓   Gemma 0.87/0.85 ✓   Gemma-sim 0.91/0.92 ✗
+Break a leg tonight! → Good luck with your performance! | I broke my leg tonight
+    USE 0.32/0.76 ✗   Gemma 0.68/0.86 ✗   Gemma-sim 0.76/0.90 ✗
+That exam was a piece of cake → That exam was very easy | I ate a piece of cake
+    USE 0.76/0.58 ✓   Gemma 0.87/0.85 ✓   Gemma-sim 0.90/0.88 ✓
+The dog bit the man → A man was bitten by a dog | The man bit the dog
+    USE 0.65/0.90 ✗   Gemma 0.97/0.99 ✗   Gemma-sim 0.98/0.99 ✗
+The cat chased the mouse → The mouse was chased by the cat | The mouse chased the cat
+    USE 0.94/0.97 ✗   Gemma 0.99/0.99 ✗   Gemma-sim 0.99/0.99 ✗
+Alice gave Bob a book → Bob received a book from Alice | Bob gave Alice a book
+    USE 0.84/0.95 ✗   Gemma 0.96/0.99 ✗   Gemma-sim 0.98/0.99 ✗
+The teacher praised the student → The student was praised by the teacher | The student praised the teacher
+    USE 0.94/0.98 ✗   Gemma 0.99/0.99 ✓   Gemma-sim 0.99/1.00 ✗
+I like this movie → I enjoy this film | I don't like this movie
+    USE 0.87/0.82 ✓   Gemma 0.95/0.80 ✓   Gemma-sim 0.96/0.84 ✓
+Everyone passed the test → Nobody failed the test | Nobody passed the test
+    USE 0.86/0.91 ✗   Gemma 0.90/0.89 ✓   Gemma-sim 0.92/0.88 ✓
+The shop is open → The shop is not closed | The shop is not open
+    USE 0.62/0.65 ✗   Gemma 0.89/0.87 ✓   Gemma-sim 0.94/0.92 ✓
+It is safe to swim here → Swimming here is fine | It is not safe to swim here
+    USE 0.73/0.96 ✗   Gemma 0.91/0.91 ✗   Gemma-sim 0.96/0.91 ✓
+I sat on the bank of the river → We had a picnic at the water's edge | I put my money in the bank
+    USE 0.60/0.49 ✓   Gemma 0.78/0.74 ✓   Gemma-sim 0.86/0.83 ✓
+The bat flew out of the cave → A small flying mammal left its cave | He swung the bat at the ball
+    USE 0.57/0.61 ✗   Gemma 0.89/0.78 ✓   Gemma-sim 0.94/0.86 ✓
+Apple released a new phone → The tech company launched a smartphone | I ate an apple
+    USE 0.73/0.35 ✓   Gemma 0.85/0.73 ✓   Gemma-sim 0.92/0.84 ✓
+The pitcher threw the ball → The baseball player made a throw | The pitcher of water was full
+    USE 0.79/0.52 ✓   Gemma 0.92/0.82 ✓   Gemma-sim 0.95/0.89 ✓
+Where is the train station? → ¿Dónde está la estación de tren? | Where is the swimming pool?
+    USE 0.03/0.60 ✗   Gemma 0.94/0.74 ✓   Gemma-sim 0.98/0.83 ✓
+I love you → Je t'aime | I lost you
+    USE 0.32/0.66 ✗   Gemma 0.90/0.83 ✓   Gemma-sim 0.92/0.85 ✓
+Good morning → Guten Morgen | Good night
+    USE 0.28/0.71 ✗   Gemma 0.91/0.83 ✓   Gemma-sim 0.94/0.89 ✓
+The cat is sleeping → 猫が寝ています | The car is parked
+    USE 0.19/0.31 ✗   Gemma 0.95/0.74 ✓   Gemma-sim 0.98/0.82 ✓
+Thank you very much → Muchas gracias | Very much later
+    USE 0.55/0.44 ✓   Gemma 0.83/0.81 ✓   Gemma-sim 0.92/0.85 ✓
+What is the capital of France? → Paris is the capital of France. | France is a country in Western Europe.
+    USE 0.75/0.60 ✓   Gemma 0.92/0.74 ✓   Gemma-sim 0.96/0.85 ✓
+How many legs does a spider have? → Spiders have eight legs. | Spiders spin webs to catch insects.
+    USE 0.71/0.51 ✓   Gemma 0.95/0.78 ✓   Gemma-sim 0.95/0.86 ✓
+Why is the sky blue? → Air scatters blue sunlight more than red. | The sky is blue.
+    USE 0.42/0.56 ✗   Gemma 0.82/0.85 ✗   Gemma-sim 0.88/0.91 ✗
+Who wrote Romeo and Juliet? → Shakespeare wrote the play. | Romeo and Juliet are characters in a play.
+    USE 0.53/0.64 ✗   Gemma 0.78/0.82 ✗   Gemma-sim 0.86/0.85 ✓
+🐶 → dog | airplane
+    USE 0.38/0.33 ✓   Gemma 0.94/0.73 ✓   Gemma-sim 0.98/0.85 ✓
+🍕 → pizza | bicycle
+    USE 0.33/0.31 ✓   Gemma 0.95/0.72 ✓   Gemma-sim 0.98/0.85 ✓
+❤️ → love | rock
+    USE 0.44/0.30 ✓   Gemma 0.93/0.75 ✓   Gemma-sim 0.96/0.85 ✓
+😢 → sad | happy
+    USE 0.44/0.43 ✓   Gemma 0.92/0.74 ✓   Gemma-sim 0.96/0.84 ✓
+TikTok → a short video app | a clock ticking
+    USE 0.25/0.36 ✗   Gemma 0.76/0.73 ✓   Gemma-sim 0.89/0.86 ✓
+COVID-19 → a coronavirus pandemic | a computer virus
+    USE 0.19/0.14 ✓   Gemma 0.88/0.74 ✓   Gemma-sim 0.96/0.88 ✓
+ChatGPT → an AI chatbot | a chat room
+    USE 0.41/0.48 ✗   Gemma 0.82/0.76 ✓   Gemma-sim 0.92/0.87 ✓
+Bitcoin → a cryptocurrency | a bit of a coin
+    USE 0.78/0.45 ✓   Gemma 0.82/0.76 ✓   Gemma-sim 0.95/0.88 ✓
+I recieved your mesage → I got your message | I deleted your message
+    USE 0.75/0.55 ✓   Gemma 0.95/0.81 ✓   Gemma-sim 0.98/0.86 ✓
+definately tommorow → certainly tomorrow | definitely yesterday
+    USE 0.65/0.58 ✓   Gemma 0.92/0.83 ✓   Gemma-sim 0.96/0.87 ✓
+I have three children → I have 3 kids | I have thirty children
+    USE 0.88/0.75 ✓   Gemma 0.99/0.90 ✓   Gemma-sim 0.99/0.93 ✓
+The meeting is at 5 pm → The meeting is at five in the afternoon | The meeting is at 5 am
+    USE 0.82/0.86 ✗   Gemma 0.97/0.95 ✓   Gemma-sim 0.98/0.97 ✓
+
+ANALOGIES a − b + c among 2856 words (inputs excluded): rank of the expected answer
+analogy                                            USE          Gemma 768          Gemma 256       USE centered Gemma 768 centered
+king−man+woman=queen                      4 (princess)                1 ✓                1 ✓       4 (princess)                1 ✓
+puppy−dog+cat=kitten                               1 ✓                1 ✓                1 ✓                1 ✓                1 ✓
+paris−france+japan=tokyo                  2 (japanese)                1 ✓                1 ✓       2 (japanese)                1 ✓
+paris−france+italy=rome                       27 (ave)        2 (italian)        2 (italian)        6 (italian)        2 (italian)
+london−england+germany=berlin               3 (german)         2 (german)                1 ✓         3 (german)         2 (german)
+walked−walk+swim=swam                    11 (swimming)       2 (swimming)       3 (swimming)      12 (swimming)       2 (swimming)
+ran−run+eat=ate                                    1 ✓           4 (food)           4 (food)                1 ✓           5 (food)
+bigger−big+small=smaller                           1 ✓                1 ✓                1 ✓                1 ✓                1 ✓
+cars−car+child=children                            1 ✓                1 ✓                1 ✓                1 ✓                1 ✓
+mice−mouse+goose=geese                        11 (bob)                1 ✓                1 ✓                1 ✓                1 ✓
+brother−boy+girl=sister                            1 ✓                1 ✓                1 ✓                1 ✓                1 ✓
+uncle−man+woman=aunt                        8 (sister)                1 ✓                1 ✓         8 (sister)                1 ✓
+prince−boy+girl=princess                           1 ✓                1 ✓                1 ✓                1 ✓                1 ✓
+hot−cold+dark=light                          8 (color)         49 (black)         39 (black)         10 (color)         34 (black)
+fish−water+air=bird                          164 (fly)       6 (airplane)       3 (airplane)           63 (fly)       7 (airplane)
+doctor−hospital+school=teacher            2 (graduate)                1 ✓                1 ✓     3 (university)                1 ✓
+kitten−cat+dog=puppy                               1 ✓                1 ✓                1 ✓                1 ✓                1 ✓
+calf−cow+horse=foal                            2 (leg)                1 ✓                1 ✓            2 (leg)                1 ✓
+france−french+spanish=spain                        1 ✓                1 ✓                1 ✓                1 ✓                1 ✓
+euro−europe+japan=yen                     4 (japanese)       2 (japanese)       2 (japanese)       4 (japanese)       2 (japanese)
+glove−hand+foot=sock                        11 (shoes)           3 (feet)           5 (feet)          9 (shoes)           3 (feet)
+day−sun+moon=night                       90 (midnight)          6 (month)          5 (month)        42 (monday)          6 (month)
+summer−hot+cold=winter                             1 ✓                1 ✓                1 ✓                1 ✓                1 ✓
+breakfast−morning+evening=dinner           2 (pancake)                1 ✓                1 ✓        2 (pancake)                1 ✓
+TOP-1 HITS                                        9/24              15/24              16/24              10/24              15/24
+
+NEIGHBORS: share of each grouped word's 5 nearest words (of all 2856 ) from its own group
+USE                  40%
+Gemma 768            32%
+Gemma 256            31%
+USE centered         43%
+Gemma 768 centered   34%
+
+NEAREST VOCAB WORDS to some test texts
+🐶         USE    minimum 0.73, dedicated 0.72, multi 0.70, set 0.69, int 0.69, providing 0.68
+🐶         Gemma  dog 0.94, puppy 0.90, animal 0.85, pet 0.85, animals 0.84, The dog is sleeping. 0.83
+TikTok     USE    bob 0.60, panda 0.59, nut 0.58, jan 0.58, goose 0.58, jam 0.57
+TikTok     Gemma  video 0.80, videos 0.79, funny 0.77, design 0.76, cool 0.76, text 0.76
+ChatGPT    USE    chat 0.60, gmt 0.57, messages 0.56, message 0.56, login 0.56, admin 0.56
+ChatGPT    Gemma  chat 0.82, robot 0.76, article 0.76, query 0.76, cat 0.76, discussion 0.76
+COVID-19   USE    mission 0.50, eagle 0.49, mail 0.48, tripadvisor 0.48, letters 0.47, nation 0.47
+COVID-19   Gemma  virus 0.83, health 0.82, medical 0.80, article 0.80, news 0.79, disease 0.79
+Je t'aime  USE    french 0.64, tel 0.61, paris 0.60, non 0.59, des 0.59, jun 0.57
+Je t'aime  Gemma  love 0.85, french 0.78, like 0.77, text 0.77, code 0.76, translation 0.76

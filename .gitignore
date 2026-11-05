@@ -8,3 +8,5 @@ study/*.txt
 study/pairs-vecs.bin
 study/pairs-words.json
 dist/
+study/then-and-now/out.json
+study/then-and-now/triplets.json

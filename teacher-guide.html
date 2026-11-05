@@ -72,6 +72,14 @@
     <li>Optional: Mission 10, checking the AI guide. A good discussion of trusting AI.</li>
   </ul>
 
+  <h2>Explaining word math</h2>
+  <p><code>puppy - dog + cat</code> is the analogy “puppy is to dog as ? is to cat”. Two explanations help, and they are the same math:</p>
+  <ul>
+    <li><b>Arrows.</b> puppy − dog is an arrow from dog to puppy, roughly “younger”. Following it from cat lands near kitten because the cat → kitten arrow points much the same way. Measured with 256 numbers, the two arrows have a similarity of 0.46. Arrows between random pairs of words average 0.05. For king − man + woman it's 0.45. For tiger − cat + dog (dog → wolf against cat → tiger) it's only 0.19, which is why that one is unreliable.</li>
+    <li><b>Adding up scores.</b> The order of the results is exactly each thing's similarity to puppy, minus its similarity to dog, plus its similarity to cat. Students can check this with the grid in section 4, or tick “Show how each score is made” in section 5. With 256 numbers: kitten 0.79 − 0.75 + 0.91 = 0.95. “Pet” gets 0.84 − 0.89 + 0.87 = 0.82: it is penalized for being close to dog. Cat itself also gets 0.95, which is why inputs often top the list.</li>
+  </ul>
+  <p>The second view makes a good lesson on its own: students can predict a result from the grid alone, with no arithmetic on 768 numbers.</p>
+
   <h2>Common misunderstandings</h2>
   <dl>
     <dt>“A similarity of 0.7 means they're 70% the same.”</dt>
@@ -80,6 +88,8 @@
     <dd>Opposites are often close. In a study of 2,800 words, “cold” was the fourth-nearest word to “hot”, because both are about temperature.</dd>
     <dt>“The arithmetic found the answer.”</dt>
     <dd>It can only land on things already on the page. With nothing better to land on, the top answer may score as low as 0.2: a weak match, not an answer.</dd>
+    <dt>“The model knows that a kitten is a young cat.”</dt>
+    <dd>Not in the way people do. It learned from how words are used, and that left the dog → puppy and cat → kitten arrows pointing roughly the same way (a similarity of 0.46, where 1 would be identical). That's enough to make kitten win, but the arrows are far from parallel, and for many pairs they don't line up at all.</dd>
     <dt>“Each number stands for a feature, like size or color.”</dt>
     <dd>Only about a third of the numbers even lean toward one kind of word, and none carries much of an idea like “plural”. The ray explanations in the app say this plainly.</dd>
     <dt>“The guide is always right.”</dt>

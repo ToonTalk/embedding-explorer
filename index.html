@@ -108,7 +108,8 @@ table.sim td { width: 46px; height: 30px; text-align: center; color: #111; borde
 table.sim th img { height: 28px; display: block; margin: 0 auto; }
 
 .nearest { list-style: none; padding: 0; margin: 6px 0; }
-.nearest li { display: flex; gap: 8px; align-items: center; padding: 2px 0; }
+.nearest li { display: flex; flex-wrap: wrap; gap: 0 8px; align-items: center; padding: 2px 0; }
+.nearest .sum { flex-basis: 100%; padding-left: 52px; font-size: 12px; color: var(--muted); }
 .nearest .sbar { height: 10px; background: var(--accent); border-radius: 3px; }
 .nearest .used { color: var(--muted); }
 
@@ -330,14 +331,28 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
 
   <section id="arithSec" class="locked">
     <h2>5. Embedding arithmetic</h2>
-    <p>Lists of numbers can be added and subtracted: that's embedding <span class="term">arithmetic</span>. What is <span class="term">nearest</span> to the result?</p>
+    <p>Lists of numbers can be added and subtracted: that's embedding <span class="term">arithmetic</span>. It can solve some <span class="term" data-t="analogy">analogies</span>: “puppy is to dog as what is to cat?” becomes puppy − dog + cat. What is <span class="term">nearest</span> to the result?</p>
     <div class="row">
       <select id="arA"></select><span>minus</span><select id="arB"></select><span>plus</span><select id="arC"></select>
     </div>
     <div class="starwrap">
       <canvas id="arStar" style="width:200px;height:200px"></canvas>
-      <div style="flex:1;min-width:220px"><ol class="nearest" id="arList"></ol><div id="arRayInfo" class="rayinfo"></div></div>
+      <div style="flex:1;min-width:220px"><ol class="nearest" id="arList"></ol>
+        <label class="meta"><input type="checkbox" id="arSums"> Show how each score is made</label>
+        <div id="arRayInfo" class="rayinfo"></div></div>
     </div>
+    <details>
+      <summary>Why does puppy − dog + cat land on kitten?</summary>
+      <p>There are two ways to see it, and they are the same math.</p>
+      <p><b>Arrows.</b> puppy − dog is an arrow from “dog” to “puppy”, roughly meaning “younger”. Start at “cat”, follow the same arrow, and you land near “kitten”. That works because the arrow from cat to kitten points much the same way as the arrow from dog to puppy. With the first 256 numbers, the two arrows have a similarity of 0.46, while arrows between random pairs of words average about 0.05. For tiger − cat + dog, the arrows from cat to tiger and from dog to wolf match much less (0.19), which is one reason that one is shakier.</p>
+      <p><b>Adding up scores.</b> The nearest thing is whatever is most like puppy and cat, and least like dog. You can check this in the grid in section 4: for each thing, add its similarity to puppy and to cat, and take away its similarity to dog. With 256 numbers, kitten gets 0.79 − 0.75 + 0.91 = 0.95. “Pet” gets 0.84 − 0.89 + 0.87 = 0.82: it loses points for being so doggy. Tick “Show how each score is made” to see the sums for everything on the page.</p>
+      <p>Neither way means the model “knows” that a kitten is a young cat. It learned from how words are used, and words used in similar ways ended up arranged so that some arrows roughly line up. “Cat” itself also scores 0.95, which is why you look past the words you started with.</p>
+      <details class="more">
+        <summary>More detail</summary>
+        <p>Why the two views give the same order: the result is the list puppy − dog + cat, shrunk to length 1. Its similarity with any thing is that thing's similarity to puppy, minus its similarity to dog, plus its similarity to cat, all divided by how long the result was before it was shrunk. That length is the same for every thing, so dividing by it doesn't change the order. Omer Levy and Yoav Goldberg pointed this out for older word embeddings in 2014.</p>
+        <p>The arrows are only roughly parallel. A similarity of 0.46 between the two arrows is far more than chance, but far from 1. That's enough for kitten to come out on top among the things that aren't inputs, but not enough to land exactly on it.</p>
+      </details>
+    </details>
     <details>
       <summary>Why does it land on something odd?</summary>
       <p>The result is usually nearest its own inputs, so look at what comes after them. And it can only land on things that are on the page. In a study with 2,800 words, tiger − cat + dog landed nearest <b>wolf</b>. With no wolf on the page, the nearest thing is just whatever is left, often with a low score like 0.2: a weak match, not an answer.</p>
@@ -1381,16 +1396,25 @@ function renderArith() {
   let v = vecOf(a);
   if (b) v = sub(v, vecOf(b));
   if (c) v = add(v, vecOf(c));
-  v = scale(v, 1 / (norm(v) || 1));
+  const len = norm(v) || 1;
+  v = scale(v, 1 / len);
   arView.set({ v, size: 200, S: starScale(), label: labelHtml(a) + (b ? " − " + labelHtml(b) : "") + (c ? " + " + labelHtml(c) : "") });
   const used = new Set([a, b, c].filter(Boolean));
   const ranked = ready().map((it) => ({ it, s: dot(v, vecOf(it)) })).sort((x, y) => y.s - x.s).slice(0, 8);
   const top = Math.max(...ranked.map((r) => r.s), .01);
+  // The score is (similarity to A − to B + to C) ÷ the result's length before shrinking, so the order is the order of those sums.
+  const sums = $("arSums").checked;
+  const how = (it) => {
+    const x = vecOf(it), parts = [[a, ""], [b, " − "], [c, " + "]].filter(([t]) => t);
+    const total = parts.reduce((t, [t2, op]) => t + (op === " − " ? -1 : 1) * dot(x, vecOf(t2)), 0);
+    return `<span class="sum">(${parts.map(([t, op]) => `${op}${labelHtml(t)} ${dot(x, vecOf(t)).toFixed(2)}`).join("")}) = ${total.toFixed(2)}, ÷ ${len.toFixed(2)} = ${(total / len).toFixed(2)}</span>`;
+  };
   $("arList").innerHTML = ranked.map(({ it, s }) =>
     `<li class="${used.has(it) ? "used" : ""}"><span style="width:44px;text-align:right">${s.toFixed(2)}</span>
      <span class="sbar" style="width:${Math.max(2, 120 * s / top)}px"></span>
-     ${KIND_ICON[it.kind]} ${labelHtml(it)}${used.has(it) ? " (used above)" : ""}</li>`).join("");
+     ${KIND_ICON[it.kind]} ${labelHtml(it)}${used.has(it) ? " (used above)" : ""}${sums ? how(it) : ""}</li>`).join("");
 }
+$("arSums").addEventListener("change", renderArith);
 
 // ---------- your own formula ----------
 // Grammar: expr = term (("+"|"-") term)*; term = unary (("*"|"/") unary | unary)*  (a bare number
@@ -1703,6 +1727,7 @@ const TERMS = {
   ray: "One line of the star. Each ray shows one of the numbers: its direction says which number, its length how big, its color whether it's positive (green) or negative (red).",
   "modality gap": "Words, pictures and sounds are different “modalities”. Even when they mean the same thing, the model keeps each kind in its own region, so words score higher with words.",
   arithmetic: "Adding or taking away lists of numbers, one position at a time. The result is a new list, and the page shows what's nearest to it.",
+  analogy: "A pattern like “puppy is to dog as kitten is to cat”. Embedding arithmetic tries to find the missing word: puppy − dog + cat should land near kitten.",
   nearest: "The things whose lists have the highest similarity to the new list.",
   difference: "How far apart the two lists are, measured as the length of one minus the other. 0 means identical; 2 means exactly opposite.",
   instruction: "A short phrase put in front of your words, like “task: search result | query:”. The model was trained with these, so it knows what job the embedding is for.",
@@ -1909,10 +1934,12 @@ Facts you can rely on:
 - Taking away B in arithmetic also takes away what B shares with other things: tiger − cat + dog penalizes every animal, which can let a non-animal like "house" come first. With 2,800 words, tiger − cat + dog landed nearest "wolf".
 - Geoffrey Hinton said in a lecture that in word embeddings "man" is closer to "dog" than to "cat" and "woman" closer to "cat" than to "dog". In this model those similarities differ only in the second or third decimal place, and "man" is in fact a tiny bit closer to "cat". But in all six male/female pairs tested (man/woman, men/women, boy/girl, male/female, father/mother, king/queen), with 256 or 768 numbers, the female word leaned further toward "cat", by between 0.002 and 0.03. One pair alone proves little (random words differ that much); the agreement across pairs is the evidence. The "Dogs, cats, men and women" set has a challenge that draws this as a dog ↔ cat line.
 - Then and now: Ken Kahn's 2023 essay used Google's Universal Sentence Encoder (2018). Given a sentence, one that means the same and a look-alike, the old model chose right in 23 of 43 tests and this model in 34. This model wins clearly on other languages ("Where is the train station?" vs its Spanish: old 0.03, new 0.94), emoji, words newer than 2018 (ChatGPT, TikTok), "not", and words with two meanings. For single English words they're about even. Both fail on who did what to whom ("The dog bit the man" vs "The man bit the dog") and on most idioms. The "Then and now" set has a challenge that shows old and new numbers.
+- Why analogies like puppy − dog + cat → kitten work, two views that are the same math. (1) Arrows: puppy − dog is an arrow from dog to puppy, roughly "younger". The arrow from cat to kitten points much the same way (with 256 numbers the two arrows have similarity 0.46; arrows between random word pairs average 0.05), so following it from cat lands near kitten. king − man and queen − woman: 0.45. tiger − cat and wolf − dog: only 0.19, so that one is shaky. (2) Adding up scores: the order of the results is exactly each thing's similarity to puppy, minus its similarity to dog, plus its similarity to cat, which the student can check in the grid; "Show how each score is made" in section 5 shows these sums. With 256 numbers: kitten 0.79 − 0.75 + 0.91 = 0.95; pet 0.84 − 0.89 + 0.87 = 0.82 (it loses points for being doggy); cat itself also 0.95, so look past the inputs. This doesn't mean the model "knows" a kitten is a young cat; it learned from how words are used.
 - Embedding arithmetic makes a new list of 768 numbers, not a single number. The page shows the things nearest to that list. It often lands nearest one of its own inputs, so look at the nearest thing that isn't an input. It can only find things that have been added: "king − man + woman" can't land on "queen" unless "queen" has been added.
 
 How to help:
 - Answer in under 100 words of plain language for a curious teenager. Use Markdown.
+- When a student asks why word arithmetic or an analogy works, explain it with the arrows and the adding-up-scores facts above, even if those words aren't on the page yet. Then offer a button to try it.
 - If no fact above explains why the model did something, say that nobody can be sure, and suggest an experiment that would tell them more. Don't make up reasons.
 - The model is already trained and can't be changed. Only suggest things the student can do on this page: add words, pictures, sounds or videos, change the settings, and use sections 3 to 7.
 - Talk about the section named in LOOKING AT unless the student asks about something else.

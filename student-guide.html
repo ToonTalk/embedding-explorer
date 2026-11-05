@@ -55,6 +55,12 @@
     <b class="label">Mission 4 · Word math</b>
     <p>In section 6, try <code>puppy - dog + cat</code>. What do you think it lands on? Then try <code>(morning + night) / 2</code> and <code>Paris - France + Japan</code>.</p>
     <details><summary>Important</summary><p>The answer can only be something that's on the page. The example buttons add a few possible answers for you, some right and some wrong. To test your own guess, use <b>Add my guess</b>.</p></details>
+    <details><summary>How does word math work?</summary>
+      <p><code>puppy - dog + cat</code> is an <b>analogy</b> written as math: “puppy is to dog as what is to cat?” There are two ways to think about it.</p>
+      <p><b>Arrows.</b> puppy − dog is an arrow from dog to puppy, roughly meaning “younger”. Follow the same arrow from cat and you land near kitten. It works because the arrow from cat to kitten points much the same way as the arrow from dog to puppy (not exactly, but far more than chance).</p>
+      <p><b>Adding up scores.</b> The winner is whatever is most like puppy and cat, and least like dog. Check it in the grid: kitten's similarity to puppy, minus its similarity to dog, plus its similarity to cat, beats “pet”, which loses points for being so doggy. In section 5, tick <b>Show how each score is made</b> to see these sums.</p>
+      <p>Neither means the AI knows a kitten is a baby cat. It learned from how words are used.</p>
+    </details>
   </div>
 
   <div class="try">
@@ -95,6 +101,7 @@
     <dt>Embedding</dt><dd>The list of numbers the AI makes for something. Here, 768 numbers long.</dd>
     <dt>Similarity</dt><dd>How much two lists point the same way: 1 is the same, 0 is unrelated.</dd>
     <dt>Ray</dt><dd>One line of a star. Each ray shows one of the numbers.</dd>
+    <dt>Analogy</dt><dd>A pattern like “puppy is to dog as kitten is to cat”. Word math tries to find the missing word.</dd>
     <dt>Direction</dt><dd>What you get by subtracting one embedding from another, like big minus small. It points from one meaning toward the other.</dd>
     <dt>Modality gap</dt><dd>Words stay closer to words, and pictures to pictures, even when they mean the same thing.</dd>
   </dl>

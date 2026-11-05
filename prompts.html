@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prompts and Responses</title>
+<link rel="stylesheet" href="pages.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23f7f6f2'/%3E%3Cg stroke-width='4.5' stroke-linecap='round'%3E%3Cpath d='M32 32V4M32 32L52 12M32 32L58 40M32 32L22 56M32 32L8 30' stroke='%231a8f3c'/%3E%3Cpath d='M32 32L46 8M32 32L56 26M32 32L44 54M32 32L12 48M32 32L18 14' stroke='%23d03a2f'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='4' fill='%232f5bd3'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+  <nav class="top">
+    <a href="./">← Open Embedding Explorer</a>
+    <a href="making-of.html">How it was made</a>
+    <a href="student-guide.html">Student guide</a>
+    <a href="teacher-guide.html">Teacher guide</a>
+  </nav>
+
+  <h1>Prompts and responses</h1>
+  <p class="lede">Every prompt Ken Kahn gave Claude while making Embedding Explorer, with a few sentences on what Claude did in response. The whole app came from these 25 messages, over three days in November 2026.</p>
+  <p class="meta">Ken's prompts are copied exactly, typos and all. The screenshots he attached aren't reproduced here. Messages marked “sent while Claude was working” arrived in the middle of a task. Times are UK time. Summaries written by Claude; the full story is in <a href="making-of.html">How it was made</a>.</p>
+
+  <h2>Day one · November 3</h2>
+
+  <div class="turn">
+    <p class="when">1 · 16:19</p>
+    <div class="prompt">I'm wondering if Google's EmbeddingGemma 2 could be used in a web app for school students to explore ideas such as those I explored in https://docs.google.com/document/d/1YPwrWcSGiGNdS7T9YFbp3Lb1abLIdpYSVtvg7ppf6Lk/edit?usp=sharing
+It could now include images, audio, and video besides text
+Is the model too big?</div>
+    <p>Claude answered that it isn't too big. The model has about 740 million settings in three parts (words, pictures and video, sounds). Stored at 4 bits per setting, the whole thing is about a 470 MB download, or 175 MB for words alone. A browser version for Transformers.js already existed that runs on the graphics chip (WebGPU). Claude offered to build a prototype following the old essay.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">2 · 17:22</p>
+    <div class="prompt">Yes, prototype it</div>
+    <p>Claude built a single-file web app with the sections that are still there: add things (typing, files, webcam, microphone), see each embedding as a star, compare everything in a grid, do A − B + C, and build a 3D space from three word pairs. It measured the speeds (0.1 s a word, 0.45 s a picture). It found that the compressed model can't run at all without WebGPU, so it added a slower words-only fallback. All seven example pictures and videos landed on the right word, but a dog barking came out nearer “cat”.</p>
+  </div>
+
+  <h2>Day two · November 4</h2>
+
+  <div class="turn">
+    <p class="when">3 · 09:03 · with a screenshot</p>
+    <div class="prompt">why do the stars look so much alike (even abstract nouns and other things)?
+Yes go ahead and publish and use the MIT license
+I'm wondering about adding an AI guide
+The option of using the first N numbers is good but why limit it to section 3?</div>
+    <p>Claude measured why: about two thirds of every embedding is a part they all share, and six of the 768 numbers carry 44% of it. It added a “Take away what everything shares” switch (“idea” and “horse” went from 0.70 to −0.04). It published the app on GitHub Pages under the MIT license. The numbers setting already changed every section, so Claude moved it into a bar at the top to make that clear. It proposed a guide that sees a summary of the page, running on Chrome's built-in Gemini Nano by default.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">4 · 09:42</p>
+    <div class="prompt">Yes, build it</div>
+    <p>Claude built the 🧭 Guide. Each question goes with a text summary of the page, plus challenge ideas the page works out from the student's own things, and answers can include buttons that set up experiments. Claude tested it with the real Gemini Nano in a headless browser. It then fixed what went wrong (wrong facts, buttons that couldn't work, vague challenges) by adding facts and rules to the guide's instructions.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">5 · 13:53 · with a screenshot</p>
+    <div class="prompt">Why did this happen? I assume all is now fine.
+Yes build the guide as suggested</div>
+    <p>Claude explained that the failed deploy was a temporary outage on GitHub's side (a “502” error), and that the next push had published everything. The guide was already built and live.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">6 · 14:43 · with three screenshots</p>
+    <div class="prompt">add a favicon
+what do you think of changing the default to 128 or 256?
+is it feasible for you to run a study to determine what some of the star rays "mean"? If we can do it for a few, especially those that are long rays, the interface can reveal their approximate meaning.
+I think initially there should be much smaller set of examples. And then maybe some buttons for adding several once, like animals. And also sentences such as "How are you?", "How old are you?", and "What is your age?" And a way to remove many examples at once
+Something went wrong with sea turtle (see screenshot)
+Technical terms, e.g. similarity should have tooltips
+The little explanations are good but they should include a way to see a longer more detailed version.</div>
+    <p>Claude did all of it:</p>
+    <ul>
+      <li>It added a star favicon, and made 256 numbers the default after measuring that it loses little (59% of each word's five nearest neighbors in its own group, against 62% with all 768).</li>
+      <li>It ran a study of 2,834 words to list, for each of the 768 numbers, the words where it is unusually high or low. Pointing at a ray now shows them. About a third of the numbers lean toward one kind of word; most are a mix.</li>
+      <li>It made a much smaller starting set, added buttons that add whole sets, and added a way to remove many things at once.</li>
+      <li>The sea turtle video hung because the video loader never gave up. Claude replaced it with one that times out and offers “Try again”.</li>
+      <li>Technical words got tooltips, and every explanation got a “More detail” version.</li>
+    </ul>
+  </div>
+
+  <div class="turn">
+    <p class="when">7 · 14:44 · sent while Claude was working</p>
+    <div class="prompt">the screenshots are meant to accompany a question about why house is higher than horse/dog</div>
+    <p>Claude reproduced tiger − cat + dog landing on “house”. It happens with 128 numbers and the shared part taken away: taking away “cat” also takes away what all animals share, so “horse” loses points and “house” doesn't. Among 2,800 words with all 768 numbers, the result lands on “wolf”. Claude's first guess, that “house” and “horse” are spelled alike, turned out to be wrong. The app now explains this under “Why does it land on something odd?”.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">8 · 14:53 · sent while Claude was working, with a screenshot</p>
+    <div class="prompt">the answer to what should I try next should never be empty. the answer before that isn't very good but that's maybe down to Gemini Nano</div>
+    <p>The guide now asks again when an answer comes back empty, and if that's empty too, the page offers an idea of its own. Claude also stopped the guide from offering buttons for things already on the page.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">9 · 14:57</p>
+    <div class="prompt">I loaded the model fine using https://toontalk.github.io/embedding-explorer/ but after refreshing it said to load again. If it is cached can't it load automatically?</div>
+    <p>Yes. The page now remembers the load settings, checks whether the model's files are already in the browser's cache, and if so loads them automatically, in a few seconds.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">10 · 15:24 · with two screenshots</p>
+    <div class="prompt">Emojis is another category that should be loadable set. I tried them and it works but they are tiny and hard to see
+Nice to see words associated with a ray - the text says 768 which is confusing
+there is a link but the text disappears when one moves towards it
+In the second screenshot I would have expected a long red ray would have related to the difference between singular and plural. Other ray dimensions could be related to tense or degree of abstractness, right?</div>
+    <p>Claude added an emoji set and made emoji display large everywhere. It rewrote the ray text and made the ray information stay put so its link can be clicked. To answer the question, it embedded 40 singular/plural pairs, 40 present/past pairs, 20 plain/-er pairs and 60 concrete and abstract nouns. Each change is a consistent direction, but spread over many numbers: the biggest single number holds only 1 to 5% of it, so there is no one long ray for plural. Buttons above the star now draw these directions.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">11 · 15:33</p>
+    <div class="prompt">Let's add a new activity between 5 and 6. The idea is to let the user provide their own arithmetic expression. E.g (a+b)/2 would be interesting when a is morning and b is night. I'm sure there are other expressions that would be interesting.</div>
+    <p>Claude added section 6, “Your own formula”. It understands words, phrases, emoji, pictures and sounds, numbers, + − × ÷, brackets and <code>average(…)</code>. Claude tried candidate formulas against about 150 words to choose the examples: (morning + night) / 2 lands on evening, puppy − dog + cat on kitten, Paris − France + Japan on Tokyo. It noticed that dividing a whole formula by 2 changes nothing, because similarity ignores length, and the app says so.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">12 · 15:34 · sent while Claude was working</p>
+    <div class="prompt">Is a Claude artifact version of the app feasible?</div>
+    <p>Probably, Claude said, but artifacts can't download from other websites, so the model would have to be stored inside the artifact itself. It offered to test that with a small probe first.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">13 · 15:42</p>
+    <div class="prompt">Yes, probe it</div>
+    <p>The probe showed that WebGPU works inside an artifact, that an artifact can store about 1 GB of its own files in pieces of up to 15 MB, and that the page can ask Claude questions through the viewer's own account with no key. Gemini Nano, the camera and the microphone aren't available there.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">14 · 15:46 · sent while Claude was working</p>
+    <div class="prompt">For sections 5 and 6 you should be able to tap on a ray to learn about it like for section 3</div>
+    <p>Claude made the ray explorer reusable, so the stars in sections 5 and 6 work just like section 3's.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">15 · 16:37</p>
+    <div class="prompt">Yes, build it</div>
+    <p>Claude built the artifact edition from the same HTML file. The model, the engine and the example media went into the artifact in 68 pieces (549 MB), and the page reassembles them as needed. One bug showed up only there: the biggest files were downloaded twice. Once that was fixed, it loaded in 55 seconds the first time and about 4 seconds after that, tested in Ken's own Chrome. Its guide uses Claude through the viewer's account.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">16 · 17:16</p>
+    <div class="prompt">working fine. create and link a student and a teacher guide. And link the app to this post I will write: https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing
+Also write a "making of" web page describing how you made this app</div>
+    <p>Claude wrote a student guide with missions, a teacher guide with lessons and the measured results, and the <a href="making-of.html">making-of page</a>. A row of links under the app's introduction points to all three and to Ken's post.</p>
+  </div>
+
+  <h2>Day three · November 5</h2>
+
+  <div class="turn">
+    <p class="when">17 · 08:47</p>
+    <div class="prompt">My old embedding essay relied upon the universal sentence encoder. I assume EmbeddingGemma 2 produces much better embeddings. Can you find some examples where it outperforms?</div>
+    <p>Claude ran the essay's old model (the TF.js Universal Sentence Encoder) and EmbeddingGemma 2 on the same tests. Given a sentence, one that means the same and a look-alike, the old model chose right 23 times out of 43 and the new one 34. The new model wins clearly on other languages, emoji, words newer than 2018, “not”, and words with two meanings. For single English words they're about even, and both fail at who did what to whom (“The dog bit the man” against “The man bit the dog”).</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">18 · 08:55</p>
+    <div class="prompt">Geoffrey Hinton mentioned in a lecture that man was closer to dog than cat while woman was closer to cat than dog. But when I tried it they were nearly identical.</div>
+    <p>Claude measured it. Ken was right that the numbers are nearly identical: they differ in the third decimal place, and “man” is in fact a hair closer to “cat”. But in all six male/female pairs tested, the female word leans further toward “cat” than the male word does. Each gap is tiny; the evidence is that they all agree.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">19 · 09:35</p>
+    <div class="prompt">Yes, add it</div>
+    <p>Claude added a “Dogs, cats, men and women” set. Its challenge card asks students to predict, then draws each pair on a dog ↔ cat line using the page's current settings. It became Mission 8 in the student guide.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">20 · 09:45</p>
+    <div class="prompt">Yes Add a "Then and now" set of these examples to the app</div>
+    <p>Claude added a “Then and now” set of seven sentences the old model got wrong. Its challenge card shows the old model's numbers next to the new model's, worked out on the spot. With the default settings, the new model gets 6 of 7; the one it misses is who bit whom.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">21 · 09:46 · sent while Claude was working</p>
+    <div class="prompt">Let's put C:\Users\toont\AppData\Local\Temp\claude\6ecbdaef25a9272b\6119a8e4-ac80-4118-b815-5f54839297f0\scratchpad\use\report.txt in the repository</div>
+    <p>Claude put the report in <a href="https://github.com/ToonTalk/embedding-explorer/tree/main/study/then-and-now">study/then-and-now</a> with the Hinton results, the tests and the scripts that made them, and reran them there to confirm they give the same output.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">22 · 10:14</p>
+    <div class="prompt">I think both the guides and the app need to somewhere explain analogies. The guides mention "puppy − dog + cat".
+When I asked the AI guide (sonnet 5.5) I didn't get a very good answer. Something about how puppy - dog captures the idea of a young version of animal so when "applied" to cat you get kitten.
+
+Me: why does puppy − dog + cat produce kitten
+AI guide: I can't see that result here. "Puppy," "kitten," and this sum aren't on your page yet, so I can't tell you whether it lands on kitten. Nobody can be sure why a result lands where it does, but a few facts may help:
+
+* The result can only point to things you've added, so "kitten" has to be added to win.
+* Subtracting "dog" also takes away what dog shares with other animals, which can shift the result.
+* The nearest thing is often one of the inputs, so look at the first thing that isn't puppy, dog, or cat.
+
+Before you run it, predict: will kitten come first, or something else? Then try it in section 5.
+＋ add kitten
+▶ try puppy - dog + cat</div>
+    <p>Claude measured two explanations, which turn out to be the same math. The arrow from dog to puppy and the arrow from cat to kitten point much the same way (similarity 0.46, against 0.05 for random pairs of words). And the order of the results is exactly each word's similarity to puppy, minus its similarity to dog, plus its similarity to cat. Section 5 now explains both, and a new “Show how each score is made” checkbox shows those sums. The guide got the same facts, plus an instruction to explain rather than say nobody can be sure. Both written guides explain word math too.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">23 · 10:32</p>
+    <div class="prompt">The teacher guide is very good as a conventional guide. Can we make it more constructionist but leave much of the current content with the comment that the proposed activities are just an example and teachers should be encouraged to be creative.</div>
+    <p>Claude reworked the <a href="teacher-guide.html">teacher guide</a> around students as investigators, in Papert's tradition. It added sections on starting from students' own interests and languages, projects students might make, and habits worth encouraging. The three lessons stay, labeled as just one example to adapt, and the answer key became “What we found when we tried”, offered as reference rather than answers.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">24 · 10:36</p>
+    <div class="prompt">Yes, rework it</div>
+    <p>Claude made the <a href="student-guide.html">student guide</a> open-ended to match. It now has “You're the investigator”, habits like guessing first and keeping a notebook, and question starters for students' own investigations. The ten missions became starting points, each ending with a “Go further” idea that has no right answer.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">25 · 10:45</p>
+    <div class="prompt">Please produce a page with all of my prompts and a few sentences about your responses - link the page from the making of page and vice versa</div>
+    <p>This page. Claude collected the prompts from the conversation's own record, including the ones sent mid-task, and linked this page and the making-of page to each other.</p>
+  </div>
+
+  <footer>Embedding Explorer by Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer">source</a> (MIT license)</footer>
+</main>
+</body>
+</html>

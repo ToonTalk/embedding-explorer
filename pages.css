@@ -39,4 +39,7 @@ details summary { cursor: pointer; color: var(--accent); }
 dl dt { font-weight: 600; margin-top: 10px; }
 dl dd { margin: 2px 0 0 0; max-width: 68ch; }
 .meta { color: var(--muted); font-size: 15px; }
+.turn { margin: 22px 0; }
+.turn .when { color: var(--muted); font-size: 14px; margin: 0 0 4px; font-variant-numeric: tabular-nums; }
+.prompt { background: var(--tint); border-left: 4px solid var(--accent); border-radius: 8px; padding: 10px 14px; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 68ch; }
 footer { margin-top: 48px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 12px; }

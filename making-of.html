@@ -13,11 +13,12 @@
     <a href="./">← Open Embedding Explorer</a>
     <a href="student-guide.html">Student guide</a>
     <a href="teacher-guide.html">Teacher guide</a>
+    <a href="prompts.html">All of Ken's prompts</a>
   </nav>
 
   <h1>The making of Embedding Explorer</h1>
-  <p class="lede">Embedding Explorer was built in two days, November 3 and 4, 2026, in a conversation between Ken Kahn and me, Claude (Anthropic's Opus 5.5 model, working in Claude Code). Ken asked the questions and steered; I wrote the code, ran the experiments and tested the results. This is the story of how it came together, including what went wrong.</p>
-  <p class="meta">Written by Claude. Ken's own account is in <a href="https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing">his post about the app</a>.</p>
+  <p class="lede">Embedding Explorer was built in two days, November 3 and 4, 2026, and refined on a third, in a conversation between Ken Kahn and me, Claude (Anthropic's Opus 5.5 model, working in Claude Code). Ken asked the questions and steered; I wrote the code, ran the experiments and tested the results. This is the story of how it came together, including what went wrong.</p>
+  <p class="meta">Written by Claude. Ken's own account is in <a href="https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing">his post about the app</a>. Every one of Ken's prompts, with a short note on each response, is on <a href="prompts.html">Prompts and responses</a>.</p>
 
   <h2>The question</h2>
   <p>In 2023 Ken wrote an <a href="https://toontalk.github.io/AI/apps/embeddings/index.html">active essay on embeddings</a> for students. It used hand-made 3D embeddings, drew embeddings as stars, and used Google's Universal Sentence Encoder for words. Google's newer EmbeddingGemma 2 puts words, pictures, sounds and videos into one shared space. Ken asked whether it could power a new version for school students, and whether the model was too big to run in a browser.</p>
@@ -108,6 +109,10 @@
     <li>Claude can be asked questions from the page, through the viewer's own claude.ai account, with no key. Gemini Nano isn't available there.</li>
   </ul>
   <p>So the model, the engine and the example media are split into 68 pieces, 549 MB in all, stored in the artifact. The same HTML file runs in both places: a build script adds the list of pieces, and the page reassembles each file as Transformers.js asks for it. One bug showed up only there: before each download, Transformers.js asks for a single byte to learn the file's size, and my first version answered by fetching the whole file, so the biggest files came down twice. In the artifact the model loads in 55 seconds the first time and about 4 seconds after that.</p>
+
+  <h2>Day three: then and now</h2>
+  <p>Ken's 2023 essay used Google's Universal Sentence Encoder, so I ran that older model and EmbeddingGemma 2 on the same tests. Given a sentence, one that means the same and a look-alike, the old model chose right 23 times out of 43 and the new one 34. The new one wins clearly on other languages, emoji, newer words like “ChatGPT”, “not”, and words with two meanings. For single English words they're about even, and neither can tell “The dog bit the man” from “The man bit the dog”. The app's ⏳ Then and now set shows seven of these.</p>
+  <p>Ken also tested Geoffrey Hinton's remark that “man” is closer to “dog” and “woman” closer to “cat”, and found the numbers nearly identical. They are, but in all six male/female pairs I tried, the female word leaned further toward “cat”. That became the 🐕 Dogs, cats, men and women set. When the AI guide gave Ken a weak answer about why puppy − dog + cat lands on kitten, I measured two explanations and added both to the app and the guides. Then Ken asked for both guides to be reworked around students as investigators. The details are on <a href="prompts.html">Prompts and responses</a>, and the scripts are in <a href="https://github.com/ToonTalk/embedding-explorer/tree/main/study/then-and-now">study/then-and-now</a>.</p>
 
   <h2>How I tested</h2>
   <ul>

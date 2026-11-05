@@ -42,18 +42,26 @@ Measured on a desktop with an NVIDIA GPU: about 0.1 s per word, 0.5 s per pictur
 
 ## The Claude artifact edition
 
-The same `index.html` also runs as a Claude artifact: https://claude.ai/artifact/41qaoHhWfC87k5AShT1un5. An artifact can't download from other sites, so everything it needs is kept in the artifact's own storage:
+The same `index.html` also runs as a Claude artifact: https://claude.ai/artifact/WbmX8jzs1p2zAsNM6LGmM4. An artifact can't download from other sites, so everything it needs is kept in the artifact's own storage:
 
-- The 4-bit model, its tokenizer and the onnxruntime engine are split into pieces of 15 MB or less, 532 MB in all. They're stored as `video/mp4`, the store's catch-all for binary data.
-- The example pictures, sounds and videos are stored there too.
+- The 4-bit model, its tokenizer, the onnxruntime engine, the word list and the example sounds (541 MB in all) are stored as text: `tools/pack-artifact.mjs` cuts each file into 11 MB slices and saves each slice as a `.js` part holding `{"b64": "…"}`, 66 parts in all. The page decodes them as it reads them.
+- The example pictures and videos are stored as they are.
 
-`tools/build-artifact.mjs` reads `tools/artifact-assets.txt`, the list of stored pieces, and writes the artifact page with that list injected. The page then serves Transformers.js's downloads from the pieces.
+Why text: claude.ai checks every stored file before an artifact can be shared publicly. An earlier version stored the binary files as `video/mp4`, which the store accepts but the check can't read, so that artifact couldn't be shared.
+
+`tools/build-artifact.mjs` reads `tools/artifact-assets.txt`, the list of stored parts, and writes the artifact page with that list injected. The page then serves Transformers.js's downloads, the word list and the sounds from the parts.
 
 How the artifact differs from the web edition:
 
 - **Guide:** it uses Claude through the viewer's claude.ai account, with no key needed. Gemini Nano isn't available inside an artifact.
 - **No camera or microphone:** the artifact frame refuses them.
 - **Graphics chip needed:** only the 4-bit files are stored, and they need WebGPU.
+
+```bash
+node tools/pack-artifact.mjs <parts folder> <model files…> <sounds…> vocab.bin
+```
+
+Upload the parts and the pictures and videos to the artifact, record their ids in `tools/artifact-assets.txt`, then:
 
 ```bash
 node tools/build-artifact.mjs

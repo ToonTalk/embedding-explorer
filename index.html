@@ -513,9 +513,44 @@ const SAMPLES = "https://huggingface.co/datasets/Xenova/transformers.js-docs/res
 // In the Claude artifact edition, tools/build-artifact.mjs sets window.__EMBEX_PACK__ =
 // { files: { name: { size, parts: [url…] } }, media: { file: url } }: the model and the example
 // media come from the artifact's own storage, because an artifact can't download from elsewhere.
+// Pictures and videos are stored as they are (media). The model, the word list and the sounds
+// (files) are stored as text, so they can be checked before the artifact is shared publicly:
+// slices of each file, each part one JSON object {"b64": "<the slice in base64>"}
+// (see tools/pack-artifact.mjs).
 const PACK = window.__EMBEX_PACK__ || null;
 const packLoad = { got: 0, want: 0, onChange: null }; // bytes read from the artifact's storage, for the progress bar
-const sampleUrl = (file) => PACK ? PACK.media[file] : SAMPLES + file;
+const packSounds = {}; // file -> { blob, url }, made by preparePackSounds
+const sampleUrl = (file) => PACK ? PACK.media[file] || packSounds[file]?.url : SAMPLES + file;
+const fromBase64 = (s) => {
+  if (Uint8Array.fromBase64) return Uint8Array.fromBase64(s);
+  const t = atob(s), u = new Uint8Array(t.length);
+  for (let i = 0; i < t.length; i++) u[i] = t.charCodeAt(i);
+  return u;
+};
+async function packPart(url, name) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Couldn't read part of ${name} (${r.status}).`);
+  const { b64 } = await r.json();
+  return fromBase64(b64);
+}
+// A whole stored file as bytes (null if this version doesn't have it).
+async function packBytes(name) {
+  const f = PACK?.files[name];
+  if (!f) return null;
+  const ps = await Promise.all(f.parts.map((u) => packPart(u, name)));
+  const out = new Uint8Array(f.size);
+  let at = 0;
+  for (const p of ps) { out.set(p, at); at += p.length; }
+  return out;
+}
+// The example sounds, ready before the sound sets can be added.
+let packSoundsReady = null;
+function preparePackSounds() {
+  return packSoundsReady ||= Promise.all(Object.keys(PACK.files).filter((n) => n.endsWith(".wav")).map(async (n) => {
+    const blob = new Blob([await packBytes(n)], { type: "audio/wav" });
+    packSounds[n] = { blob, url: URL.createObjectURL(blob) };
+  })).catch((e) => { packSoundsReady = null; throw e; });
+}
 if (PACK) {
   document.documentElement.classList.add("in-artifact");
   const realFetch = env.fetch;
@@ -532,9 +567,7 @@ if (PACK) {
     }
     // Fetch every piece at once, but hand them over in order.
     packLoad.want += f.size; packLoad.onChange?.();
-    const pieces = f.parts.map((part) => fetch(part).then(async (r) => {
-      if (!r.ok) throw new Error(`Couldn't read part of ${name} (${r.status}).`);
-      const buf = await r.arrayBuffer();
+    const pieces = f.parts.map((part) => packPart(part, name).then((buf) => {
       packLoad.got += buf.byteLength; packLoad.onChange?.();
       return buf;
     }));
@@ -543,7 +576,7 @@ if (PACK) {
     const body = new ReadableStream({
       async pull(ctl) {
         if (k >= pieces.length) { ctl.close(); return; }
-        try { ctl.enqueue(new Uint8Array(await pieces[k++])); } catch (e) { ctl.error(e); }
+        try { ctl.enqueue(await pieces[k++]); } catch (e) { ctl.error(e); }
       },
     });
     return new Response(body, { status: 200, headers: { "content-length": String(f.size), "content-type": "application/octet-stream" } });
@@ -674,6 +707,7 @@ $("loadBtn").addEventListener("click", async () => {
     if (!wantAudio) config.audio_config = null;
     processor = await AutoProcessor.from_pretrained(MODEL_ID);
     model = await AutoModel.from_pretrained(MODEL_ID, { config, device, dtype, progress_callback });
+    if (PACK && wantAudio) await preparePackSounds();
     $("barFill").style.width = "100%";
     loaded = { vision: wantVision, audio: wantAudio, device, quality };
     try { localStorage.setItem(LOAD_STORE, JSON.stringify({ vision: wantVision, audio: wantAudio, quality, device: $("device").value })); } catch {}
@@ -935,7 +969,9 @@ function addThings(things, set) {
     const src = file && sampleUrl(file);
     if (file && !src) continue;
     if (items.some((it) => it.kind === kind && (kind === "text" ? it.text === label : it.src === src))) continue;
-    addItem(kind, kind === "text" ? { text: label, label, set } : { src, label, set });
+    // In the artifact, a sound comes from its storage as a blob (decoded like a sound the student adds).
+    const blob = PACK && packSounds[file]?.blob;
+    addItem(kind, kind === "text" ? { text: label, label, set } : { src, label, set, ...(blob ? { file: blob } : {}) });
   }
   if (skipped) status(`Some of the set was left out: load the model with ${loaded.vision ? "sounds" : loaded.audio ? "pictures & videos" : "pictures, videos and sounds"} to add those.`);
 }
@@ -1602,11 +1638,16 @@ function vocabProblem() {
 }
 async function loadVocab() {
   vocabLoading ||= (async () => {
-    const url = PACK ? PACK.media["vocab.bin"] : "vocab.bin";
-    if (!url) throw new Error("This version doesn't have the word list.");
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Couldn't get the word list (${res.status}).`);
-    const ab = await res.arrayBuffer();
+    let ab;
+    if (PACK) {
+      const b = await packBytes("vocab.bin");
+      if (!b) throw new Error("This version doesn't have the word list.");
+      ab = b.buffer;
+    } else {
+      const res = await fetch("vocab.bin");
+      if (!res.ok) throw new Error(`Couldn't get the word list (${res.status}).`);
+      ab = await res.arrayBuffer();
+    }
     const hl = new Uint32Array(ab, 0, 1)[0];
     const head = JSON.parse(new TextDecoder().decode(new Uint8Array(ab, 4, hl)));
     const off = 4 + hl + (4 - ((4 + hl) % 4)) % 4, n = head.words.length, D = head.dims;

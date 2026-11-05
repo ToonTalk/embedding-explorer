@@ -16,44 +16,61 @@
   </nav>
 
   <h1>Student guide</h1>
-  <p class="lede">How does an AI know that a puppy is like a dog, or that a photo of a tiger goes with the word “tiger”? It turns everything into lists of numbers. This guide gives you missions to find out how.</p>
+  <p class="lede">How does an AI know that a puppy is like a dog, or that a photo of a tiger goes with the word “tiger”? It turns everything into lists of numbers. This app lets you look inside, and find things out that nobody has noticed yet.</p>
 
   <h2>The one big idea</h2>
   <p>The AI in this app turns a word, a picture, a sound or a video into a list of 768 numbers. That list is called an <b>embedding</b>. Things with similar meanings get similar lists. That's all the AI knows about them: it never “sees” the picture the way you do, it just compares lists of numbers.</p>
   <p>Two lists are compared with a number called <b>similarity</b>. 1 means they point the same way, 0 means unrelated. Most of what you'll do is guess a similarity, then check.</p>
 
+  <h2>You're the investigator</h2>
+  <p>The AI in this app is a real one, and nobody, not even the people who made it, can fully explain everything it does. Why does it think “house” is close to “dog”? Why can't it tell “The dog bit the man” from “The man bit the dog”? If you find a pattern and test it, you're doing real research.</p>
+  <p>So bring your own ideas. Try the things you care about: your favorite games, foods, teams or animals, words in a language you speak at home, a photo of your pet, a recording of an instrument you play. Your own things are more interesting than ours, and more likely to surprise you.</p>
+
   <h2>Getting started</h2>
   <ol>
     <li>Open the app in Chrome or Edge on a computer. Press <b>Load</b> in section 1. The first time, this can take a minute; after that it's quick.</li>
-    <li>A few things are added for you: dog, cat, apple, house, a photo of a corgi, a photo of a house and a dog barking.</li>
+    <li>A few things are added for you: dog, cat, apple, house, a photo of a corgi, a photo of a house and a dog barking. Add your own with the box in section 2, or add a whole set with one button.</li>
     <li>Words with a dotted line under them explain themselves if you point at them or tap them.</li>
     <li>Stuck? Press <b>🧭 Guide</b> in the corner to ask the AI guide. It can be wrong, so check what it says against the page.</li>
   </ol>
 
-  <h2>Missions</h2>
-  <p>For each mission, <b>guess first</b>, then check. Being wrong is the interesting part.</p>
+  <h2>How investigators work</h2>
+  <ul>
+    <li><b>Guess first.</b> Before you press anything, write down what you expect. Being wrong is the interesting part: it means you've found something.</li>
+    <li><b>Keep a notebook.</b> For each try: your question, your guess, what you did, what happened, and what surprised you.</li>
+    <li><b>Treat surprises like bugs.</b> Don't just say “the AI got it wrong”. Ask why, and change one thing to find out.</li>
+    <li><b>Check it another way.</b> Does your finding still hold with 768 numbers instead of 256? With “Take away what everything shares” ticked? With different words that mean the same?</li>
+    <li><b>Share it.</b> Show your class what you found, with the numbers as evidence. Then let them try to break it, and try to break theirs.</li>
+  </ul>
+
+  <h2>Starting points</h2>
+  <p>These missions are places to start, not a list to finish. Do them in any order, change them, skip the ones you don't like, or use one as a jumping-off point for an investigation of your own. Each ends with a <b>Go further</b> idea with no right answer.</p>
 
   <div class="try">
     <b class="label">Mission 1 · Who is close to whom?</b>
     <p>Look at section 4. Which pair do you think scores highest: <i>dog</i> and <i>cat</i>, <i>dog</i> and <i>apple</i>, or <i>dog</i> and the photo of the corgi? Write your order down, then check.</p>
+    <p><b>Go further:</b> make a set of your own things that you think the AI will group differently from the way you would. Were you right?</p>
     <details><summary>A hint</summary><p>Words tend to score higher with other words, even when a picture is a better match. That's called the <i>modality gap</i>. So compare which picture is nearest a word, not just the size of the numbers.</p></details>
   </div>
 
   <div class="try">
     <b class="label">Mission 2 · Why do all the stars look the same?</b>
     <p>In section 3, each number is drawn as a ray: green for positive, red for negative. Look at the stars for <i>dog</i> and <i>apple</i>. They look almost the same! Now tick <b>Take away what everything shares</b> at the top. What changes?</p>
+    <p><b>Go further:</b> with the shared part taken away, can you find two things that point in opposite directions, with a similarity below zero?</p>
     <details><summary>What's going on</summary><p>About two thirds of every list is a part that all of them share. Taking it away leaves what makes each thing different. Then unrelated things score near 0.</p></details>
   </div>
 
   <div class="try">
     <b class="label">Mission 3 · What does a ray mean?</b>
     <p>Point at one of the longest rays of a star. The page shows everyday words that are unusually high or low for that number. Can you find a ray that seems to be about music, or sports? Can you find one that makes no sense at all?</p>
+    <p><b>Go further:</b> pick a topic you care about and hunt for a ray that leans toward it. Give it a name, and test your name with new words.</p>
     <details><summary>The surprise</summary><p>Most numbers don't mean one thing. The model mixes many ideas into each number. Ideas like “more than one” (dog → dogs) are spread over lots of numbers. Press <b>one → many</b> above the star to see it.</p></details>
   </div>
 
   <div class="try">
     <b class="label">Mission 4 · Word math</b>
     <p>In section 6, try <code>puppy - dog + cat</code>. What do you think it lands on? Then try <code>(morning + night) / 2</code> and <code>Paris - France + Japan</code>.</p>
+    <p><b>Go further:</b> before you look at the answer, can you predict a word math result using only the numbers in the grid?</p>
     <details><summary>Important</summary><p>The answer can only be something that's on the page. The example buttons add a few possible answers for you, some right and some wrong. To test your own guess, use <b>Add my guess</b>.</p></details>
     <details><summary>How does word math work?</summary>
       <p><code>puppy - dog + cat</code> is an <b>analogy</b> written as math: “puppy is to dog as what is to cat?” There are two ways to think about it.</p>
@@ -66,35 +83,52 @@
   <div class="try">
     <b class="label">Mission 5 · Invent a formula</b>
     <p>Make up a formula of your own that you think will work, like <code>king - man + woman</code> or <code>2 * big - small</code>. Write down what you expect, then try it. Can you find one that fails in a funny way?</p>
+    <p><b>Go further:</b> start a formula zoo: ones that work, ones that fail, and ones that fail in funny ways, each with your best explanation of why.</p>
   </div>
 
   <div class="try">
     <b class="label">Mission 6 · Pictures and sounds</b>
     <p>Add the 🐾 <b>Animals</b> set. Which word is nearest the sound of a dog barking? Is the AI right? Then add a photo of your own (or drop one onto the page) and see which word it lands nearest.</p>
+    <p><b>Go further:</b> find a picture or sound that the AI gets badly wrong. What might have confused it?</p>
     <details><summary>A known weak spot</summary><p>In testing, the dog barking sound came out a little closer to “cat” than to “dog”. Speech and music work much better. Can you find out why? Nobody knows for sure.</p></details>
   </div>
 
   <div class="try">
     <b class="label">Mission 7 · Build your own space</b>
     <p>In section 7, choose three directions, like <i>small → big</i>, <i>quiet → loud</i> and <i>sad → happy</i>, and press <b>Place everything</b>. Where does the tiger land? Drag to turn the space around.</p>
+    <p><b>Go further:</b> invent three directions that sort things you care about, like <i>scary → cute</i> or <i>boring → exciting</i>. Do your friends agree with where things landed?</p>
   </div>
 
   <div class="try">
     <b class="label">Mission 8 · Test a famous claim</b>
     <p>Geoffrey Hinton, one of the pioneers of modern AI, said that in word embeddings “man” is closer to “dog” than to “cat”, and “woman” closer to “cat” than to “dog”. Add the 🐕 <b>Dogs, cats, men and women</b> set. Look at the grid first: can you see it? Predict which word of each pair leans further toward cat, then press <b>Check</b> in the challenge box.</p>
+    <p><b>Go further:</b> find another claim about AI, from the news, a video, or the AI guide, and design an experiment to test it.</p>
     <details><summary>Hint</summary><p>Tiny differences can still matter if they all point the same way. How many pairs agree? Where could a model pick up a habit like this?</p></details>
   </div>
 
   <div class="try">
     <b class="label">Mission 9 · Then and now</b>
-    <p>Add the ⏳ <b>Then and now</b> set. Each sentence comes with one that means the same and a look-alike. An older AI model from 2018 picked the look-alike every time. Predict which ones this model gets right, then press <b>Check</b> in the challenge box. Can you find a new sentence that fools this model too?</p>
+    <p>Add the ⏳ <b>Then and now</b> set. Each sentence comes with one that means the same and a look-alike. An older AI model from 2018 picked the look-alike every time. Predict which ones this model gets right, then press <b>Check</b> in the challenge box.</p>
+    <p><b>Go further:</b> build a trap gallery of sentences that fool this model too, and challenge a friend to explain them.</p>
     <details><summary>Hint</summary><p>Try swapping who does what (“The cat chased the mouse”), or an idiom (“He kicked the bucket”).</p></details>
   </div>
 
   <div class="try">
     <b class="label">Mission 10 · Catch the guide out</b>
     <p>Ask the 🧭 Guide to explain something, then check it against the numbers on the page. Did it get anything wrong? AI guides can sound sure of themselves even when they're mistaken.</p>
+    <p><b>Go further:</b> write a better explanation than the guide gave, one that a younger student could understand.</p>
   </div>
+
+  <h2>Your own investigation</h2>
+  <p>The best questions are the ones you come up with yourself. Here are some to get you thinking:</p>
+  <ul>
+    <li>Does the AI understand my language? Do my words land next to their English translations?</li>
+    <li>Which of my favorite games, songs or teams does it think are alike, and why?</li>
+    <li>Can I find a word that's close to everything? Or one that's close to nothing?</li>
+    <li>Does a photo of my pet land nearest “cat”, “dog”, or something odd?</li>
+    <li>Can I make a sentence that means the opposite of another but scores almost the same?</li>
+  </ul>
+  <p>Pick one, guess, test, check it another way, and share what you found. If you're not sure how to test an idea, the 🧭 Guide can suggest an experiment.</p>
 
   <h2>Words to know</h2>
   <dl>

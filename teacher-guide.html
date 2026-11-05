@@ -18,7 +18,12 @@
   <h1>Teacher guide</h1>
   <p class="lede">Embedding Explorer lets students aged about 10 to 16 look inside one of the ideas at the heart of modern AI: turning meaning into lists of numbers. Students add words, pictures, sounds and videos, then compare, draw, add and subtract the lists the AI makes for them.</p>
 
-  <h2>Before the lesson</h2>
+  <h2>Students as investigators</h2>
+  <p>The app is meant to be used in a <b>constructionist</b> way, in the tradition of Seymour Papert: students learn most when they build things that matter to them and share them with others. Here, what students build are collections of words and pictures, formulas, 3D spaces, experiments, and claims about how the model behaves, backed by evidence.</p>
+  <p>This suits the subject unusually well. The model inside the app is a real one, and nobody, including the people who made it, can fully explain why it puts “house” near “dog”, or why it can't tell “The dog bit the man” from “The man bit the dog”. A student who finds a pattern and tests it is doing real research. You don't need to know the answers first: “I don't know. How could we find out?” is a good thing for a teacher to say here.</p>
+  <p>Everything below, including the lessons, is <b>only an example</b>. Please be creative: borrow parts, reorder them, replace them with your own ideas, and above all follow your students' questions where they lead.</p>
+
+  <h2>Before you start</h2>
   <h3>Computers and browsers</h3>
   <ul>
     <li><b>Desktop or laptop computers</b> with Chrome or Edge. The app needs a graphics chip the browser can use (WebGPU), which most computers from the last few years have. Phones and tablets haven't been tested.</li>
@@ -37,7 +42,45 @@
   <h3>Privacy</h3>
   <p>The embedding model runs entirely in the browser: words, photos, recordings and videos students add stay on their computer. The only thing that can leave is what the <b>AI guide</b> sends when a student asks it a question. It sends a text summary of the page: the labels of what's been added and the numbers. It never sends the pictures or sounds themselves. With Gemini Nano, even that stays on the computer. With Claude, Gemini or ChatGPT, it goes to that company. Each time, the guide shows exactly what it was told, under “What the guide was told”.</p>
 
-  <h2>What students should come away with</h2>
+  <h2>Starting from the students</h2>
+  <p>The app's example sets are a quick way in, but things students choose themselves are more interesting to them, and more likely to surprise everyone.</p>
+  <ul>
+    <li><b>Their own interests:</b> teams, games, foods, songs, animals, words from a hobby. Which ones does the model think belong together, and do the students agree?</li>
+    <li><b>Their own languages:</b> the model reads many languages. Students who speak another language at home can test whether their words land next to the English ones, and find where the translation breaks down. They become the class experts.</li>
+    <li><b>Their own photos and sounds:</b> a photo of a pet, a drawing, a recording of a musical instrument. These stay on the computer.</li>
+    <li><b>Their own questions:</b> collect what students wonder about after a first ten minutes of play, and let groups choose one to investigate.</li>
+  </ul>
+
+  <h2>Projects students might make</h2>
+  <p>A few ideas, from short to long. Each ends with something students can show others. Most work well in pairs or small groups.</p>
+  <dl>
+    <dt>A set that tells a story</dt>
+    <dd>Ten to twenty things chosen to show something about the model, such as “things the model thinks are alike that people don't” or “words that are close but opposite”. Present it with the grid as evidence.</dd>
+    <dt>A trap gallery</dt>
+    <dd>Sentences that fool the model, with the sentence it confused them with. Swapping who does what, idioms, sarcasm and “not” are good places to look. Groups swap galleries and try to explain each other's traps.</dd>
+    <dt>A space of their own</dt>
+    <dd>Three directions in section 7 that sort something students care about (scary → cute, cheap → expensive, old → new). Does the class agree with where things landed? Where it doesn't, whose sense of the words is different, the model's or the students'?</dd>
+    <dt>A formula zoo</dt>
+    <dd>Formulas that work, formulas that fail, and formulas that fail in funny ways, each with an explanation. “Show how each score is made” in section 5 lets students explain any result from the grid's numbers.</dd>
+    <dt>Testing a claim</dt>
+    <dd>Take a claim about AI, from the news, an expert, or the AI guide, and turn it into an experiment. Geoffrey Hinton's remark about dogs, cats, men and women (Mission 8 in the student guide) is a worked example: the effect turns out to be tiny but consistent. What would count as evidence for or against?</dd>
+    <dt>Then and now</dt>
+    <dd>The Then and now set shows sentences a 2018 model got wrong. Students look for new sentences that still fool today's model, and guess what the next model will fix.</dd>
+    <dt>A better explanation</dt>
+    <dd>Ask the 🧭 Guide to explain something, check its answer against the numbers, and write a better explanation for next year's class.</dd>
+  </dl>
+
+  <h2>Habits worth encouraging</h2>
+  <ul>
+    <li><b>Predict first.</b> Before pressing anything, write down what you expect. A wrong prediction is the most useful kind.</li>
+    <li><b>Keep a notebook</b> of predictions, results and surprises. It becomes the evidence for whatever students present.</li>
+    <li><b>Treat surprises as bugs to investigate</b>, not as failures. Why did it land there? What could you change to find out?</li>
+    <li><b>Check it another way.</b> Does a finding still hold with 768 numbers instead of 256, with the shared part taken away, or with a different set of words?</li>
+    <li><b>Share and build on each other's work.</b> Short demos to the class, then other groups try to break or extend the finding.</li>
+  </ul>
+
+  <h2>Ideas students are likely to meet</h2>
+  <p>Students who explore usually run into these big ideas, in their own order and their own words. They are useful for noticing and naming what students find, not a checklist to work through.</p>
   <ol>
     <li>An AI model can represent the meaning of words, pictures and sounds as lists of numbers, called <b>embeddings</b>, in one shared space.</li>
     <li>Similar meanings give similar lists, and similarity can be measured with a single number.</li>
@@ -46,7 +89,8 @@
     <li>The model can be wrong in surprising ways, and the way to find out is to make predictions and test them.</li>
   </ol>
 
-  <h2>Three lessons</h2>
+  <h2>One possible sequence: three lessons</h2>
+  <div class="box"><p><b>This is just an example.</b> It is one way to give a class shared experiences to build on. Feel free to reorder it, cut it, stretch it over more sessions, swap any part for a project above, or skip it entirely and start from a single open question. You and your students will think of better activities than these.</p></div>
   <p>Each lesson is about 45 minutes. The <a href="student-guide.html">student guide</a> has the missions mentioned below.</p>
 
   <h3>Lesson 1 · Meaning as numbers</h3>
@@ -54,6 +98,7 @@
     <li>Start with no computers: give pairs of words (dog/cat, dog/apple, hot/cold) and ask students to rank how “close” they are. Is hot closer to cold or to warm?</li>
     <li>Load the app. Mission 1 (who is close to whom). Compare the class's rankings with the model's.</li>
     <li>Discuss: what could it mean for two lists of numbers to be “close”? Introduce similarity as “pointing the same way”.</li>
+    <li>To finish, each group makes a small set of their own that they predict the model will group in a surprising way, and tests it.</li>
   </ul>
 
   <h3>Lesson 2 · Looking inside</h3>
@@ -72,15 +117,16 @@
     <li>Optional: Mission 10, checking the AI guide. A good discussion of trusting AI.</li>
   </ul>
 
-  <h2>Explaining word math</h2>
+  <h2>Background: how word math works</h2>
   <p><code>puppy - dog + cat</code> is the analogy “puppy is to dog as ? is to cat”. Two explanations help, and they are the same math:</p>
   <ul>
     <li><b>Arrows.</b> puppy − dog is an arrow from dog to puppy, roughly “younger”. Following it from cat lands near kitten because the cat → kitten arrow points much the same way. Measured with 256 numbers, the two arrows have a similarity of 0.46. Arrows between random pairs of words average 0.05. For king − man + woman it's 0.45. For tiger − cat + dog (dog → wolf against cat → tiger) it's only 0.19, which is why that one is unreliable.</li>
     <li><b>Adding up scores.</b> The order of the results is exactly each thing's similarity to puppy, minus its similarity to dog, plus its similarity to cat. Students can check this with the grid in section 4, or tick “Show how each score is made” in section 5. With 256 numbers: kitten 0.79 − 0.75 + 0.91 = 0.95. “Pet” gets 0.84 − 0.89 + 0.87 = 0.82: it is penalized for being close to dog. Cat itself also gets 0.95, which is why inputs often top the list.</li>
   </ul>
-  <p>The second view makes a good lesson on its own: students can predict a result from the grid alone, with no arithmetic on 768 numbers.</p>
+  <p>Students can discover the second view for themselves. Before showing them the checkbox, ask whether they can predict an arithmetic result using only the grid.</p>
 
-  <h2>Common misunderstandings</h2>
+  <h2>Misunderstandings worth discussing</h2>
+  <p>These come up often. Rather than correcting them up front, let students run into them, then design a test together.</p>
   <dl>
     <dt>“A similarity of 0.7 means they're 70% the same.”</dt>
     <dd>Not quite. Without “Take away what everything shares”, almost every pair scores between 0.5 and 0.85, because two thirds of every list is a shared part. Compare rankings, not raw numbers.</dd>
@@ -96,8 +142,8 @@
     <dd>It isn't, especially with the small Gemini Nano model. The guide is told not to invent reasons, but it sometimes does. Treat it as a classmate with ideas, not an authority.</dd>
   </dl>
 
-  <h2>Answer key: what we measured</h2>
-  <p>These numbers come from the app's own model with its default settings (the first 256 numbers, nothing taken away), unless noted. Your class may see slightly different numbers.</p>
+  <h2>What we found when we tried</h2>
+  <p>For reference, not as the answers students should reach. These are results from the app's own model with its default settings (the first 256 numbers, nothing taken away), unless noted. If your students find something different, that's worth investigating: what was different about how they did it?</p>
   <div class="table-wrap"><table>
     <tr><th>Try</th><th>Lands nearest</th><th class="num">Similarity</th></tr>
     <tr><td><code>(morning + night) / 2</code></td><td>evening</td><td class="num">0.93</td></tr>
@@ -123,6 +169,7 @@
     <li><a href="https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing">Ken Kahn's post about this app</a></li>
     <li><a href="https://toontalk.github.io/AI/apps/embeddings/index.html">Ken Kahn's 2023 active essay on embeddings</a>, which this app follows</li>
     <li><a href="making-of.html">How the app was made</a>, including the experiments behind the numbers above</li>
+    <li>Seymour Papert, <i>Mindstorms: Children, Computers, and Powerful Ideas</i> (1980), the classic account of learning by building</li>
   </ul>
 
   <footer>Embedding Explorer by Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer">source</a> (MIT license) · model: <a href="https://huggingface.co/google/embeddinggemma-2">EmbeddingGemma 2</a> (Apache 2.0)</footer>

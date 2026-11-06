@@ -48,6 +48,13 @@ A Swedish copy is in [sv/](https://toontalk.github.io/embedding-explorer/sv/), w
   ```
 
   Paste `study/sv/rays.js` and `study/sv/dirs.js` over the `RAYS` and `DIRS` lines in `sv/index.html`.
+- **The Claude version:** https://claude.ai/artifact/XHYQScy5QAseDEGvv1GyDP. It holds copies of the English artifact's stored files plus the Swedish word list, listed in `tools/artifact-assets-sv.txt`. Build it with:
+
+  ```bash
+  node tools/build-artifact.mjs tools/artifact-assets-sv.txt dist/embedding-explorer-sv-artifact.html --page sv/index.html --swap 'href="https://toontalk.github.io/embedding-explorer/">English</a>' 'href="https://claude.ai/artifact/WbmX8jzs1p2zAsNM6LGmM4">English</a>'
+  ```
+
+  (The English artifact is built with a matching `--swap` that points its "På svenska" link at the Swedish artifact.)
 - **What the model does with Swedish:** [sv/RESULTS.md](sv/RESULTS.md) has the measurements. In short, the model compares short Swedish words largely by spelling. Only 25% of a Swedish word's five nearest words are in its own group, against 60% in English, so some English analogies fail in Swedish. The Swedish page says so and uses examples that work.
 
 ## Requirements

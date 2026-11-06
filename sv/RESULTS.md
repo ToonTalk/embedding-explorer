@@ -37,7 +37,7 @@ study, about 2,000 common words translated from the English common-word list, an
 | katt − cat + dog | 🐶 0.87, hund 0.86 | mixing languages works |
 | puppy − dog + katt | kattunge 0.84 | mixing languages |
 | Berlin − Tyskland + Spanien | Madrid 0.81 | |
-| äpple + päron | frukt 0.84 | |
+| äpple + päron | frukt 0.84 | with the word list, "potatis" 0.85 comes first and "läpp", "mäta" follow: spelling again |
 | valp − hund + katt | fails: kalv 0.77; with the word list "väl", "val", "vald" | English puppy − dog + cat → kitten 0.91 |
 | kung − man + kvinna | fails: "Kina", "kunglig", "kvinnlig" (word list) | English king − man + woman → queen 0.82 |
 | (morgon + natt) / 2 | midnatt, then spelling neighbors | English (morning + night) / 2 → evening 0.93 |

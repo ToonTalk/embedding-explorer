@@ -1,6 +1,9 @@
 // Builds the Claude artifact edition of Embedding Explorer from index.html.
 //
-//   node tools/build-artifact.mjs [assets.txt] [out.html]
+//   node tools/build-artifact.mjs [assets.txt] [out.html] [--page sv/index.html] [--swap <from> <to>]…
+//
+// --page builds another page (default index.html), e.g. the Swedish copy. --swap replaces a text, such as a link to
+// the other language's web page with a link to its artifact.
 //
 // assets.txt lists what is stored in the artifact, one per line: "<name> <asset id> <bytes>".
 //   - The model and engine files, the word list and the example sounds are stored as text parts
@@ -15,8 +18,15 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..");
-const assetsFile = process.argv[2] || path.join(root, "tools", "artifact-assets.txt");
-const outFile = process.argv[3] || path.join(root, "dist", "embedding-explorer-artifact.html");
+const args = process.argv.slice(2), positional = [], swaps = [];
+let page = "index.html";
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === "--page") page = args[++i];
+  else if (args[i] === "--swap") swaps.push([args[++i], args[++i]]);
+  else positional.push(args[i]);
+}
+const assetsFile = positional[0] || path.join(root, "tools", "artifact-assets.txt");
+const outFile = positional[1] || path.join(root, "dist", "embedding-explorer-artifact.html");
 
 const pack = { files: {}, media: {} };
 const pieces = {};
@@ -35,7 +45,11 @@ for (const [file, ps] of Object.entries(pieces)) {
   pack.files[file] = { size: ps.reduce((s, p) => s + p[2], 0), parts: ps.map((p) => p[1]) };
 }
 
-let html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+let html = fs.readFileSync(path.join(root, page), "utf8");
+for (const [from, to] of swaps) {
+  if (!html.includes(from)) throw new Error(`--swap: couldn't find ${from}`);
+  html = html.split(from).join(to);
+}
 const strip = (re, what) => { if (!re.test(html)) throw new Error(`Couldn't find ${what}`); html = html.replace(re, ""); };
 // The artifact host wraps the page in its own document, so drop ours.
 strip(/<!doctype html>\s*/i, "doctype");

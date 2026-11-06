@@ -33,6 +33,23 @@ A bar at the top changes every section at once. It sets how many of the 768 numb
 
 This follows Ken Kahn's earlier [active essay on embeddings](https://toontalk.github.io/AI/apps/embeddings/index.html).
 
+## Svenska (Swedish)
+
+A Swedish copy is in [sv/](https://toontalk.github.io/embedding-explorer/sv/), with Swedish student and teacher guides. It shows how the app can be adapted to another language:
+
+- **The page:** `sv/index.html` is a translated copy of `index.html`. [sv/GLOSSARY.md](sv/GLOSSARY.md) has the rules and word choices the translators followed. It is a copy, so later changes to the English page have to be made there too.
+- **The word lists:** `study/sv/` holds Swedish word lists translated from the English study, and `study/sv/labels.json` names the groups and directions. The scripts take a language folder:
+
+  ```bash
+  node study/collect.mjs sv
+  node study/collect-pairs.mjs sv
+  cd study/sv && node ../build-rays.mjs && node ../directions.mjs && cd ../..
+  node tools/build-vocab.mjs sv
+  ```
+
+  Paste `study/sv/rays.js` and `study/sv/dirs.js` over the `RAYS` and `DIRS` lines in `sv/index.html`.
+- **What the model does with Swedish:** [sv/RESULTS.md](sv/RESULTS.md) has the measurements. In short, the model compares short Swedish words largely by spelling. Only 25% of a Swedish word's five nearest words are in its own group, against 60% in English, so some English analogies fail in Swedish. The Swedish page says so and uses examples that work.
+
 ## Requirements
 
 - **A browser with WebGPU** (recent Chrome or Edge) is strongly recommended. With WebGPU the first visit downloads about 473 MB, which the browser keeps for later visits.

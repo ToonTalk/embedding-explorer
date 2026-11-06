@@ -12,12 +12,14 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..");
-const study = path.join(root, "study");
+// `node tools/build-vocab.mjs sv` builds sv/vocab.bin from study/sv/ (another language: no then-and-now extras).
+const lang = process.argv[2] || "";
+const study = path.join(root, "study", lang);
 const D = 768;
 const W = JSON.parse(fs.readFileSync(path.join(study, "words.json"), "utf8")).words;
 const buf = fs.readFileSync(path.join(study, "vecs.bin"));
 if (buf.length !== W.length * D * 4) throw new Error("vecs.bin doesn't match words.json");
-const out = JSON.parse(fs.readFileSync(path.join(study, "then-and-now", "out.json"), "utf8"));
+const out = lang ? { allWords: W, gemmaExtra: [] } : JSON.parse(fs.readFileSync(path.join(study, "then-and-now", "out.json"), "utf8"));
 const extra = out.allWords.slice(W.length);
 if (extra.length !== out.gemmaExtra.length) throw new Error("out.json extras don't line up");
 
@@ -47,5 +49,5 @@ for (let k = 0; k < n; k++) {
 const header = Buffer.from(JSON.stringify({ words, dims: D, instruction: "task: search result | query: ", dtype: "q4", device: "webgpu" }));
 const pad = (4 - ((4 + header.length) % 4)) % 4;
 const file = Buffer.concat([Buffer.from(new Uint32Array([header.length]).buffer), header, Buffer.alloc(pad), Buffer.from(scales.buffer), Buffer.from(q.buffer)]);
-fs.writeFileSync(path.join(root, "vocab.bin"), file);
+fs.writeFileSync(path.join(root, lang, "vocab.bin"), file);
 console.log(`vocab.bin: ${n} words, ${(file.length / 1e6).toFixed(2)} MB; worst similarity to the original after rounding: ${worst.toFixed(5)} (768 numbers), ${worst256.toFixed(5)} (first 256)`);

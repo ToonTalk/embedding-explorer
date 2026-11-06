@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inbäddningsutforskaren: Lärarguide</title>
+<link rel="stylesheet" href="../pages.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23f7f6f2'/%3E%3Cg stroke-width='4.5' stroke-linecap='round'%3E%3Cpath d='M32 32V4M32 32L52 12M32 32L58 40M32 32L22 56M32 32L8 30' stroke='%231a8f3c'/%3E%3Cpath d='M32 32L46 8M32 32L56 26M32 32L44 54M32 32L12 48M32 32L18 14' stroke='%23d03a2f'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='4' fill='%232f5bd3'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+  <nav class="top">
+    <a href="./">← Öppna Inbäddningsutforskaren</a>
+    <a href="student-guide.html">Elevguide</a>
+    <a href="../making-of.html">Så gjordes den (på engelska)</a>
+  </nav>
+
+  <h1>Lärarguide</h1>
+  <p class="lede">Med Inbäddningsutforskaren kan elever från ungefär 10 till 16 år titta in i en av idéerna i hjärtat av modern AI: att göra om betydelse till listor med tal. Eleverna lägger till ord, bilder, ljud och videor, och jämför, ritar, adderar och subtraherar sedan de listor som AI:n gör av dem.</p>
+
+  <h2>Eleverna som forskare</h2>
+  <p>Appen är tänkt att användas på ett <b>konstruktionistiskt</b> sätt, i Seymour Paperts tradition: elever lär sig mest när de bygger saker som betyder något för dem och delar dem med andra. Här bygger eleverna samlingar av ord och bilder, formler, 3D-rum, experiment och påståenden om hur modellen beter sig, underbyggda med belägg.</p>
+  <p>Det passar ämnet ovanligt bra. Modellen i appen är en riktig modell, och ingen, inte ens de som har gjort den, kan helt förklara varför den lägger ”hus” nära ”hund”, eller varför den inte kan skilja ”The dog bit the man” från ”The man bit the dog”. En elev som hittar ett mönster och testar det forskar på riktigt. Du behöver inte kunna svaren i förväg: ”Jag vet inte. Hur skulle vi kunna ta reda på det?” är en bra sak för en lärare att säga här.</p>
+  <p>Allt nedan, också lektionerna, är <b>bara exempel</b>. Var gärna kreativ: låna delar, ändra ordningen, byt ut dem mot egna idéer, och följ framför allt elevernas frågor dit de leder.</p>
+
+  <h2>Innan du börjar</h2>
+  <h3>Datorer och webbläsare</h3>
+  <ul>
+    <li><b>Stationära eller bärbara datorer</b> med Chrome eller Edge. Appen behöver en grafikkrets som webbläsaren kan använda (WebGPU), vilket de flesta datorer från de senaste åren har. Mobiler och surfplattor har inte testats.</li>
+    <li><b>En stor första nedladdning.</b> Modellen är ungefär 473&nbsp;MB med bilder, videor och ljud (175&nbsp;MB för bara ord: kryssa ur de rutorna innan du trycker på Ladda). Webbläsaren sparar den, så senare besök laddar på några sekunder. På ett skolnätverk är det bra att ladda den en gång på varje dator före lektionen.</li>
+    <li><b>Utan grafikkrets</b> fungerar webbversionen fortfarande för ord (ungefär 0.2&nbsp;s per ord), men bilder och ljud går för långsamt för att vara användbara.</li>
+  </ul>
+
+  <h3>Två versioner</h3>
+  <div class="table-wrap"><table>
+    <tr><th></th><th><a href="./">Webbversion</a></th><th><a href="https://claude.ai/artifact/WbmX8jzs1p2zAsNM6LGmM4">Claude-version</a> (på engelska)</th></tr>
+    <tr><td>Kräver</td><td>Bara en webbläsare</td><td>Ett konto på claude.ai</td></tr>
+    <tr><td>Kamera och mikrofon</td><td>Ja</td><td>Nej (bara filer)</td></tr>
+    <tr><td>AI-guide</td><td>Gemini Nano, inbyggd i Chrome (gratis, stannar på datorn), eller Claude, Gemini eller ChatGPT med en API-nyckel</td><td>Claude, via elevens eget konto på claude.ai, utan nyckel</td></tr>
+  </table></div>
+  <p class="meta">Claude-versionen finns än så länge bara på engelska.</p>
+
+  <h3>Integritet</h3>
+  <p>Inbäddningsmodellen körs helt i webbläsaren: ord, foton, inspelningar och videor som eleverna lägger till stannar på deras dator. Det enda som kan lämna datorn är det som <b>AI-guiden</b> skickar när en elev ställer en fråga till den. Den skickar en textsammanfattning av sidan: namnen på det som lagts till och talen. Den skickar aldrig själva bilderna eller ljuden. Med Gemini Nano stannar även det på datorn. Med Claude, Gemini eller ChatGPT går det till det företaget. Varje gång visar guiden exakt vad den fick veta, under ”Vad guiden fick veta”.</p>
+
+  <h2>Utgå från eleverna</h2>
+  <p>Appens exempelsamlingar är ett snabbt sätt att komma in i den, men saker som eleverna väljer själva är mer intressanta för dem, och det är större chans att de överraskar alla.</p>
+  <ul>
+    <li><b>Deras egna intressen:</b> lag, spel, mat, låtar, djur, ord från en hobby. Vilka tycker modellen hör ihop, och håller eleverna med?</li>
+    <li><b>Deras egna språk:</b> modellen läser många språk. Elever som pratar ett annat språk hemma kan testa om deras ord hamnar bredvid de svenska (eller engelska), och hitta var översättningen brister. De blir klassens experter.</li>
+    <li><b>Deras egna foton och ljud:</b> ett foto av ett husdjur, en teckning, en inspelning av ett instrument. De stannar på datorn.</li>
+    <li><b>Deras egna frågor:</b> samla in vad eleverna undrar över efter de första tio minuternas lek, och låt grupperna välja en fråga att undersöka.</li>
+  </ul>
+
+  <h2>Projekt som eleverna kan göra</h2>
+  <p>Några idéer, från korta till långa. Alla slutar med något eleverna kan visa för andra. De flesta fungerar bra i par eller små grupper.</p>
+  <dl>
+    <dt>En samling som berättar något</dt>
+    <dd>Tio till tjugo saker som valts ut för att visa något om modellen, till exempel ”saker modellen tycker liknar varandra men som människor inte tycker liknar varandra” eller ”ord som ligger nära men betyder motsatsen”. Presentera den med rutnätet som belägg.</dd>
+    <dt>Ett fällgalleri</dt>
+    <dd>Meningar som lurar modellen, tillsammans med meningen den förväxlade dem med. Att byta plats på vem som gör vad, talesätt, ironi och ”inte” är bra ställen att leta på. Grupperna byter gallerier och försöker förklara varandras fällor.</dd>
+    <dt>Ett eget rum</dt>
+    <dd>Tre riktningar i avsnitt 7 som sorterar något eleverna bryr sig om (läskig → gullig, billig → dyr, gammal → ny). Håller klassen med om var sakerna hamnade? Där den inte gör det, vems känsla för orden skiljer sig, modellens eller elevernas?</dd>
+    <dt>Ett formel-zoo</dt>
+    <dd>Formler som fungerar, formler som misslyckas och formler som misslyckas på roliga sätt, var och en med en förklaring. Med ”Visa hur varje poäng räknas ut” i avsnitt 5 kan eleverna förklara vilket resultat som helst utifrån talen i rutnätet.</dd>
+    <dt>Att testa ett påstående</dt>
+    <dd>Ta ett påstående om AI, från nyheterna, en expert eller AI-guiden, och gör om det till ett experiment. Geoffrey Hintons kommentar om hundar, katter, män och kvinnor (uppdrag 8 i elevguiden) är ett genomarbetat exempel: effekten visar sig vara mycket liten. Med engelska ord pekar alla sex testade par åt samma håll, med svenska ord bara fyra av sex. Vad skulle räknas som belägg för eller emot?</dd>
+    <dt>Då och nu</dt>
+    <dd>Samlingen Då och nu visar meningar som en modell från 2018 fick fel på. Meningarna är på engelska även i den svenska appen, eftersom den gamla modellens resultat mättes på de engelska meningarna (den läste nästan bara engelska). Eleverna letar efter nya meningar, på svenska eller engelska, som fortfarande lurar dagens modell, och gissar vad nästa modell kommer att klara.</dd>
+    <dt>En bättre förklaring</dt>
+    <dd>Be 🧭 Guide förklara något, jämför svaret med talen och skriv en bättre förklaring för nästa års klass.</dd>
+  </dl>
+
+  <h2>Vanor som är värda att uppmuntra</h2>
+  <ul>
+    <li><b>Förutsäg först.</b> Skriv ner vad du tror innan du trycker på något. En felaktig förutsägelse är den mest användbara sorten.</li>
+    <li><b>För anteckningar</b> om förutsägelser, resultat och överraskningar. De blir beläggen för det eleverna sedan presenterar.</li>
+    <li><b>Se överraskningar som buggar att undersöka</b>, inte som misslyckanden. Varför hamnade det där? Vad kan du ändra för att ta reda på det?</li>
+    <li><b>Kolla på ett annat sätt.</b> Håller ett resultat fortfarande med 768 tal i stället för 256, med den gemensamma delen borttagen, eller med andra ord?</li>
+    <li><b>Dela och bygg vidare på varandras arbete.</b> Korta demonstrationer för klassen, sedan försöker andra grupper slå hål på resultatet eller bygga vidare på det.</li>
+  </ul>
+
+  <h2>Idéer som eleverna troligen stöter på</h2>
+  <p>Elever som utforskar brukar stöta på de här stora idéerna, i sin egen ordning och med sina egna ord. De är till hjälp för att lägga märke till och sätta namn på det eleverna upptäcker, inte en checklista att beta av.</p>
+  <ol>
+    <li>En AI-modell kan representera betydelsen av ord, bilder och ljud som listor med tal, så kallade <b>inbäddningar</b>, i ett gemensamt rum.</li>
+    <li>Liknande betydelser ger liknande listor, och likhet kan mätas med ett enda tal.</li>
+    <li>Man kan räkna med betydelser, och ibland fungerar det (Stockholm − Sverige + Norge hamnar på Oslo) och ibland inte (valp − hund + katt fungerar på engelska men inte på svenska).</li>
+    <li>De enskilda talen betyder för det mesta ingenting var för sig: idéerna är utspridda över många av dem.</li>
+    <li>Modellen kan ha fel på överraskande sätt, och sättet att ta reda på det är att göra förutsägelser och testa dem.</li>
+  </ol>
+
+  <h2>Ett möjligt upplägg: tre lektioner</h2>
+  <div class="box"><p><b>Det här är bara ett exempel.</b> Det är ett sätt att ge en klass gemensamma erfarenheter att bygga vidare på. Ändra gärna ordningen, korta ner det, sprid ut det över fler tillfällen, byt ut delar mot ett av projekten ovan, eller hoppa över det helt och börja med en enda öppen fråga. Du och dina elever kommer att komma på bättre aktiviteter än de här.</p></div>
+  <p>Varje lektion är ungefär 45 minuter. <a href="student-guide.html">Elevguiden</a> innehåller de uppdrag som nämns nedan.</p>
+
+  <h3>Lektion 1 · Betydelse som tal</h3>
+  <ul>
+    <li>Börja utan datorer: ge eleverna ordpar (hund/katt, hund/äpple, varm/kall) och be dem rangordna hur ”nära” orden är varandra. Ligger het närmare kall eller varm?</li>
+    <li>Ladda appen. Uppdrag 1 (vem är nära vem). Jämför klassens rangordning med modellens. Lägg gärna till <i>varm</i> och <i>kall</i> också: på svenska ligger ord som ”var” och ”vart” närmast ”varm”, eftersom de stavas likt (se ”Svenska och engelska” nedan).</li>
+    <li>Diskutera: vad kan det betyda att två listor med tal är ”nära” varandra? Introducera likhet som att ”peka åt samma håll”.</li>
+    <li>Avsluta med att varje grupp gör en liten egen samling som de tror att modellen kommer att gruppera på ett överraskande sätt, och testar den.</li>
+  </ul>
+
+  <h3>Lektion 2 · Titta inuti</h3>
+  <ul>
+    <li>Uppdrag 2 (varför stjärnorna ser likadana ut) och uppdrag 3 (vad en stråle betyder).</li>
+    <li>Diskutera: om inget enskilt tal betyder ”djur”, var finns då idén om ett djur? Använd riktningarna ovanför stjärnan (en → många, nu → då) för att visa en idé som är utspridd över många tal.</li>
+    <li>Uppdrag 6 (bilder och ljud): eleverna letar efter var modellen har fel.</li>
+  </ul>
+
+  <h3>Lektion 3 · Räkna med betydelser</h3>
+  <ul>
+    <li>Uppdrag 4 och 5 (räkna med ord och hitta på formler). Be varje grupp hitta en formel som fungerar och en som misslyckas, och förklara båda.</li>
+    <li>Uppdrag 7 (bygga ett 3D-rum).</li>
+    <li>Uppdrag 8 (testa Geoffrey Hintons påstående om hundar och katter). En bra ingång till hur modeller får vanor från texterna de lär sig av, och till vad som krävs för att en mycket liten effekt ska räknas som verklig. Med engelska ord pekar alla sex par åt samma håll; med samlingens fyra svenska par bara två. Räcker det som belägg?</li>
+    <li>Uppdrag 9 (då och nu): hur en modell från 2018 och den här hanterar andra språk, ”not” (inte), nyare ord och ordföljd. Meningarna är på engelska. Bra för att diskutera hur snabbt AI har förändrats, och vad som fortfarande är svårt.</li>
+    <li>Om tid finns: uppdrag 10, att granska AI-guiden. Ger en bra diskussion om att lita på AI.</li>
+  </ul>
+
+  <h2>Bakgrund: hur det fungerar att räkna med ord</h2>
+  <p><code>Stockholm - Sverige + Norge</code> är analogin ”Stockholm är till Sverige som ? är till Norge”. Det är appens huvudexempel (samlingen 🗺️ Länder och huvudstäder). Två förklaringar hjälper, och matematiken är densamma:</p>
+  <ul>
+    <li><b>Pilar.</b> Stockholm − Sverige är en pil från Sverige till Stockholm, ungefär ”huvudstaden i”. Följer man den från Norge hamnar man nära Oslo, eftersom pilen Norge → Oslo pekar ungefär åt samma håll. Mätt med 256 tal har de två pilarna likheten 0.44. Pilar mellan slumpvis valda ordpar har i genomsnitt 0.00. För de svenska orden i valp − hund + katt (hund → valp mot katt → kattunge) är det −0.08, och för kung − man + kvinna (man → kung mot kvinna → drottning) −0.11: pilarna pekar inte alls åt samma håll, och därför misslyckas de formlerna på svenska.</li>
+    <li><b>Lägga ihop poäng.</b> Resultatens ordning är exakt varje saks likhet med Stockholm, minus dess likhet med Sverige, plus dess likhet med Norge. Eleverna kan kontrollera det med rutnätet i avsnitt 4, eller kryssa i ”Visa hur varje poäng räknas ut” i avsnitt 5. Med 256 tal: Oslo 0.87 − 0.79 + 0.84 = 0.91. ”Köpenhamn” får 0.85 − 0.80 + 0.78 = 0.82: den ligger lika nära Stockholm men längre från Norge. Norge själv får 0.94 och Stockholm 0.91, och därför hamnar det man räknar med ofta överst i listan. (Listan delar sedan varje summa med resultatets längd, här 1.07, vilket inte ändrar ordningen.)</li>
+  </ul>
+  <p>Eleverna kan själva upptäcka det andra synsättet. Innan du visar dem kryssrutan, fråga om de kan förutsäga ett räkneresultat bara med hjälp av rutnätet.</p>
+
+  <h2>Svenska och engelska</h2>
+  <p>Modellen lärde sig från text på många språk, men mest från engelska, och det märks i den svenska appen. Den vet vad många svenska ord betyder: ”katt”–”cat” och ”hund”–”dog” har båda likheten 0.89, och för 349 av 523 svenska vardagsord (två av tre) var rätt engelsk översättning det närmaste av de 523 engelska orden. Men när den jämför korta svenska ord med varandra går den ofta efter stavningen. ”Valp” har likheten 0.87 med ”val”, 0.86 med ”väl” och bara 0.81 med ”hund”. ”Katt” ligger närmare ”kategori” (0.85) än ”hund” (0.77).</p>
+  <p>Vi mätte det med 548 vardagsord i 19 grupper, samma ord på svenska och engelska: hur stor andel av varje ords fem närmaste ord ligger i ordets egen grupp?</p>
+  <div class="table-wrap"><table>
+    <tr><th></th><th class="num">Svenska</th><th class="num">Engelska</th></tr>
+    <tr><td>Standardinställningar (4-bitars, standardinstruktionen, 256 tal)</td><td class="num">25&nbsp;%</td><td class="num">60&nbsp;%</td></tr>
+    <tr><td>Alla 768 tal</td><td class="num">26&nbsp;%</td><td class="num">64&nbsp;%</td></tr>
+    <tr><td>Alla tre instruktionerna, 4- och 8-bitars</td><td class="num">25–33&nbsp;%</td><td class="num">60–65&nbsp;%</td></tr>
+  </table></div>
+  <p>Ingen inställning i appen räddar alltså svenskan. Därför misslyckas valp − hund + katt och kung − man + kvinna på svenska, fast de fungerar på engelska, medan huvudstäder, emoji och formler som blandar språk (katt − cat + dog) fungerar. Appen förklarar det för eleverna under ”Svenska och engelska” i avsnitt 4.</p>
+  <p>Det här är en bra diskussionspunkt om AI och mindre språk. Vem har modellen tränats för? Vad betyder det för svenska elever, eller för elever som talar ett ännu mindre språk hemma? Låt gärna eleverna själva leta efter svenska ord som modellen blandar ihop för att de stavas likt, och jämföra med samma ord på engelska.</p>
+
+  <h2>Missförstånd som är värda att diskutera</h2>
+  <p>De här dyker ofta upp. I stället för att rätta dem i förväg kan du låta eleverna stöta på dem och sedan utforma ett test tillsammans.</p>
+  <dl>
+    <dt>”En likhet på 0.7 betyder att de är 70&nbsp;% lika.”</dt>
+    <dd>Inte riktigt. Utan ”Ta bort det som allt har gemensamt” får nästan alla par en hög likhet, eftersom ungefär 70&nbsp;% av varje lista är en gemensam del. Bland slumpvis valda svenska ordpar ligger de flesta mellan 0.68 och 0.78, och ”idé” och ”häst” får 0.74. Jämför rangordningar, inte råa tal.</dd>
+    <dt>”Lika betyder samma betydelse.”</dt>
+    <dd>Inte alltid. På svenska går modellen ofta efter stavningen: orden närmast ”varm” i ordlistan är ”var”, ”vart”, ”vars” och ”varit”, och ”valp” ligger närmare ”val” (0.87) än ”hund” (0.81). Det är ett bra tillfälle att diskutera vad modellen faktiskt jämför.</dd>
+    <dt>”Uträkningen hittade svaret.”</dt>
+    <dd>Den kan bara hamna på saker som redan finns på sidan. Om det inte finns något bättre att hamna på kan det översta svaret ha en låg likhet: en svag träff, inte ett svar. Kryssar man i ”Sök också bland 2 585 vardagsord” i avsnitt 5 och 6 vidgas sökningen till en fast lista med vanliga svenska ord (märkta 📖), så att Stockholm − Sverige + Norge kan hitta ”Oslo” utan att någon har lagt till det. Ordlistan kan också visa varför en formel misslyckas: valp − hund + katt hamnar då på ”väl”, ”val” och ”vald”. Det är värt att diskutera båda sätten: att gissa och lägga till kandidater får eleverna att tänka, och ordlistan visar vad modellen ”skulle ha sagt”.</dd>
+    <dt>”Modellen vet att Oslo är Norges huvudstad.”</dt>
+    <dd>Inte på det sätt som människor vet det. Den har lärt sig av hur ord används, och det har gjort att pilarna Sverige → Stockholm och Norge → Oslo pekar ungefär åt samma håll (en likhet på 0.44, där 1 vore identiskt och slumpvisa par i genomsnitt ger 0.00). Det räcker för att Oslo ska vinna, men pilarna är långt ifrån parallella, och för andra par pekar de inte alls åt samma håll: med svenska ord har hund → valp och katt → kattunge likheten −0.08.</dd>
+    <dt>”Varje tal står för en egenskap, som storlek eller färg.”</dt>
+    <dd>Bara ungefär ett av fem tal (140 av 768) lutar ens åt en viss sorts svenska ord (med engelska ord ungefär ett av tre), och inget av dem bär särskilt mycket av en idé som ”plural”: det största enskilda talet står för 1–2&nbsp;% av riktningen med 768 tal och 3–4&nbsp;% med 256. Förklaringarna av strålarna i appen säger det rakt ut.</dd>
+    <dt>”Guiden har alltid rätt.”</dt>
+    <dd>Det har den inte, särskilt inte med den lilla modellen Gemini Nano. Guiden är instruerad att inte hitta på förklaringar, men ibland gör den det ändå. Behandla den som en klasskamrat med idéer, inte som en auktoritet.</dd>
+  </dl>
+
+  <h2>Vad vi fick fram när vi testade</h2>
+  <p>Som referens, inte som de svar eleverna borde komma fram till. Det här är resultat från appens egen modell med standardinställningarna (de första 256 talen, inget borttaget), om inget annat anges. Om dina elever får fram något annat är det värt att undersöka: vad gjorde de annorlunda?</p>
+  <div class="table-wrap"><table>
+    <tr><th>Prova</th><th>Hamnar närmast</th><th class="num">Likhet</th><th>På engelska</th></tr>
+    <tr><td><code>Stockholm - Sverige + Norge</code></td><td>Oslo, sedan Köpenhamn (0.77)</td><td class="num">0.85</td><td></td></tr>
+    <tr><td><code>Berlin - Tyskland + Spanien</code></td><td>Madrid</td><td class="num">0.81</td><td></td></tr>
+    <tr><td><code>(sommar + vinter) / 2</code></td><td>vår, sedan höst (0.86)</td><td class="num">0.88</td><td></td></tr>
+    <tr><td><code>katt + bebis</code></td><td>kattunge</td><td class="num">0.88</td><td></td></tr>
+    <tr><td><code>äpple + päron</code></td><td>frukt</td><td class="num">0.84</td><td></td></tr>
+    <tr><td><code>🐶 - hund + katt</code></td><td>🐱</td><td class="num">0.86</td><td></td></tr>
+    <tr><td><code>katt - cat + dog</code></td><td>🐶, sedan hund (0.86)</td><td class="num">0.87</td><td></td></tr>
+    <tr><td><code>valp - hund + katt</code></td><td>misslyckas: kalv; med ordlistan ”väl”, ”val”, ”vald”</td><td class="num">0.77</td><td>puppy − dog + cat → kitten 0.91</td></tr>
+    <tr><td><code>kung - man + kvinna</code></td><td>misslyckas: med ordlistan ”Kina”, ”kunglig”, ”kvinnlig”</td><td class="num"></td><td>king − man + woman → queen 0.82</td></tr>
+    <tr><td><code>(morgon + natt) / 2</code></td><td>misslyckas: midnatt, sedan ord som stavas likt</td><td class="num"></td><td>(morning + night) / 2 → evening 0.93</td></tr>
+    <tr><td><code>bröd + ost + tomat</code>, <code>(blå + gul) / 2</code>, <code>2 * stor - liten</code></td><td>misslyckas: ord som stavas likt (brott, röst; blåsa, guld; störst, stol)</td><td class="num"></td><td></td></tr>
+  </table></div>
+  <p class="meta">Tabellen visar det första svaret som inte är en del av uträkningen. Huvudstäder, emoji och formler som blandar språk fungerar; formler som bygger på korta svenska ord misslyckas ofta, eftersom modellen jämför dem efter stavningen (se ”Svenska och engelska” ovan). Med ordlistan hamnar tiger − katt + hund på ”dog”, 🐶 och ”hundvalp”. När man tar bort ”katt” tar man också bort det som alla djur har gemensamt; appen förklarar det under ”Varför hamnar det på något konstigt?”.</p>
+  <ul>
+    <li><b>Då och nu:</b> när de fick en mening, en mening som betyder samma sak och en som bara ser likadan ut, valde Universal Sentence Encoder från 2018 (som användes i essän från 2023) rätt i 23 av 43 test och den här modellen i 34. Den gamla modellen misslyckas med alla sju i samlingen Då och nu. Den här modellen klarar sex; ingen av dem kan skilja ”The dog bit the man” från ”The man bit the dog”. Alla meningar är på engelska, även i den svenska appen. Detaljer finns i <a href="https://github.com/ToonTalk/embedding-explorer/tree/main/study/then-and-now">study/then-and-now</a> (på engelska).</li>
+    <li><b>Hundar, katter, män och kvinnor:</b> lutar det kvinnliga ordet längre åt ”katt” än det manliga? Skillnaden i lutning med 256 tal: man/kvinna +0.037, män/kvinnor +0.003, pojke/flicka −0.009, kung/drottning −0.009, pappa/mamma +0.009, manlig/kvinnlig +0.008. Fyra av sex par lutade alltså åt Hintons håll, och med 768 tal var det också fyra av sex. Samlingens fyra par ger två av fyra. Med engelska ord lutade alla sex par åt samma håll. Varje skillnad för sig är inte större än mellan slumpvis valda ord, så på svenska är belägget svagt: ett bra exempel på hur ett påstående kan hålla för ett språk men inte för ett annat.</li>
+    <li><b>Varför stjärnorna ser likadana ut:</b> ungefär 70&nbsp;% av varje lista är gemensam, och de sex längsta strålarna (tal 116, 392, 112, 555, 733 och 30, samma som på engelska) står för nästan två tredjedelar av den gemensamma delen.</li>
+    <li><b>Startexemplen:</b> rutorna mellan hund, katt, äpple, hus, corgifotot, husfotot och den skällande hunden ligger mellan 0.57 och 0.80. ”Hus”–”hund” (0.80) är högre än ”katt”–”hund” (0.77). Ljudet av en hund som skäller får 0.71 med ”katt” och bara 0.69 med ”hund”.</li>
+    <li><b>Färre tal:</b> av varje svenskt vardagsords fem närmaste grannar i ordlistan låg 26&nbsp;% i ordets egen grupp med alla 768 tal, 25&nbsp;% med 512 och 256, 24&nbsp;% med 128 och 19&nbsp;% med 64. För engelska var det 62&nbsp;%, 59&nbsp;% (256), 53&nbsp;% (128) och 41&nbsp;% (64). Svenskan förlorar alltså lite på färre tal, men börjar mycket lägre.</li>
+  </ul>
+
+  <h2>Läs mer</h2>
+  <ul>
+    <li><a href="https://docs.google.com/document/d/1YS4ML1H348kTH3ecGvalBJJfJr2AW6BQHYi-T4qDrIE/edit?usp=sharing">Ken Kahns inlägg om appen</a> (på engelska)</li>
+    <li><a href="https://toontalk.github.io/AI/apps/embeddings/index.html">Ken Kahns aktiva essä om inbäddningar från 2023</a> (på engelska), som appen bygger vidare på</li>
+    <li><a href="../making-of.html">Så gjordes appen</a> (på engelska), med experimenten bakom talen ovan</li>
+    <li>Seymour Papert, <i>Mindstorms: Children, Computers, and Powerful Ideas</i> (1980), den klassiska beskrivningen av att lära sig genom att bygga</li>
+  </ul>
+
+  <footer>Inbäddningsutforskaren av Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer">källkod</a> (MIT-licens) · modell: <a href="https://huggingface.co/google/embeddinggemma-2">EmbeddingGemma 2</a> (Apache 2.0)</footer>
+</main>
+</body>
+</html>

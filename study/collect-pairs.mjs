@@ -5,9 +5,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 const HERE = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, "$1");
+// `node collect-pairs.mjs sv` reads and writes the word lists in study/sv/ instead (another language).
+const DIR = process.argv[2] ? path.join(HERE, process.argv[2]) : HERE;
 const PROFILE = path.join(HERE, "chrome-profile"); // reused so the model downloads once
 const PORT = 9341;
-const pairs = JSON.parse(fs.readFileSync(path.join(HERE, "pairs.json"), "utf8"));
+const pairs = JSON.parse(fs.readFileSync(path.join(DIR, "pairs.json"), "utf8"));
 
 const words = [...new Set([...["plural","past","bigger"].flatMap((k) => pairs[k].flat()), ...pairs.concrete, ...pairs.abstract])];
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -31,6 +33,11 @@ try {
     if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || "evaluate failed");
     return r.result?.result?.value;
   };
+  // The page restores the settings of its last load, so first make that the 4-bit model on the graphics chip
+  // (the word list and the study assume it), from another page on the same site.
+  await send("Page.navigate", { url: "http://localhost:8455/making-of.html" });
+  await new Promise((r) => setTimeout(r, 1500));
+  await evaluate(`localStorage.setItem("embex.load", JSON.stringify({ vision: true, audio: true, quality: "q4", device: "auto" })), 1`);
   await send("Page.navigate", { url: "http://localhost:8455/?v=study" + Date.now() });
   await new Promise((r) => setTimeout(r, 3000));
   log("webgpu:", await evaluate(`(async () => !!(navigator.gpu && await navigator.gpu.requestAdapter()))()`));
@@ -46,7 +53,7 @@ try {
   
   log("media:", media.map((m) => m.kind + ":" + m.label + (m.err ? " ERR " + m.err : "")).join(", "));
 
-  const out = fs.openSync(path.join(HERE, "pairs-vecs.bin"), "w");
+  const out = fs.openSync(path.join(DIR, "pairs-vecs.bin"), "w");
   const B = 100;
   for (let i = 0; i < words.length; i += B) {
     const batch = words.slice(i, i + B);
@@ -61,7 +68,7 @@ try {
     if ((i / B) % 5 === 0) log(`${i + batch.length}/${words.length}`);
   }
   fs.closeSync(out);
-  fs.writeFileSync(path.join(HERE, "pairs-words.json"), JSON.stringify({ words }));
+  fs.writeFileSync(path.join(DIR, "pairs-words.json"), JSON.stringify({ words }));
   log("done", words.length, "words");
 } finally {
   chrome.kill();

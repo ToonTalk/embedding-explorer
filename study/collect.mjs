@@ -5,11 +5,17 @@ import fs from "node:fs";
 import path from "node:path";
 
 const HERE = path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, "$1");
+// `node collect.mjs sv` reads and writes the word lists in study/sv/ instead (another language).
+const DIR = process.argv[2] ? path.join(HERE, process.argv[2]) : HERE;
 const PROFILE = path.join(HERE, "chrome-profile"); // reused so the model downloads once
 const PORT = 9341;
-const cats = JSON.parse(fs.readFileSync(path.join(HERE, "categories.json"), "utf8"));
-const common = fs.readFileSync(path.join(HERE, "google-10000-english-usa-no-swears.txt"), "utf8").split(/\r?\n/).filter((w) => w.length >= 3).slice(0, 2500);
-const words = [...new Set([...Object.values(cats).flat(), ...common, "a speech", "piano music", "fruit", "corgi", "unicorn"])];
+const cats = JSON.parse(fs.readFileSync(path.join(DIR, "categories.json"), "utf8"));
+// Another language brings its own common words (common.txt) and extra words (labels.json).
+const labels = process.argv[2] ? JSON.parse(fs.readFileSync(path.join(DIR, "labels.json"), "utf8")) : null;
+const common = labels
+  ? fs.readFileSync(path.join(DIR, "common.txt"), "utf8").split(/\r?\n/).map((w) => w.trim()).filter(Boolean)
+  : fs.readFileSync(path.join(DIR, "google-10000-english-usa-no-swears.txt"), "utf8").split(/\r?\n/).filter((w) => w.length >= 3).slice(0, 2500);
+const words = [...new Set([...Object.values(cats).flat(), ...common, ...(labels ? labels.extra : ["a speech", "piano music", "fruit", "corgi", "unicorn"])])];
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 const chrome = spawn("C:/Program Files/Google/Chrome/Application/chrome.exe", [
@@ -31,6 +37,11 @@ try {
     if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || "evaluate failed");
     return r.result?.result?.value;
   };
+  // The page restores the settings of its last load, so first make that the 4-bit model on the graphics chip
+  // (the word list and the study assume it), from another page on the same site.
+  await send("Page.navigate", { url: "http://localhost:8455/making-of.html" });
+  await new Promise((r) => setTimeout(r, 1500));
+  await evaluate(`localStorage.setItem("embex.load", JSON.stringify({ vision: true, audio: true, quality: "q4", device: "auto" })), 1`);
   await send("Page.navigate", { url: "http://localhost:8455/?v=study" + Date.now() });
   await new Promise((r) => setTimeout(r, 3000));
   log("webgpu:", await evaluate(`(async () => !!(navigator.gpu && await navigator.gpu.requestAdapter()))()`));
@@ -43,10 +54,10 @@ try {
     if (/Ready/.test(s) && /\| (\d+)\/\1$/.test(s) && !/\| 0\//.test(s)) { log(s); break; }
   }
   const media = await evaluate(`window.explorer.items.filter(i => i.kind !== "text").map(i => ({ label: i.label, kind: i.kind, err: i.err, vec: i.vec ? Array.from(i.vec) : null }))`);
-  fs.writeFileSync(path.join(HERE, "media.json"), JSON.stringify(media));
+  fs.writeFileSync(path.join(DIR, "media.json"), JSON.stringify(media));
   log("media:", media.map((m) => m.kind + ":" + m.label + (m.err ? " ERR " + m.err : "")).join(", "));
 
-  const out = fs.openSync(path.join(HERE, "vecs.bin"), "w");
+  const out = fs.openSync(path.join(DIR, "vecs.bin"), "w");
   const B = 100;
   for (let i = 0; i < words.length; i += B) {
     const batch = words.slice(i, i + B);
@@ -61,7 +72,7 @@ try {
     if ((i / B) % 5 === 0) log(`${i + batch.length}/${words.length}`);
   }
   fs.closeSync(out);
-  fs.writeFileSync(path.join(HERE, "words.json"), JSON.stringify({ words, cats }));
+  fs.writeFileSync(path.join(DIR, "words.json"), JSON.stringify({ words, cats }));
   log("done", words.length, "words");
 } finally {
   chrome.kill();

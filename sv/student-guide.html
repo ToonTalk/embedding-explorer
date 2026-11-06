@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inbäddningsutforskaren: Elevguide</title>
+<link rel="stylesheet" href="../pages.css">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23f7f6f2'/%3E%3Cg stroke-width='4.5' stroke-linecap='round'%3E%3Cpath d='M32 32V4M32 32L52 12M32 32L58 40M32 32L22 56M32 32L8 30' stroke='%231a8f3c'/%3E%3Cpath d='M32 32L46 8M32 32L56 26M32 32L44 54M32 32L12 48M32 32L18 14' stroke='%23d03a2f'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='4' fill='%232f5bd3'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+  <nav class="top">
+    <a href="./">← Öppna Inbäddningsutforskaren</a>
+    <a href="teacher-guide.html">Lärarguide</a>
+    <a href="../making-of.html">Så gjordes den (på engelska)</a>
+  </nav>
+
+  <h1>Elevguide</h1>
+  <p class="lede">Hur vet en AI att ”katt” och ”cat” betyder samma sak, eller vilket ord ett foto hör ihop med? Den gör om allt till listor med tal. Med den här appen kan du titta in, och upptäcka saker som ingen har lagt märke till än.</p>
+
+  <h2>Den stora idén</h2>
+  <p>AI:n i den här appen gör om ett ord, en bild, ett ljud eller en video till en lista med 768 tal. Listan kallas en <b>inbäddning</b>. Saker som betyder ungefär samma sak får liknande listor. Det är allt AI:n vet om dem: den ”ser” aldrig bilden som du gör, den jämför bara listor med tal.</p>
+  <p>Två listor jämförs med ett tal som kallas <b>likhet</b>. 1 betyder att de pekar åt samma håll, 0 betyder att de inte har med varandra att göra. Det mesta du gör är att gissa en likhet och sedan kolla.</p>
+
+  <h2>Du är forskaren</h2>
+  <p>AI:n i appen är en riktig AI, och ingen, inte ens de som gjorde den, kan förklara allt den gör. Varför tycker den att ”hus” ligger nära ”hund”? Varför kan den inte skilja ”The dog bit the man” från ”The man bit the dog”? Varför tycker den att ”valp” liknar ”val” mer än ”hund”? Om du hittar ett mönster och testar det, då forskar du på riktigt.</p>
+  <p>Så ta med dina egna idéer. Prova sådant du bryr dig om: dina favoritspel, maträtter, lag eller djur, ord på ett språk du pratar hemma, ett foto av ditt husdjur, en inspelning av ett instrument du spelar. Dina egna saker är mer intressanta än våra, och det är större chans att de överraskar dig.</p>
+
+  <h2>Kom igång</h2>
+  <ol>
+    <li>Öppna appen i Chrome eller Edge på en dator. Tryck på <b>Ladda</b> i avsnitt 1. Första gången kan det ta en minut, sedan går det snabbt.</li>
+    <li>Några saker läggs till åt dig: hund, katt, äpple, hus, ett foto av en corgi, ett foto av ett hus och en hund som skäller. Lägg till egna saker med rutan i avsnitt 2, eller lägg till en hel samling med en knapp.</li>
+    <li>Ord med en prickad linje under förklarar sig själva om du pekar på dem eller trycker på dem.</li>
+    <li>Kör du fast? Tryck på <b>🧭 Guide</b> i hörnet och fråga AI-guiden. Den kan ha fel, så jämför det den säger med det som står på sidan.</li>
+  </ol>
+
+  <h2>Svenska och engelska</h2>
+  <div class="box">
+    <p>AI:n har lärt sig mest från engelska, och det märks. Den vet vad många svenska ord betyder: ”katt” ligger nära ”cat” (0.89) och ”hund” nära ”dog” (0.89). Men när den jämför korta svenska ord med varandra går den ofta efter <b>stavningen</b>. ”Valp” ligger närmare ”val” (0.87) än ”hund” (0.81).</p>
+    <p>Därför fungerar en del saker på engelska men inte på svenska. Det är inget fel i appen, det är något du kan undersöka:</p>
+    <ul>
+      <li>Lägg till <i>valp</i>, <i>val</i> och <i>hund</i>. Vilka ligger närmast varandra? Prova samma sak med <i>puppy</i>, <i>whale</i> och <i>dog</i>.</li>
+      <li>Blanda språk i avsnitt 6: <code>katt - cat + dog</code>. Vad hamnar det på?</li>
+      <li>Hitta fler svenska ord som AI:n blandar ihop för att de stavas likt. Fungerar längre ord bättre?</li>
+    </ul>
+    <p>Läs mer under ”Svenska och engelska” i avsnitt 4 i appen.</p>
+  </div>
+
+  <h2>Så jobbar en forskare</h2>
+  <ul>
+    <li><b>Gissa först.</b> Skriv ner vad du tror innan du trycker på något. Det är när du gissar fel som det blir spännande: då har du hittat något.</li>
+    <li><b>För anteckningar.</b> Skriv för varje försök: din fråga, din gissning, vad du gjorde, vad som hände och vad som överraskade dig.</li>
+    <li><b>Se överraskningar som buggar.</b> Säg inte bara ”AI:n hade fel”. Fråga varför, och ändra en sak i taget för att ta reda på det.</li>
+    <li><b>Kolla på ett annat sätt.</b> Stämmer det du hittade fortfarande med 768 tal i stället för 256? Med <b>Ta bort det som allt har gemensamt</b> ikryssat? Med andra ord som betyder samma sak?</li>
+    <li><b>Dela med dig.</b> Visa klassen vad du hittade, med talen som bevis. Låt dem sedan försöka slå hål på det, och försök slå hål på deras.</li>
+  </ul>
+
+  <h2>Uppdrag att börja med</h2>
+  <p>De här uppdragen är ställen att börja på, inte en lista du måste bli klar med. Gör dem i vilken ordning du vill, ändra dem, hoppa över dem du inte gillar, eller använd ett som språngbräda för en egen undersökning. Varje uppdrag slutar med en idé, <b>Gå vidare</b>, som inte har något rätt svar.</p>
+
+  <div class="try">
+    <b class="label">Uppdrag 1 · Vem är nära vem?</b>
+    <p>Titta på avsnitt 4. Vilket par tror du får högst likhet: <i>hund</i> och <i>katt</i>, <i>hund</i> och <i>äpple</i>, eller <i>hund</i> och fotot av corgin? Skriv ner din ordning och kolla sedan.</p>
+    <p><b>Gå vidare:</b> gör en samling med egna saker som du tror att AI:n grupperar på ett annat sätt än du skulle göra. Hade du rätt?</p>
+    <details><summary>Ett tips</summary><p>Ord brukar få högre likhet med andra ord, även när en bild passar bättre. Det kallas <i>modalitetsgapet</i>. Jämför därför vilken bild som ligger närmast ett ord, inte bara hur stora talen är.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 2 · Varför ser alla stjärnor likadana ut?</b>
+    <p>I avsnitt 3 ritas varje tal som en stråle: grön för positiva tal, röd för negativa. Titta på stjärnorna för <i>hund</i> och <i>äpple</i>. De ser nästan likadana ut! Kryssa nu i <b>Ta bort det som allt har gemensamt</b> högst upp. Vad händer?</p>
+    <p><b>Gå vidare:</b> när den gemensamma delen är borttagen, kan du hitta två saker som pekar åt motsatt håll, med en likhet under noll?</p>
+    <details><summary>Vad är det som händer?</summary><p>Ungefär 70&nbsp;% av varje lista är en del som alla listor har gemensamt. Tar man bort den blir det kvar som gör varje sak annorlunda. Då får saker som inte hör ihop en likhet nära 0.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 3 · Vad betyder en stråle?</b>
+    <p>Peka på en av de längsta strålarna i en stjärna. Sidan visar vardagsord som har ovanligt höga eller låga värden för just det talet. Kan du hitta en stråle som verkar handla om musik eller sport? Kan du hitta en som inte verkar betyda något alls?</p>
+    <p><b>Gå vidare:</b> välj ett ämne du bryr dig om och leta efter en stråle som lutar åt det hållet. Ge den ett namn, och testa namnet med nya ord.</p>
+    <details><summary>Överraskningen</summary><p>De flesta tal betyder inte en enda sak. Modellen blandar in många idéer i varje tal. Idéer som ”fler än en” (hund → hundar) är utspridda över massor av tal. Tryck på <b>en → många</b> ovanför stjärnan för att se det.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 4 · Räkna med ord</b>
+    <p>Lägg till samlingen 🗺️ <b>Länder och huvudstäder</b> och prova <code>Stockholm - Sverige + Norge</code> i avsnitt 6. Vad tror du att det hamnar på? Prova sedan <code>(sommar + vinter) / 2</code> och <code>Berlin - Tyskland + Spanien</code>. Prova till sist <code>valp - hund + katt</code>. Den fungerar på engelska men inte på svenska. Kan du ta reda på varför?</p>
+    <p><b>Gå vidare:</b> kan du förutsäga vad en uträkning blir, bara med hjälp av talen i rutnätet, innan du tittar på svaret?</p>
+    <details><summary>Viktigt</summary><p>Svaret kan bara bli något som finns på sidan. Exempelknapparna lägger till några möjliga svar åt dig, en del rätt och en del fel. Vill du testa din egen gissning, använd <b>Lägg till min gissning</b>. Eller kryssa i <b>Sök också bland 2 585 vardagsord</b> under listan, så letar AI:n dessutom igenom en lista med vanliga svenska ord (de är märkta med 📖). Kom din gissning överst?</p></details>
+    <details><summary>Hur fungerar det att räkna med ord?</summary>
+      <p><code>Stockholm - Sverige + Norge</code> är en <b>analogi</b> skriven som matte: ”Stockholm är till Sverige som vad är till Norge?” Man kan tänka på det på två sätt.</p>
+      <p><b>Pilar.</b> Stockholm − Sverige är en pil från Sverige till Stockholm, som ungefär betyder ”huvudstaden i”. Följer du samma pil från Norge hamnar du nära Oslo. Det fungerar eftersom pilen från Norge till Oslo pekar ungefär åt samma håll som pilen från Sverige till Stockholm (inte exakt, men mycket mer än av en slump). För valp − hund + katt pekar pilarna hund → valp och katt → kattunge inte alls åt samma håll, och därför misslyckas den på svenska.</p>
+      <p><b>Lägga ihop poäng.</b> Vinnaren är det som liknar Stockholm och Norge mest, och Sverige minst. Kolla i rutnätet: Oslos likhet med Stockholm, minus dess likhet med Sverige, plus dess likhet med Norge, slår ”Köpenhamn”, som ligger lika nära Stockholm men längre från Norge. Kryssa i <b>Visa hur varje poäng räknas ut</b> i avsnitt 5 för att se uträkningarna.</p>
+      <p>Inget av det betyder att AI:n vet att Oslo är Norges huvudstad. Den har lärt sig av hur ord används.</p>
+    </details>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 5 · Hitta på en formel</b>
+    <p>Hitta på en egen formel som du tror fungerar, till exempel <code>katt + bebis</code> eller <code>äpple + päron</code>. Skriv ner vad du tror och prova sedan. Kan du hitta en som misslyckas på ett roligt sätt? Prova <code>kung - man + kvinna</code>: på engelska hamnar king − man + woman på queen, men vad händer på svenska?</p>
+    <p><b>Gå vidare:</b> starta ett formel-zoo: formler som fungerar, formler som misslyckas och formler som misslyckas på roliga sätt, var och en med din bästa förklaring till varför.</p>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 6 · Bilder och ljud</b>
+    <p>Lägg till samlingen 🐾 <b>Djur</b>. Vilket ord ligger närmast ljudet av en hund som skäller? Har AI:n rätt? Lägg sedan till ett eget foto (eller släpp ett på sidan) och se vilket ord det hamnar närmast.</p>
+    <p><b>Gå vidare:</b> hitta en bild eller ett ljud som AI:n får helt fel. Vad kan ha förvirrat den?</p>
+    <details><summary>En känd svag punkt</summary><p>När vi testade hamnade ljudet av en hund som skäller lite närmare ”katt” (0.71) än ”hund” (0.69). Tal och musik fungerar mycket bättre. Kan du ta reda på varför? Ingen vet säkert.</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 7 · Bygg ditt eget rum</b>
+    <p>Välj tre riktningar i avsnitt 7, till exempel <i>liten → stor</i>, <i>tyst → högljudd</i> och <i>ledsen → glad</i>, och tryck på <b>Placera allt</b>. Var hamnar tigern? Dra för att vrida på rummet.</p>
+    <p><b>Gå vidare:</b> hitta på tre riktningar som sorterar saker du bryr dig om, till exempel <i>läskig → gullig</i> eller <i>tråkig → spännande</i>. Håller dina kompisar med om var sakerna hamnade?</p>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 8 · Testa ett känt påstående</b>
+    <p>Geoffrey Hinton, en av pionjärerna inom modern AI, har sagt att i inbäddningar av ord ligger ”man” närmare ”hund” än ”katt”, och ”kvinna” närmare ”katt” än ”hund”. Lägg till samlingen 🐕 <b>Hundar, katter, män och kvinnor</b>. Titta först på rutnätet: kan du se det? Gissa vilket ord i varje par som lutar mest åt katt, och tryck sedan på <b>Kolla: rita linjen hund ↔ katt</b> i utmaningsrutan.</p>
+    <p><b>Gå vidare:</b> hitta ett annat påstående om AI, från nyheterna, en video eller AI-guiden, och hitta på ett experiment som testar det.</p>
+    <details><summary>Tips</summary><p>Små skillnader kan ändå betyda något om alla pekar åt samma håll. Hur många par håller med? Med engelska ord lutade alla sex par vi provade åt samma håll. Med samlingens svenska ord gjorde bara två av fyra det. Vad säger det om Hintons påstående? Var kan en modell ha fått en sådan vana ifrån?</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 9 · Då och nu</b>
+    <p>Lägg till samlingen ⏳ <b>Då och nu</b>. Varje mening har en mening som betyder samma sak och en som bara ser likadan ut. En äldre AI-modell från 2018 valde den som bara ser likadan ut varje gång. Meningarna är på engelska, eftersom den gamla modellen testades på just de engelska meningarna (den förstod nästan bara engelska). Gissa vilka den här modellen klarar, och tryck sedan på <b>Kolla: då och nu</b> i utmaningsrutan.</p>
+    <p><b>Gå vidare:</b> bygg ett fällgalleri med meningar som lurar den här modellen också, på svenska eller engelska, och utmana en kompis att förklara dem.</p>
+    <details><summary>Tips</summary><p>Prova att byta plats på vem som gör vad (”Katten jagade musen”), eller ett talesätt (”Han trillade av pinn”).</p></details>
+  </div>
+
+  <div class="try">
+    <b class="label">Uppdrag 10 · Ta guiden på bar gärning</b>
+    <p>Be 🧭 Guide förklara något, och jämför sedan med talen på sidan. Hade den fel om något? AI-guider kan låta säkra på sin sak även när de har fel.</p>
+    <p><b>Gå vidare:</b> skriv en bättre förklaring än guiden gav, en som en yngre elev skulle förstå.</p>
+  </div>
+
+  <h2>Din egen undersökning</h2>
+  <p>De bästa frågorna är de du kommer på själv. Här är några som kan sätta igång tankarna:</p>
+  <ul>
+    <li>Förstår AI:n mitt språk? Hamnar mina ord bredvid sina svenska (eller engelska) översättningar?</li>
+    <li>Vilka av mina favoritspel, låtar eller lag tycker den liknar varandra, och varför?</li>
+    <li>Kan jag hitta ett ord som ligger nära allt? Eller ett som inte ligger nära någonting?</li>
+    <li>Hamnar ett foto av mitt husdjur närmast ”katt”, ”hund” eller något konstigt?</li>
+    <li>Kan jag skriva en mening som betyder motsatsen till en annan men får nästan samma likhet?</li>
+  </ul>
+  <p>Välj en, gissa, testa, kolla på ett annat sätt och berätta vad du hittade. Om du inte vet hur du ska testa en idé kan 🧭 Guide föreslå ett experiment.</p>
+
+  <h2>Ord att kunna</h2>
+  <dl>
+    <dt>Inbäddning</dt><dd>Listan med tal som AI:n gör för något. Här är den 768 tal lång.</dd>
+    <dt>Likhet</dt><dd>Hur mycket två listor pekar åt samma håll: 1 är samma, 0 är att de inte har med varandra att göra.</dd>
+    <dt>Stråle</dt><dd>Ett streck i en stjärna. Varje stråle visar ett av talen.</dd>
+    <dt>Analogi</dt><dd>Ett mönster som ”Stockholm är till Sverige som Oslo är till Norge”. När man räknar med ord försöker man hitta ordet som saknas.</dd>
+    <dt>Riktning</dt><dd>Det du får när du drar bort en inbäddning från en annan, till exempel stor minus liten. Den pekar från den ena betydelsen mot den andra.</dd>
+    <dt>Modalitetsgapet</dt><dd>Ord håller sig närmare ord, och bilder närmare bilder, även när de betyder samma sak.</dd>
+  </dl>
+
+  <h2>Vill du veta mer?</h2>
+  <p>I appen har varje kort förklaring en länk som heter <b>Mer detaljer</b>. Och <a href="../making-of.html">Så gjordes den (på engelska)</a> berättar om experimenten bakom appen.</p>
+
+  <footer>Inbäddningsutforskaren av Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer">källkod</a> (MIT-licens)</footer>
+</main>
+</body>
+</html>

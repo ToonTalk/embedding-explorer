@@ -17,7 +17,7 @@
   </nav>
 
   <h1>Prompts and responses</h1>
-  <p class="lede">Every prompt Ken Kahn gave Claude while making Embedding Explorer, with a few sentences on what Claude did in response. The whole app came from these 32 messages, over three days in November 2026.</p>
+  <p class="lede">Every prompt Ken Kahn gave Claude while making Embedding Explorer, with a few sentences on what Claude did in response. The whole app came from these 34 messages, over four days in November 2026.</p>
   <p class="meta">Ken's prompts are copied exactly, typos and all. The screenshots he attached aren't reproduced here. Messages marked “sent while Claude was working” arrived in the middle of a task. Times are UK time. Summaries written by Claude; the full story is in <a href="making-of.html">How it was made</a>.</p>
 
   <h2>Day one · November 3</h2>
@@ -252,6 +252,20 @@ If you click "add my guess" and it isn't in the top 10 you don't find out its sc
     <p class="when">32 · 18:01</p>
     <div class="prompt">I was able to share publicly the Tiny Mind artifact.</div>
     <p>Tiny Mind stores its files as text, so Claude did the same here. Each file is cut into slices, and each slice is saved as text that the page decodes as it loads: 66 parts, 722 MB. Pictures and videos stay as they are. The old artifact's storage was half full, so this went into a new artifact with a new link. Claude checked it in Ken's Chrome: it loaded in 49 seconds, and pictures, sounds and the word list all worked.</p>
+  </div>
+
+  <h2>Day four · November 6</h2>
+
+  <div class="turn">
+    <p class="when">33 · 09:11</p>
+    <div class="prompt">Yes, delete it</div>
+    <p>Ken's answer to Claude's question about the old Claude version, which couldn't be shared publicly. Claude checked that nothing linked to it any more and deleted it.</p>
+  </div>
+
+  <div class="turn">
+    <p class="when">34 · 09:17</p>
+    <div class="prompt">To demonstrate that the app can be adapted for other languages please make a Swedish version</div>
+    <p>Claude made a Swedish copy in <code>sv/</code>. Four helpers translated parts of the page in parallel, following a shared glossary, and another translated the student and teacher guides. The study's word lists were translated too, and the real model embedded 2,600 Swedish words, giving the copy its own word list, ray meanings and directions. Checking every claimed result against the model turned up a surprise: the model compares short Swedish words largely by spelling. Only 25% of a Swedish word's five nearest words are in its own group, against 60% in English. So <i>valp − hund + katt</i> lands near <i>väl</i> and <i>val</i>, not <i>kattunge</i>. The Swedish copy says so plainly and uses examples that do work, such as <i>Stockholm − Sverige + Norge</i> → Oslo.</p>
   </div>
 
   <footer>Embedding Explorer by Ken Kahn · <a href="https://github.com/ToonTalk/embedding-explorer">source</a> (MIT license)</footer>

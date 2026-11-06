@@ -14,12 +14,15 @@ for (const v of V) for (let i = 0; i < D; i++) mean[i] += v[i] / N;
 for (const v of V) for (let i = 0; i < D; i++) sd[i] += (v[i] - mean[i]) ** 2 / N;
 for (let i = 0; i < D; i++) sd[i] = Math.sqrt(sd[i]);
 
-const CAT_NAME = { animals: "animals", food: "food", body: "the body", places: "places", objects: "everyday objects", vehicles: "vehicles",
+// Run from study/ for English, or from a language folder (cd sv && node ../build-rays.mjs), whose labels.json
+// names the groups and lists the little words to hide.
+const labels = fs.existsSync("labels.json") ? JSON.parse(fs.readFileSync("labels.json", "utf8")) : null;
+const CAT_NAME = labels ? labels.groups : { animals: "animals", food: "food", body: "the body", places: "places", objects: "everyday objects", vehicles: "vehicles",
   nature: "nature and weather", colors: "colors", numbers: "numbers", time: "times and dates", people: "people", feelings: "feelings",
   abstract: "big ideas", actions: "actions", describing: "describing words", music: "music", sports: "sports",
   "science and tech": "science and technology", "function words": "little words like “the” and “of”", sentences: "whole sentences" };
 // Only everyday words are shown (the common-word list is full of web words); all of them set the average.
-const show = [...new Set(Object.values(cats).flat())].filter((w) => !["the", "and", "of", "to", "in", "is", "that", "it", "for", "on", "with", "as", "at", "by", "from", "but", "not", "or", "if", "so"].includes(w));
+const show = [...new Set(Object.values(cats).flat())].filter((w) => !(labels ? labels.hide : ["the", "and", "of", "to", "in", "is", "that", "it", "for", "on", "with", "as", "at", "by", "from", "but", "not", "or", "if", "so"]).includes(w));
 const vocab = show;
 const idx = new Map(words.map((w, i) => [w, i]));
 const K = 6;

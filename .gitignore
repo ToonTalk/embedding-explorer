@@ -10,3 +10,13 @@ study/pairs-words.json
 dist/
 study/then-and-now/out.json
 study/then-and-now/triplets.json
+study/sv/vecs.bin
+study/sv/words.json
+study/sv/media.json
+study/sv/rays.js
+study/sv/rays.json
+study/sv/pairs-vecs.bin
+study/sv/pairs-words.json
+study/sv/dirs.js
+study/sv/directions.json
+study/sv/collect.log

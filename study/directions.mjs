@@ -36,21 +36,25 @@ for (const d of [768, 256]) {
     if (d === 768) out[name] = { top: order.slice(0, 8).map((i) => [i, +mean[i].toFixed(3)]), dir: mean.map((x) => +x.toFixed(4)) };
   }
 }
+// Run from study/ for English, or from a language folder (cd sv && node ../directions.mjs) with its own labels.json.
+const labels = fs.existsSync("labels.json") ? JSON.parse(fs.readFileSync("labels.json", "utf8")) : null;
+const L = labels?.directions;
 // dogs − dog: which of its longest rays are plural numbers?
 const V = new Map(words.map((w, i) => [w, tn(raw.subarray(i * D0, i * D0 + D0), 256)]));
-const dd = V.get("dogs").map((x, i) => x - V.get("dog")[i]);
+const [one, many] = pairs.plural[0];
+const dd = V.get(many).map((x, i) => x - V.get(one)[i]);
 const longest = [...dd.keys()].sort((p, q) => Math.abs(dd[q]) - Math.abs(dd[p])).slice(0, 8);
-console.log("dogs − dog (256 numbers), longest rays:", longest.map((i) => `#${i + 1} ${dd[i].toFixed(3)}`).join(", "));
+console.log(`${many} − ${one} (256 numbers), longest rays:`, longest.map((i) => `#${i + 1} ${dd[i].toFixed(3)}`).join(", "));
 fs.writeFileSync("directions.json", JSON.stringify(out));
 
 // For the page: each direction's average change, and for each number how many pairs moved the same way as the average.
 {
   const V = new Map(words.map((w, i) => [w, tn(raw.subarray(i * D0, i * D0 + D0), 768)]));
   const defs = {
-    plural: { from: "one", to: "more than one", ps: pairs.plural },
-    past: { from: "now", to: "in the past", ps: pairs.past },
-    bigger: { from: "big", to: "bigger", ps: pairs.bigger },
-    abstract: { from: "things you can touch", to: "ideas", ps: pairs.concrete.map((c, i) => [c, pairs.abstract[i]]) },
+    plural: { ...(L?.plural || { from: "one", to: "more than one" }), ps: pairs.plural },
+    past: { ...(L?.past || { from: "now", to: "in the past" }), ps: pairs.past },
+    bigger: { ...(L?.bigger || { from: "big", to: "bigger" }), ps: pairs.bigger },
+    abstract: { ...(L?.abstract || { from: "things you can touch", to: "ideas" }), ps: pairs.concrete.map((c, i) => [c, pairs.abstract[i]]) },
   };
   const dirs = {};
   for (const [k, { from, to, ps }] of Object.entries(defs)) {

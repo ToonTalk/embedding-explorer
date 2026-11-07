@@ -47,7 +47,7 @@ button:disabled { opacity: .5; cursor: default; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
 .choices label { display: inline-flex; gap: 6px; align-items: center; margin-right: 14px; }
 #status { margin-top: 8px; font-size: 15px; }
-#status.err { color: var(--warn); }
+#status.err, #smallNote.err { color: var(--warn); }
 .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 6px; max-width: 420px; }
 .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
 table.times { border-collapse: collapse; margin-top: 6px; }
@@ -212,6 +212,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <button id="loadBtn" class="primary">Ladda</button>
       <span id="sizeNote" class="meta"></span>
     </div>
+    <p id="smallNote" class="meta" hidden></p>
     <div class="bar"><div id="barFill"></div></div>
     <div id="status">Inte laddad än.</div>
     <details>
@@ -627,14 +628,24 @@ function dtypesFor(device, quality) {
 }
 
 let hasGpu = false;
+// Phones and tablets: a touch screen as the main pointer, or a mobile browser. Their graphics
+// chips share a few GB with everything else, and the picture and sound parts can use it up,
+// which stops the page and can make the whole device freeze.
+const SMALL_DEVICE = navigator.userAgentData?.mobile || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)
+  || matchMedia("(pointer: coarse)").matches;
 function showSizeNote() {
   const device = $("device").value === "wasm" || !hasGpu ? "wasm" : "webgpu";
   const d = dtypesFor(device, $("quality").value);
+  const media = $("wantVision").checked || $("wantAudio").checked;
   const mb = SIZES[d.model].text + ($("wantVision").checked ? SIZES[d.vision_encoder].vision : 0)
     + ($("wantAudio").checked ? SIZES[d.audio_encoder].audio : 0);
   $("sizeNote").textContent = `ungefär ${mb} MB första gången`
-    + (device === "wasm" && ($("wantVision").checked || $("wantAudio").checked)
-      ? " · bilder, videor och ljud kan ta flera minuter styck utan grafikkrets" : "");
+    + (device === "wasm" && media ? " · bilder, videor och ljud kan ta flera minuter styck utan grafikkrets" : "");
+  $("smallNote").hidden = !SMALL_DEVICE;
+  $("smallNote").className = media ? "err" : "meta";
+  $("smallNote").textContent = media
+    ? "⚠️ Det här ser ut att vara en mobil eller surfplatta. Bilder, videor och ljud behöver mer minne än de flesta har: sidan kan sluta fungera och enheten kan frysa. Bara ord fungerar mycket bättre."
+    : "Det här ser ut att vara en mobil eller surfplatta, så bara ord laddas. Bilder, videor och ljud behöver en bärbar dator eller en stationär dator.";
 }
 ["quality", "device", "wantVision", "wantAudio"].forEach((id) => $(id).addEventListener("change", showSizeNote));
 (async () => {
@@ -654,6 +665,9 @@ function showSizeNote() {
     const s = JSON.parse(localStorage.getItem(LOAD_STORE));
     if (s) { $("wantVision").checked = s.vision; $("wantAudio").checked = s.audio; $("quality").value = s.quality; $("device").value = s.device; }
   } catch {}
+  // A phone or tablet starts with words only every time, even if pictures loaded before:
+  // loading isn't what fails there, running a picture through the model is.
+  if (SMALL_DEVICE) $("wantVision").checked = $("wantAudio").checked = false;
   showSizeNote();
   await new Promise((r) => setTimeout(r)); // let the rest of the page finish setting up first
   if (await modelIsSaved()) {
@@ -738,6 +752,7 @@ $("loadBtn").addEventListener("click", async () => {
   } catch (e) {
     failed = true;
     console.error(e);
+    if (GPU_LOST.test(e?.message || String(e))) { noteGpuLost(); return; }
     status("Laddningen misslyckades: " + (e.message || e), true);
     log("fel vid laddning: " + (e.stack || e));
   } finally {
@@ -755,17 +770,38 @@ function runSerial(fn) {
 
 const textForModel = (t) => $("prefix").value + t;
 
+// When a phone or tablet runs out of graphics memory, the browser takes the graphics chip
+// away from the page. Nothing can run on it again until the page is reloaded, so say that
+// plainly once, instead of showing the engine's error on every item.
+let gpuLost = false;
+const GPU_LOST = /external Instance reference no longer exists|device (was |is )?lost|DeviceLost|Failed to download data from buffer|mapAsync/i;
+const GPU_LOST_MSG = "Grafikkretsen slutade fungera, troligen för att minnet tog slut. Ladda om sidan för att börja om.";
+function noteGpuLost() {
+  if (gpuLost) return;
+  gpuLost = true;
+  status(GPU_LOST_MSG + (SMALL_DEVICE
+    ? " På en mobil eller surfplatta: ladda bara ord. Bilder, ljud och videor behöver mer minne än de flesta har."
+    : " Det kan hjälpa att ladda bara ord eller att stänga andra flikar."), true);
+  log("grafikkretsen förlorad");
+}
+
 async function embedInput(kind, input) {
   return runSerial(async () => {
+    if (gpuLost) throw new Error(GPU_LOST_MSG);
     const t0 = performance.now();
-    let inputs;
-    if (kind === "text") inputs = await processor([input]);
-    else if (kind === "image") inputs = await processor(null, input);
-    else if (kind === "audio") inputs = await processor(null, null, input);
-    else inputs = await processor(null, null, null, input);
-    const out = await model(inputs);
-    const vec = Float32Array.from(out.sentence_embedding.data);
-    return { vec, ms: performance.now() - t0 };
+    try {
+      let inputs;
+      if (kind === "text") inputs = await processor([input]);
+      else if (kind === "image") inputs = await processor(null, input);
+      else if (kind === "audio") inputs = await processor(null, null, input);
+      else inputs = await processor(null, null, null, input);
+      const out = await model(inputs);
+      const vec = Float32Array.from(out.sentence_embedding.data);
+      return { vec, ms: performance.now() - t0 };
+    } catch (e) {
+      if (loaded.device === "webgpu" && GPU_LOST.test(e?.message || String(e))) { console.error(e); noteGpuLost(); throw new Error(GPU_LOST_MSG); }
+      throw e;
+    }
   });
 }
 
@@ -987,7 +1023,8 @@ function addThings(things, set) {
     const blob = PACK && packSounds[file]?.blob;
     addItem(kind, kind === "text" ? { text: label, label, set } : { src, label, set, ...(blob ? { file: blob } : {}) });
   }
-  if (skipped) status(`En del av samlingen lämnades utanför: ladda modellen med ${loaded.vision ? "ljud" : loaded.audio ? "bilder och videor" : "bilder, videor och ljud"} för att lägga till dem.`);
+  if (skipped && SMALL_DEVICE && !loaded.vision && !loaded.audio) status("Klar för ord. Bilderna, videorna och ljuden i samlingen lämnades utanför: de behöver en bärbar dator eller en stationär dator.");
+  else if (skipped) status(`En del av samlingen lämnades utanför: ladda modellen med ${loaded.vision ? "ljud" : loaded.audio ? "bilder och videor" : "bilder, videor och ljud"} för att lägga till dem.`);
 }
 for (const s of SETS) {
   const b = document.createElement("button");
@@ -1245,7 +1282,8 @@ function renderItems() {
   for (const it of items) {
     const card = document.createElement("div");
     card.className = "card" + (it.busy ? " busy" : "") + (choosing?.has(it) ? " chosen" : "");
-    const meta = it.err ? `<span style="color:var(--warn)">${esc(it.err)}</span>${model && !/^Ladda modellen/.test(it.err) ? ` <button class="retry">Försök igen</button>` : ""}`
+    const meta = it.err === GPU_LOST_MSG ? `<span style="color:var(--warn)">Stoppad: ladda om sidan</span>`
+      : it.err ? `<span style="color:var(--warn)">${esc(it.err)}</span>${model && !gpuLost && !/^Ladda modellen/.test(it.err) ? ` <button class="retry">Försök igen</button>` : ""}`
       : it.busy ? "räknar…" : it.vec ? `${fmtMs(it.ms)}${it.note ? " · " + it.note : ""}` : "väntar";
     card.innerHTML = `<button class="x" title="Ta bort">×</button>
       <div class="thumb">${itemThumb(it)}</div>

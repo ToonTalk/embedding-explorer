@@ -47,7 +47,7 @@ button:disabled { opacity: .5; cursor: default; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
 .choices label { display: inline-flex; gap: 6px; align-items: center; margin-right: 14px; }
 #status { margin-top: 8px; font-size: 15px; }
-#status.err { color: var(--warn); }
+#status.err, #smallNote.err { color: var(--warn); }
 .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 6px; max-width: 420px; }
 .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
 table.times { border-collapse: collapse; margin-top: 6px; }
@@ -212,6 +212,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <button id="loadBtn" class="primary">Load</button>
       <span id="sizeNote" class="meta"></span>
     </div>
+    <p id="smallNote" class="meta" hidden></p>
     <div class="bar"><div id="barFill"></div></div>
     <div id="status">Not loaded yet.</div>
     <details>
@@ -615,14 +616,24 @@ function dtypesFor(device, quality) {
 }
 
 let hasGpu = false;
+// Phones and tablets: a touch screen as the main pointer, or a mobile browser. Their graphics
+// chips share a few GB with everything else, and the picture and sound parts can use it up,
+// which stops the page and can make the whole device freeze.
+const SMALL_DEVICE = navigator.userAgentData?.mobile || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)
+  || matchMedia("(pointer: coarse)").matches;
 function showSizeNote() {
   const device = $("device").value === "wasm" || !hasGpu ? "wasm" : "webgpu";
   const d = dtypesFor(device, $("quality").value);
+  const media = $("wantVision").checked || $("wantAudio").checked;
   const mb = SIZES[d.model].text + ($("wantVision").checked ? SIZES[d.vision_encoder].vision : 0)
     + ($("wantAudio").checked ? SIZES[d.audio_encoder].audio : 0);
   $("sizeNote").textContent = `about ${mb} MB the first time`
-    + (device === "wasm" && ($("wantVision").checked || $("wantAudio").checked)
-      ? " · pictures, videos and sounds may take minutes each without a graphics chip" : "");
+    + (device === "wasm" && media ? " · pictures, videos and sounds may take minutes each without a graphics chip" : "");
+  $("smallNote").hidden = !SMALL_DEVICE;
+  $("smallNote").className = media ? "err" : "meta";
+  $("smallNote").textContent = media
+    ? "⚠️ This looks like a phone or tablet. Pictures, videos and sounds need more memory than most of them have: the page may stop working, and the device may freeze. Words alone work much better."
+    : "This looks like a phone or tablet, so only words are loaded. Pictures, videos and sounds need a laptop or desktop computer.";
 }
 ["quality", "device", "wantVision", "wantAudio"].forEach((id) => $(id).addEventListener("change", showSizeNote));
 (async () => {
@@ -642,6 +653,9 @@ function showSizeNote() {
     const s = JSON.parse(localStorage.getItem(LOAD_STORE));
     if (s) { $("wantVision").checked = s.vision; $("wantAudio").checked = s.audio; $("quality").value = s.quality; $("device").value = s.device; }
   } catch {}
+  // A phone or tablet starts with words only every time, even if pictures loaded before:
+  // loading isn't what fails there, running a picture through the model is.
+  if (SMALL_DEVICE) $("wantVision").checked = $("wantAudio").checked = false;
   showSizeNote();
   await new Promise((r) => setTimeout(r)); // let the rest of the page finish setting up first
   if (await modelIsSaved()) {
@@ -726,6 +740,7 @@ $("loadBtn").addEventListener("click", async () => {
   } catch (e) {
     failed = true;
     console.error(e);
+    if (GPU_LOST.test(e?.message || String(e))) { noteGpuLost(); return; }
     status("Loading failed: " + (e.message || e), true);
     log("load error: " + (e.stack || e));
   } finally {
@@ -743,17 +758,38 @@ function runSerial(fn) {
 
 const textForModel = (t) => $("prefix").value + t;
 
+// When a phone or tablet runs out of graphics memory, the browser takes the graphics chip
+// away from the page. Nothing can run on it again until the page is reloaded, so say that
+// plainly once, instead of showing the engine's error on every item.
+let gpuLost = false;
+const GPU_LOST = /external Instance reference no longer exists|device (was |is )?lost|DeviceLost|Failed to download data from buffer|mapAsync/i;
+const GPU_LOST_MSG = "The graphics chip stopped working, probably because it ran out of memory. Reload the page to start again.";
+function noteGpuLost() {
+  if (gpuLost) return;
+  gpuLost = true;
+  status(GPU_LOST_MSG + (SMALL_DEVICE
+    ? " On a phone or tablet, load only words: pictures, sounds and videos need more memory than most have."
+    : " Loading only words, or closing other tabs, may help."), true);
+  log("graphics chip lost");
+}
+
 async function embedInput(kind, input) {
   return runSerial(async () => {
+    if (gpuLost) throw new Error(GPU_LOST_MSG);
     const t0 = performance.now();
-    let inputs;
-    if (kind === "text") inputs = await processor([input]);
-    else if (kind === "image") inputs = await processor(null, input);
-    else if (kind === "audio") inputs = await processor(null, null, input);
-    else inputs = await processor(null, null, null, input);
-    const out = await model(inputs);
-    const vec = Float32Array.from(out.sentence_embedding.data);
-    return { vec, ms: performance.now() - t0 };
+    try {
+      let inputs;
+      if (kind === "text") inputs = await processor([input]);
+      else if (kind === "image") inputs = await processor(null, input);
+      else if (kind === "audio") inputs = await processor(null, null, input);
+      else inputs = await processor(null, null, null, input);
+      const out = await model(inputs);
+      const vec = Float32Array.from(out.sentence_embedding.data);
+      return { vec, ms: performance.now() - t0 };
+    } catch (e) {
+      if (loaded.device === "webgpu" && GPU_LOST.test(e?.message || String(e))) { console.error(e); noteGpuLost(); throw new Error(GPU_LOST_MSG); }
+      throw e;
+    }
   });
 }
 
@@ -974,7 +1010,8 @@ function addThings(things, set) {
     const blob = PACK && packSounds[file]?.blob;
     addItem(kind, kind === "text" ? { text: label, label, set } : { src, label, set, ...(blob ? { file: blob } : {}) });
   }
-  if (skipped) status(`Some of the set was left out: load the model with ${loaded.vision ? "sounds" : loaded.audio ? "pictures & videos" : "pictures, videos and sounds"} to add those.`);
+  if (skipped && SMALL_DEVICE && !loaded.vision && !loaded.audio) status("Ready for words. The pictures, videos and sounds in the set were left out: they need a laptop or desktop computer.");
+  else if (skipped) status(`Some of the set was left out: load the model with ${loaded.vision ? "sounds" : loaded.audio ? "pictures & videos" : "pictures, videos and sounds"} to add those.`);
 }
 for (const s of SETS) {
   const b = document.createElement("button");
@@ -1232,7 +1269,8 @@ function renderItems() {
   for (const it of items) {
     const card = document.createElement("div");
     card.className = "card" + (it.busy ? " busy" : "") + (choosing?.has(it) ? " chosen" : "");
-    const meta = it.err ? `<span style="color:var(--warn)">${esc(it.err)}</span>${model && !/^Load the model/.test(it.err) ? ` <button class="retry">Try again</button>` : ""}`
+    const meta = it.err === GPU_LOST_MSG ? `<span style="color:var(--warn)">Stopped: reload the page</span>`
+      : it.err ? `<span style="color:var(--warn)">${esc(it.err)}</span>${model && !gpuLost && !/^Load the model/.test(it.err) ? ` <button class="retry">Try again</button>` : ""}`
       : it.busy ? "working…" : it.vec ? `${fmtMs(it.ms)}${it.note ? " · " + it.note : ""}` : "waiting";
     card.innerHTML = `<button class="x" title="Remove">×</button>
       <div class="thumb">${itemThumb(it)}</div>

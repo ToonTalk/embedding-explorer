@@ -51,3 +51,5 @@ onnxruntime-web 1.31.0-dev.20260914-8d85527a0 (the version Transformers.js 4.3.2
 
 - Setting `env.backends.onnx.webgpu.profiling = { mode: "default" }` printed nothing with this build, so we couldn't get per-kernel times. We'd be glad to run a build or flag that does.
 - We noticed this in [Embedding Explorer](https://github.com/ToonTalk/embedding-explorer), a page for school students to explore embeddings.
+
+Filed as https://github.com/microsoft/onnxruntime/issues/33970 on 7 November 2026.

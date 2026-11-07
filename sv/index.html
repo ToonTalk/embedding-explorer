@@ -214,6 +214,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
       <span id="sizeNote" class="meta"></span>
     </div>
     <p id="smallNote" class="meta" hidden></p>
+    <p id="chipNote" class="meta" hidden></p>
     <div class="bar"><div id="barFill"></div></div>
     <div id="status">Inte laddad än.</div>
     <div id="slowGpu" hidden><span id="slowGpuText"></span> <button id="slowGpuBtn">Byt till huvudprocessorn</button></div>
@@ -651,7 +652,19 @@ function showSizeNote() {
 }
 ["quality", "device", "wantVision", "wantAudio"].forEach((id) => $(id).addEventListener("change", showSizeNote));
 (async () => {
-  try { hasGpu = !!(navigator.gpu && await navigator.gpu.requestAdapter()); } catch {}
+  let adapter = null;
+  try { adapter = navigator.gpu && await navigator.gpu.requestAdapter(); } catch {}
+  hasGpu = !!adapter;
+  // Imagination graphics chips (in the Pixel 10 Pro, for one) run the 4-bit model's arithmetic
+  // about 80 times slower than its 16-bit arithmetic: 20 s a word, against 0.24 s for 16-bit on
+  // the same chip and 0.13 s on the main processor. So start those on the main processor.
+  const slowChip = adapter?.info?.vendor === "img-tec";
+  if (slowChip) {
+    $("chipNote").hidden = false;
+    $("chipNote").textContent = "Den här enhetens grafikkrets (från Imagination) kör 4-bitarsmodellen mycket långsamt: på en Pixel 10 Pro 20 s per ord, mot 0,13 s på huvudprocessorn. "
+      + (PACK ? "Den här utgåvan kan bara använda grafikkretsen, men webbutgåvan på toontalk.github.io/embedding-explorer/sv/ kan använda huvudprocessorn."
+        : `Därför används huvudprocessorn. Den behöver en nedladdning på ${SIZES.fp16.text} MB en gång, och listan med vardagsord går inte att använda med den.`);
+  }
   if (PACK) {
     // The artifact stores only the 4-bit files, which need the graphics chip.
     $("quality").hidden = $("device").hidden = true;
@@ -670,6 +683,7 @@ function showSizeNote() {
   // A phone or tablet starts with words only every time, even if pictures loaded before:
   // loading isn't what fails there, running a picture through the model is.
   if (SMALL_DEVICE) $("wantVision").checked = $("wantAudio").checked = false;
+  if (slowChip && !PACK) $("device").value = "wasm";
   showSizeNote();
   await new Promise((r) => setTimeout(r)); // let the rest of the page finish setting up first
   if (await modelIsSaved()) {
@@ -706,12 +720,25 @@ const fmtMs = (ms) => ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixe
 $("loadBtn").addEventListener("click", async () => {
   $("loadBtn").disabled = true;
   let failed = false;
+  // Hold the run queue for the whole load: runs already waiting are cancelled, the one in
+  // progress finishes on the old model, and anything asked for meanwhile (such as the 3D
+  // section's words) waits for the new model instead of running on the one being dropped.
+  runGen++;
+  const before = queue;
+  let openQueue;
+  const gate = new Promise((r) => { openQueue = r; });
+  queue = before.then(() => gate);
   try {
     const wantVision = $("wantVision").checked, wantAudio = $("wantAudio").checked;
     const quality = $("quality").value;
     const device = $("device").value === "wasm" || !hasGpu ? "wasm" : "webgpu";
     const dtype = dtypesFor(device, quality);
-    if (model) { try { await model.dispose(); } catch {} model = null; }
+    if (model) {
+      status("Gör klart ordet som pågår först…");
+      await before;
+      try { await model.dispose(); } catch {}
+      model = null;
+    }
     for (const t of Object.values(timings)) t.length = 0; // timings are for this load only
     renderTimes();
     slowGpuRun = 0; $("slowGpu").hidden = true;
@@ -761,14 +788,21 @@ $("loadBtn").addEventListener("click", async () => {
     status("Laddningen misslyckades: " + (e.message || e), true);
     log("fel vid laddning: " + (e.stack || e));
   } finally {
+    openQueue(); // let the waiting runs go, on the new model (or fail plainly if loading failed)
     $("loadBtn").disabled = false;
     $("loadBtn").textContent = "Ladda igen med de här inställningarna";
   }
 });
 
 // ---------- embedding ----------
+// Loading again drops the old model, so it first cancels the runs still waiting (runGen) and
+// waits for the one in progress: dropping a model mid-run breaks the graphics chip's session.
+let runGen = 0;
+const RELOAD_CANCEL = "Avbruten medan modellen laddades igen.";
 function runSerial(fn) {
-  const p = queue.then(fn, fn);
+  const gen = runGen;
+  const go = () => { if (gen !== runGen) throw new Error(RELOAD_CANCEL); return fn(); };
+  const p = queue.then(go, go);
   queue = p.catch(() => {});
   return p;
 }
@@ -790,7 +824,7 @@ function noteGpuLost() {
   log("grafikkretsen förlorad");
 }
 
-// Some graphics chips stall: on a Pixel 10a every word took 20 s on the graphics chip and
+// Some graphics chips stall: on a Pixel 10 Pro every word took 20 s on the graphics chip and
 // 0.13 s on the main processor. After two slow words in a row, offer the main processor.
 // (The first word is always slower while the chip gets ready, so one slow word isn't enough.)
 let slowGpuRun = 0;
@@ -799,8 +833,8 @@ function checkSlowGpu(it) {
   slowGpuRun = it.ms > 3000 ? slowGpuRun + 1 : 0;
   if (slowGpuRun < 2 || !$("slowGpu").hidden) return;
   $("slowGpuText").textContent = `Ord tar ${fmtMs(it.ms)} styck på den här enhetens grafikkrets. `
-    + (PACK ? "På vissa mobiler är huvudprocessorn mycket snabbare (på en Pixel 10a 0,13 s per ord i stället för 20 s). Den här utgåvan kan inte använda den, men webbutgåvan på toontalk.github.io/embedding-explorer/sv/ kan det."
-      : `På vissa mobiler är huvudprocessorn mycket snabbare (på en Pixel 10a 0,13 s per ord i stället för 20 s). Att byta laddar ner en version av modellen på ${SIZES.fp16.text} MB en gång, och listan med vardagsord går inte att använda med den.`);
+    + (PACK ? "På vissa mobiler är huvudprocessorn mycket snabbare (på en Pixel 10 Pro 0,13 s per ord i stället för 20 s). Den här utgåvan kan inte använda den, men webbutgåvan på toontalk.github.io/embedding-explorer/sv/ kan det."
+      : `På vissa mobiler är huvudprocessorn mycket snabbare (på en Pixel 10 Pro 0,13 s per ord i stället för 20 s). Att byta laddar ner en version av modellen på ${SIZES.fp16.text} MB en gång, och listan med vardagsord går inte att använda med den.`);
   $("slowGpuBtn").hidden = !!PACK;
   $("slowGpu").hidden = false;
 }
@@ -814,6 +848,7 @@ $("slowGpuBtn").addEventListener("click", () => {
 async function embedInput(kind, input) {
   return runSerial(async () => {
     if (gpuLost) throw new Error(GPU_LOST_MSG);
+    if (!model) throw new Error("Ladda modellen först.");
     const t0 = performance.now();
     try {
       let inputs;

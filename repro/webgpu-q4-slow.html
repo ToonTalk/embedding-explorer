@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebGPU 4-bit timing test</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; max-width: 760px; margin: 0 auto; padding: 16px; }
+  button { font: inherit; padding: 6px 12px; margin: 4px 4px 4px 0; }
+  pre { background: #f3f3f3; padding: 10px; overflow-x: auto; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>WebGPU 4-bit timing test</h1>
+<p>Runs EmbeddingGemma 2 (<code>onnx-community/embeddinggemma-2-ONNX</code>, text part only) through Transformers.js 4.3.2 and
+onnxruntime-web, and times one forward pass per word. On a Pixel 10 Pro (Imagination graphics chip) the 4-bit model on WebGPU
+takes about 20 s a word, while the 16-bit model takes 0.24 s on WebGPU and 0.13 s on WASM.</p>
+<p>Each button downloads that model once (4-bit about 175 MB, 16-bit about 543 MB) and then runs three words. Run one at a time.</p>
+<p>
+  <button data-v="q4@webgpu">4-bit on WebGPU</button>
+  <button data-v="fp16@webgpu">16-bit on WebGPU</button>
+  <button data-v="fp16@wasm">16-bit on WASM</button>
+  <button id="copy">Copy results</button>
+</p>
+<pre id="out">Getting the graphics chip's details…</pre>
+<script type="module">
+import { AutoConfig, AutoModel, AutoProcessor, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/+esm";
+env.allowLocalModels = false;
+const ID = "onnx-community/embeddinggemma-2-ONNX";
+const out = document.getElementById("out");
+const say = (s) => { out.textContent += s + "\n"; };
+
+out.textContent = "";
+say("User agent: " + navigator.userAgent);
+try {
+  const a = await navigator.gpu?.requestAdapter();
+  if (!a) say("WebGPU: no adapter");
+  else {
+    const i = a.info || {};
+    say(`WebGPU adapter: vendor=${i.vendor} architecture=${i.architecture} device=${i.device} description=${i.description}`);
+    say("Features: " + [...a.features].sort().join(", "));
+  }
+} catch (e) { say("WebGPU: " + e.message); }
+say("onnxruntime-web: " + (env.backends.onnx?.versions?.web || "?"));
+say("");
+
+let processor = null;
+let busy = false;
+for (const b of document.querySelectorAll("button[data-v]")) b.onclick = async () => {
+  if (busy) return;
+  busy = true;
+  const [dtype, device] = b.dataset.v.split("@");
+  say(`== ${dtype} on ${device}`);
+  try {
+    processor ||= await AutoProcessor.from_pretrained(ID);
+    const config = await AutoConfig.from_pretrained(ID);
+    config.vision_config = null; config.audio_config = null;
+    let t = performance.now();
+    const model = await AutoModel.from_pretrained(ID, { config, device, dtype });
+    say(`load: ${((performance.now() - t) / 1000).toFixed(1)} s`);
+    for (const w of ["dog", "cat", "apple"]) {
+      const inputs = await processor(["task: search result | query: " + w]);
+      t = performance.now();
+      const r = await model(inputs);
+      const ms = performance.now() - t;
+      const v = r.sentence_embedding.data;
+      say(`"${w}": ${ms.toFixed(0)} ms  (first numbers ${Array.from(v.slice(0, 3)).map((x) => x.toFixed(4)).join(", ")})`);
+    }
+    await model.dispose();
+  } catch (e) { say("ERROR: " + (e.message || e)); }
+  say("");
+  busy = false;
+};
+document.getElementById("copy").onclick = () => navigator.clipboard.writeText(out.textContent);
+</script>
+</body>
+</html>

@@ -48,6 +48,7 @@ button:disabled { opacity: .5; cursor: default; }
 .choices label { display: inline-flex; gap: 6px; align-items: center; margin-right: 14px; }
 #status { margin-top: 8px; font-size: 15px; }
 #status.err, #smallNote.err { color: var(--warn); }
+#slowGpu { margin-top: 6px; color: var(--warn); }
 .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 6px; max-width: 420px; }
 .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
 table.times { border-collapse: collapse; margin-top: 6px; }
@@ -215,6 +216,7 @@ dialog input[type=password], dialog input[type=text] { font: inherit; font-size:
     <p id="smallNote" class="meta" hidden></p>
     <div class="bar"><div id="barFill"></div></div>
     <div id="status">Inte laddad än.</div>
+    <div id="slowGpu" hidden><span id="slowGpuText"></span> <button id="slowGpuBtn">Byt till huvudprocessorn</button></div>
     <details>
       <summary>Tider och detaljer</summary>
       <table class="times" id="timesTable"></table>
@@ -710,6 +712,9 @@ $("loadBtn").addEventListener("click", async () => {
     const device = $("device").value === "wasm" || !hasGpu ? "wasm" : "webgpu";
     const dtype = dtypesFor(device, quality);
     if (model) { try { await model.dispose(); } catch {} model = null; }
+    for (const t of Object.values(timings)) t.length = 0; // timings are for this load only
+    renderTimes();
+    slowGpuRun = 0; $("slowGpu").hidden = true;
     status(`Laddar ner… (körs på ${device === "webgpu" ? "grafikkretsen" : "huvudprocessorn"})`);
     const t0 = performance.now();
     const files = new Map();
@@ -740,7 +745,7 @@ $("loadBtn").addEventListener("click", async () => {
     try { localStorage.setItem(LOAD_STORE, JSON.stringify({ vision: wantVision, audio: wantAudio, quality, device: $("device").value })); } catch {}
     const secs = ((performance.now() - t0) / 1000).toFixed(1);
     const parts = ["ord", wantVision && "bilder och videor", wantAudio && "ljud"].filter(Boolean).join(", ");
-    const where = device === "webgpu" ? "grafikkretsen (WebGPU)" : "huvudprocessorn (WASM) – räkna med att det går långsamt";
+    const where = device === "webgpu" ? "grafikkretsen (WebGPU)" : "huvudprocessorn (WASM): ord går bra, men bilder, ljud och videor går långsamt";
     status(`Klar för ${parts}. Laddades på ${secs} s med ${where}.`);
     log(`laddning: ${secs} s, device=${device}, dtype=${JSON.stringify(dtype)}, vision=${wantVision}, audio=${wantAudio}`);
     document.querySelectorAll("section.locked").forEach((s) => s.classList.remove("locked"));
@@ -784,6 +789,27 @@ function noteGpuLost() {
     : " Det kan hjälpa att ladda bara ord eller att stänga andra flikar."), true);
   log("grafikkretsen förlorad");
 }
+
+// Some graphics chips stall: on a Pixel 10a every word took 20 s on the graphics chip and
+// 0.13 s on the main processor. After two slow words in a row, offer the main processor.
+// (The first word is always slower while the chip gets ready, so one slow word isn't enough.)
+let slowGpuRun = 0;
+function checkSlowGpu(it) {
+  if (it.kind !== "text" || loaded.device !== "webgpu") return;
+  slowGpuRun = it.ms > 3000 ? slowGpuRun + 1 : 0;
+  if (slowGpuRun < 2 || !$("slowGpu").hidden) return;
+  $("slowGpuText").textContent = `Ord tar ${fmtMs(it.ms)} styck på den här enhetens grafikkrets. `
+    + (PACK ? "På vissa mobiler är huvudprocessorn mycket snabbare (på en Pixel 10a 0,13 s per ord i stället för 20 s). Den här utgåvan kan inte använda den, men webbutgåvan på toontalk.github.io/embedding-explorer/sv/ kan det."
+      : `På vissa mobiler är huvudprocessorn mycket snabbare (på en Pixel 10a 0,13 s per ord i stället för 20 s). Att byta laddar ner en version av modellen på ${SIZES.fp16.text} MB en gång, och listan med vardagsord går inte att använda med den.`);
+  $("slowGpuBtn").hidden = !!PACK;
+  $("slowGpu").hidden = false;
+}
+$("slowGpuBtn").addEventListener("click", () => {
+  $("slowGpu").hidden = true;
+  $("device").value = "wasm";
+  showSizeNote();
+  $("loadBtn").click();
+});
 
 async function embedInput(kind, input) {
   return runSerial(async () => {
@@ -895,6 +921,7 @@ async function embedItem(it) {
       it.vec = r.vec; it.ms = r.ms;
     }
     timings[it.kind].push(it.ms);
+    checkSlowGpu(it);
     log(`${it.kind} "${it.label}": ${fmtMs(it.ms)}${it.decodeMs ? ` (+ ${fmtMs(it.decodeMs)} för avkodning)` : ""}`);
     renderTimes();
   } catch (e) {

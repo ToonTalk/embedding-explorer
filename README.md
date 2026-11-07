@@ -60,7 +60,7 @@ A Swedish copy is in [sv/](https://toontalk.github.io/embedding-explorer/sv/), w
 ## Requirements
 
 - **A browser with WebGPU** (recent Chrome or Edge) is strongly recommended. With WebGPU the first visit downloads about 473 MB, which the browser keeps for later visits.
-- **Phones and tablets** start with words only, and the page warns before loading pictures, videos and sounds. On a Galaxy tablet and a Pixel 10a those used up the graphics memory: the page stopped (it now says so and asks for a reload) and the phone froze.
+- **Phones and tablets** start with words only, and the page warns before loading pictures, videos and sounds. On a Galaxy tablet and a Pixel 10a those used up the graphics memory: the page stopped (it now says so and asks for a reload) and the phone froze. Some graphics chips are also very slow: on the Pixel 10a a word took 20 s on the graphics chip and 0.13 s on the main processor, so after two slow words the page offers to switch (a one-off 543 MB download, without the everyday-word list).
 - **Without WebGPU**, the page falls back to the main processor. This needs a larger 16-bit download, and in testing it was only practical for words: about 0.2 s each. A single picture didn't finish in five minutes.
 
 Measured on a desktop with an NVIDIA GPU: about 0.1 s per word, 0.5 s per picture, 0.2 s per sound and 3–4 s per short video.

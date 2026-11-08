@@ -100,6 +100,18 @@ It is a single file, `index.html`. Serve the folder with any static web server, 
 python -m http.server 8455
 ```
 
+## Error reports
+
+On toontalk.github.io only (not on localhost, and never in the Claude artifacts), when the page runs into
+an error a small notice asks whether to send Ken a report through Sentry. That covers an uncaught error, the
+model failing to load, the graphics chip being lost, and a run that throws. Nothing is sent, and Sentry's
+script is not even fetched, unless the visitor presses Send. "What would be sent" shows the report first:
+the error, where in the code it happened, the load settings (graphics chip or main processor, 4/8/16-bit,
+numbers used, the chip's maker) and the browser. It never contains the visitor's words, file names, guide
+keys or anything else the page keeps in the browser. "Don't ask again" holds in that browser, and an
+"Offer error reports again" button under the load settings undoes it. The DSN is `SENTRY_DSN` in
+`index.html` and `sv/index.html`.
+
 ## License
 
 MIT. See [LICENSE](LICENSE). The EmbeddingGemma 2 model is licensed separately under Apache 2.0.
